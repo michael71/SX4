@@ -5,7 +5,9 @@
  */
 package de.blankedv.sx4;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.logging.Level;
@@ -48,10 +50,11 @@ public class SX4 {
      */
     public static final int SXMAX_USED = 106;
 
-     /**
+    /**
      * {@value #LBMIN} =minimum lanbahn channel number
      */
-    public static final int LBMIN = 1280;   // higher than sxAdrMax*10
+    public static final int LBMIN = 10;   // TODO - both SX and Lanbahn RANGE !!
+    
     /**
      * {@value #LBMAX} =maximum lanbahn channel number
      */
@@ -66,10 +69,12 @@ public class SX4 {
     public static final int LBDATAMAX = 3;  // 
 
     static SXnetServer serv;
+    static WifiThrottle wifiThrottle;
 
     public static AtomicBoolean running = new AtomicBoolean(false);
 
     public static ArrayList<Integer> locoAddresses = new ArrayList<Integer>();
+    public static List<InetAddress> myips;
 
     public static GenericSXInterface sxi;
     public static int baudrate;
@@ -97,7 +102,6 @@ public class SX4 {
                     Thread.sleep(200);
                     System.out.println("SX4 shutdown.");
                     //some cleaning up code...
-                    
 
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
@@ -110,14 +114,18 @@ public class SX4 {
         if (!result) {
             System.out.println("ERROR - SX4 program ends.");
             System.exit(1);
-        } 
-        
-        if (sxi instanceof SXFCCInterface) {
-           System.out.println("FCC mode="+sxi.getMode());
         }
-        
-        running.set(true);
-        serv = new SXnetServer();
+
+        if (sxi instanceof SXFCCInterface) {
+            System.out.println("FCC mode=" + sxi.getMode());
+        }
+        myips = NIC.getmyip();
+        if (!myips.isEmpty()) {
+            running.set(true);
+            serv = new SXnetServer();
+
+            wifiThrottle = new WifiThrottle();
+        }
 
         while (running.get()) {
             try {
@@ -128,7 +136,7 @@ public class SX4 {
             }
         }
     }
-    
+
     /**
      * called every 250 msecs
      *
@@ -144,10 +152,8 @@ public class SX4 {
         updateCount = 0;
         checkConnection();
 
-        
         //Route.auto();
         //CompRoute.auto();
-
     }
 
     /**
@@ -245,8 +251,8 @@ public class SX4 {
         CommandLineParser parser = new DefaultParser();
 
         String[] defaultArgs
-               // = {"-D", "/dev/ttyUSB0", "-b", "9600", "-t", "SIM"};
-                = {"-D", "/dev/ttyUSB0",  "-t", "FCC"};
+                // = {"-D", "/dev/ttyUSB0", "-b", "9600", "-t", "SIM"};
+                = {"-D", "/dev/ttyUSB0", "-t", "FCC"};
 
         options.addOption(option_h);
         options.addOption(option_t);
@@ -283,19 +289,19 @@ public class SX4 {
                         System.out.println("Device(SerialPort) = " + portName);
                         baudrate = readBaudrate(commandLine);
                         System.out.println("baudrate(SerialPort) = " + baudrate);
-                        sxi = new SXInterface(portName,baudrate);
+                        sxi = new SXInterface(portName, baudrate);
                         break;
                     case "FCC":
                         System.out.println("Interface Type=" + ifType);
                         simulation = false;
                         portName = readPortName(commandLine);
-                        System.out.println("Device(SerialPort) = " + portName);                        
+                        System.out.println("Device(SerialPort) = " + portName);
                         baudrate = 230400;
                         sxi = new SXFCCInterface(portName);
                         break;
                     default:
                         System.out.println("ERROR: invalid interface type=" + ifType);
-                        System.out.println( "SX4 program ends.");
+                        System.out.println("SX4 program ends.");
                         System.exit(1);
                 }
             } else {
@@ -305,17 +311,15 @@ public class SX4 {
                 System.out.println("option -t not set, using SIM as interface");
             }
 
-  
-                String[] remainder = commandLine.getArgs();
-                if (remainder.length > 0) {
-                    System.out.print("invalid options: ");
-                    for (String argument : remainder) {
-                        System.out.print(argument);
-                        System.out.print(" ");
-                    }
-                    System.out.println();
+            String[] remainder = commandLine.getArgs();
+            if (remainder.length > 0) {
+                System.out.print("invalid options: ");
+                for (String argument : remainder) {
+                    System.out.print(argument);
+                    System.out.print(" ");
                 }
-
+                System.out.println();
+            }
 
         } catch (ParseException exception) {
             System.out.print("Parse error: ");

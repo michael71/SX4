@@ -23,7 +23,7 @@ public class SXUtils {
      * @param bit
      * @return
      */
-    static private boolean isSet(int d, int bit) {
+    static public boolean isSet(int d, int bit) {
         return ((d >> (bit - 1)) & 1) == 1;
     }
 

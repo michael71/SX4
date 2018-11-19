@@ -1,6 +1,6 @@
 package de.blankedv.sx4;
 
-import static de.blankedv.sx4.SX4.running;
+import static de.blankedv.sx4.SX4.*;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
@@ -30,7 +30,7 @@ public class SXnetServer {
      * Creates new form SRCPServerUI
      */
     public SXnetServer() {
-        List<InetAddress> myips = NIC.getmyip();
+        
         if (myips.isEmpty()) {
             System.out.println("ERROR, no usable network interface. EXITING");
             System.exit(0);

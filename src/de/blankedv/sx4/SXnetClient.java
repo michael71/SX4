@@ -181,12 +181,12 @@ public class SXnetClient implements Runnable {
             //case "REQ":
             //    result = requestRouteMessage(param);
             //    break;
-            // case "SET": //TODO, for addresses > 1000 (lanbahn sim./routes)
-            //    setLanbahnMessage(param);
-            //    break;
-            //case "READ": //TODO, for addresses > 1000 (lanbahn sim./routes)
-            //    result = createLanbahnFeedbackMessage(param);
-            //    break;
+            case "SET": // for addresses > 1200 (lanbahn sim./routes)
+                  setLanbahnMessage(param);
+                  break;
+            case "READ": // for addresses > 1200 (lanbahn sim./routes)
+                 result = createLanbahnFeedbackMessage(param);
+                 break;
             case "QUIT": //terminate this client thread
                 stop();
                 break;
@@ -332,9 +332,9 @@ public class SXnetClient implements Runnable {
      */
     
      
-    /* private String setLanbahnMessage(String[] par) {
+    private String setLanbahnMessage(String[] par) {
         if (DEBUG) {
-            // System.out.println("setLanbahnMessage");
+            System.out.println("setLanbahnMessage");
         }
 
         if (par.length <= 2) {
@@ -342,7 +342,22 @@ public class SXnetClient implements Runnable {
         }
         int lbadr = getLanbahnAddrFromString(par[1]);
         int lbdata = getLanbahnDataFromString(par[2]);
-        if ((lbadr == INVALID_INT) || (lbdata == INVALID_INT)) {
+         if ((lbadr == INVALID_INT) || (lbdata == INVALID_INT)) {
+            return "ERROR";
+        }
+        int sxaddr = lbadr / 10;
+        int sxbit = lbadr % 10;
+        
+        if (SXUtils.isValidSXAddress(sxaddr) && SXUtils.isValidSXBit(sxbit)) {
+            if (lbdata != 0) {
+                SXData.setBit(sxaddr, sxbit, true);
+            } else {
+                SXData.clearBit(sxaddr, sxbit, true);
+            }
+            return "OK";
+        }
+        return "ERROR";
+/*      if ((lbadr == INVALID_INT) || (lbdata == INVALID_INT)) {
             return "ERROR";
         } else {
             // check if we have a matching PanelElement
@@ -359,7 +374,7 @@ public class SXnetClient implements Runnable {
                 // send lanbahnData
                 return "XL " + lbadr + " " + peList.get(0).getState();
             }
-        }
+        } */
     }
 
     private String createLanbahnFeedbackMessage(String[] par) {
@@ -367,18 +382,28 @@ public class SXnetClient implements Runnable {
             System.out.println("createLanbahnFeedbackMessage");
         }
         int lbAddr = getLanbahnAddrFromString(par[1]);
-        if (lbAddr == ERROR) {
+        if (lbAddr == INVALID_INT) {
             return "ERROR";
         } else {
-            PanelElement pe = PanelElement.getSingleByAddress(lbAddr);  // all elements with identical address should have the same state
+            int sxaddr = lbAddr / 10;
+            int sxbit = lbAddr % 10;
+            if (SXUtils.isValidSXAddress(sxaddr) && SXUtils.isValidSXBit(sxbit)) {
+                if (SXUtils.isSet(SXData.get(sxaddr), sxbit)) {
+                    return "XL " + lbAddr + " 1";
+                } else {
+                    return "XL " + lbAddr + " 0";
+                }
+                
+            }
+            /*PanelElement pe = PanelElement.getSingleByAddress(lbAddr);  // all elements with identical address should have the same state
             if (pe != null) {
                 // send lanbahnData
                 return "XL " + lbAddr + " " + pe.getState();
-            }
+            } */
             return "ERROR";
-        }
+        } 
     }
- */
+  
     private int getByteFromString(String s) {
         // converts String to integer between 0 and 255 
         //    (= range of SX Data and of Lanbahn data values)
