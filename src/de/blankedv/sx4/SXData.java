@@ -17,7 +17,7 @@ import static de.blankedv.sx4.SX4.*;
  */
 public class SXData {
     
-    static private int[] d = new int[SXMAX];
+    static private int[] d = new int[SXMAX+1];
     static private int power = INVALID_INT;
     
   

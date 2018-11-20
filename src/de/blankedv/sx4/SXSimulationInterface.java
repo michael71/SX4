@@ -33,25 +33,13 @@ public class SXSimulationInterface extends GenericSXInterface {
        
     @Override
     public void registerFeedback(int adr) {
-        // not necessary, because it is polled every second
-        // TODO ?? check
     }
 
-   
-    @Override
-    public void unregisterFeedback(int addr) {
-        // not necessary, because it is polled every second
-        // TODO ?? check
-    }
-
-    @Override
-    public void unregisterFeedback() {
-        // not necessary, because it is polled every second
-    }
 
     @Override
     public void requestPower() {
-        // not necessary, because it is polled every second
+        connectionOK = true;  // the only reason for this request is to 
+        // check whether command station is still reachable
     }
 
     @Override

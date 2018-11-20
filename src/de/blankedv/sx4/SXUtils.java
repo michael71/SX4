@@ -48,15 +48,14 @@ public class SXUtils {
     public static boolean isValidSXAddress(int a) {
         if (((a >= SXMIN) && (a <= SXMAX))) {
             //if (DEBUG) System.out.println("isValidSXAddress? "+a + " true (SX0");
-            return true;  // 0..111 or 127
+            return true;  // in range 0..111
         }
-
         //if (DEBUG) System.out.println("isValidSXAddress? "+a + " false");
         return false;
     }
 
     /**
-     * is the sxbit a valid SX sxbit? (1...8)
+     * is the sxbit a valid SX sxbit? (1...8) starting with 1 !!
      *
      * @param bit
      * @return true or false

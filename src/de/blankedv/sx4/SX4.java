@@ -27,7 +27,7 @@ import org.apache.commons.cli.ParseException;
 public class SX4 {
 
     public static int INVALID_INT = -1;
-    public static boolean DEBUG = true;
+    public static boolean DEBUG = false;
 
     public static final int STATUS_CONNECTED = 1;
     public static final int STATUS_NOT_CONNECTED = 0;
@@ -35,7 +35,7 @@ public class SX4 {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "1.0 - 19 Nov 2018";
+    public static final String VERSION = "1.01 - 20 Nov 2018";
     public static final String S_XNET_SERVER_REV = "SX4 -" + VERSION;
 
     /**
@@ -56,8 +56,8 @@ public class SX4 {
     /**
      * {@value #LBMIN} =minimum lanbahn channel number
      */
-    public static final int LBMIN = 10;   // TODO - both SX and Lanbahn RANGE !!
-    
+    public static final int LBMIN = 10;
+    public static final int LBPURE = (SXMAX + 1) * 10; // lowest pure lanbahn addres
     /**
      * {@value #LBMAX} =maximum lanbahn channel number
      */
@@ -91,9 +91,9 @@ public class SX4 {
 
     public static boolean connectionOK = false;  // watchdog for connection
 
-    private static boolean DEFAULT_OPTIONS = true;
     private static int updateCount = 0;
 
+    @SuppressWarnings("SleepWhileInLoop")
     public static void main(String[] args) {
 
         evalOptions(args);
@@ -101,16 +101,16 @@ public class SX4 {
         initSXInterface();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
             public void run() {
                 try {
-                    running.set(false);
+                    running.set(false);  // shutdown all threads
                     Thread.sleep(200);
                     System.out.println("SX4 shutdown.");
                     //some cleaning up code...
 
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
                 }
             }
         });
@@ -123,6 +123,8 @@ public class SX4 {
 
         if (sxi instanceof SXFCCInterface) {
             System.out.println("FCC mode=" + sxi.getMode());
+        } else if (sxi instanceof SXSimulationInterface) {
+            SXData.setPower(1, false);
         }
         myips = NIC.getmyip();
         if (!myips.isEmpty()) {
@@ -130,27 +132,28 @@ public class SX4 {
             serv = new SXnetServer();
 
             wifiThrottle = new WifiThrottle();
-        }
 
-        while (running.get()) {
-            try {
-                Thread.sleep(250);
-                doUpdate();    // TODO?? put on different thread
-            } catch (InterruptedException ex) {
-                Logger.getLogger(SX4.class.getName()).log(Level.SEVERE, null, ex);
+            while (running.get()) {
+                try {
+                    Thread.sleep(250);
+                    doUpdate();    // TODO?? put on different thread?
+                } catch (InterruptedException ex) {
+                    System.out.println("ERROR" + ex.getMessage());
+                }
             }
+        } else {
+            System.out.println("ERROR: no network");
         }
     }
-
-    /**
-     * called every 250 msecs
-     *
-     */
+        /**
+         * called every 250 msecs + duration of sxi.doUpdate()
+         *
+         */
     public static void doUpdate() {
         String result = sxi.doUpdate();
 
         updateCount++;
-        if (updateCount < 4) {  // do GUI update only every second
+        if (updateCount < 4) {  // do connection check only every second
             return;
         }
 
@@ -162,13 +165,11 @@ public class SX4 {
     }
 
     /**
-     * called every second
+     * called once a second to do a connection check works for SLX825 TODO
+     * implement for FCC
      *
      */
     private static void checkConnection() {
-        if (simulation) {
-            return;
-        }
 
         timeoutCounter++;
 
@@ -184,7 +185,7 @@ public class SX4 {
                 System.out.println("Verbindung verloren !! ");
                 closeConnection();
             } else {
-                connectionOK = false; // will be set to true in receive routine
+                connectionOK = false; // will be set to true again in receive routine
             }
             timeoutCounter = 0; // reset counter
         }
@@ -235,47 +236,70 @@ public class SX4 {
                 .build();
         Option option_t = Option.builder("t")
                 .required(false)
-                .desc("Interface Type (SLX825, FCC, SIM)")
+                .desc("Interface Type (SLX825, FCC, SIM), default=SIM")
                 .longOpt("type")
                 .hasArg(true)
                 .build();
-        Option option_D = Option.builder("D")
+        Option option_s = Option.builder("s")
                 .required(false)
-                .desc("Serial Device")
+                .desc("Serial Device - default=/dev/ttyUSB0")
                 .longOpt("Device")
                 .hasArg(true)
                 .build();
         Option option_b = Option.builder("b")
                 .required(false)
-                .desc("Baudrate (only needed for SLX825)")
+                .desc("Baudrate (only needed for SLX825), default=9600")
                 .hasArg(true)
                 .longOpt("baudrate")
+                .build();
+        Option option_v = Option.builder("v")
+                .required(false)
+                .desc("program version and date")
+                .hasArg(false)
+                .longOpt("version")
+                .build();
+        Option option_d = Option.builder("d")
+                .required(false)
+                .desc("debug output on")
+                .hasArg(false)
+                .longOpt("debug")
                 .build();
 
         Options options = new Options();
         CommandLineParser parser = new DefaultParser();
 
-        String[] defaultArgs
-                // = {"-D", "/dev/ttyUSB0", "-b", "9600", "-t", "SIM"};
-                = {"-D", "/dev/ttyUSB0", "-t", "FCC"};
-
+        // example options
+        // = {"-D", "/dev/ttyUSB0", "-b", "9600", "-t", "SLX825"};
+        //= {"-D", "/dev/ttyUSB0", "-t", "FCC"};
+        // = { "-t", "SIM"};
         options.addOption(option_h);
         options.addOption(option_t);
-        options.addOption(option_D);
+        options.addOption(option_d);
+        options.addOption(option_s);
         options.addOption(option_b);
+        options.addOption(option_v);
 
         HelpFormatter formatter = new HelpFormatter();
 
         try {
-            if (DEFAULT_OPTIONS) {
-                commandLine = parser.parse(options, defaultArgs);
-            } else {
-                commandLine = parser.parse(options, args);
-            }
+            commandLine = parser.parse(options, args);
 
             if (commandLine.hasOption("h")) {
                 formatter.printHelp("SX4", options, true);
                 System.exit(0);
+            }
+
+            if (commandLine.hasOption("v")) {
+                System.out.println("SX4 version: " + VERSION);
+                System.out.println("use option '-h' to get possible program options");
+                System.exit(0);
+            }
+
+            if (commandLine.hasOption("d")) {
+                System.out.println("switching on debug output");
+                DEBUG = true;
+            } else {
+                DEBUG = false;
             }
 
             simulation = false;
@@ -284,24 +308,26 @@ public class SX4 {
                 ifType = commandLine.getOptionValue("t");
                 switch (ifType) {
                     case "SIM":
+                        System.out.println("SX Interface Type=" + ifType);
                         simulation = true;
                         sxi = new SXSimulationInterface();
                         break;
                     case "SXL825":
-                        System.out.println("Interface Type=" + ifType);
+                        System.out.println("SX Interface Type=" + ifType);
                         simulation = false;
-                        portName = readPortName(commandLine);
-                        System.out.println("Device(SerialPort) = " + portName);
+                        portName = readSerialPortName(commandLine);
+                        System.out.println("serial port device = " + portName);
                         baudrate = readBaudrate(commandLine);
-                        System.out.println("baudrate(SerialPort) = " + baudrate);
+                        System.out.println("serial baudrate = " + baudrate);
                         sxi = new SXInterface(portName, baudrate);
                         break;
                     case "FCC":
-                        System.out.println("Interface Type=" + ifType);
+                        System.out.println("SX Interface Type=" + ifType);
                         simulation = false;
-                        portName = readPortName(commandLine);
-                        System.out.println("Device(SerialPort) = " + portName);
+                        portName = readSerialPortName(commandLine);
+                        System.out.println("serial port device = " + portName);
                         baudrate = 230400;
+                        System.out.println("serial baudrate = " + baudrate);
                         sxi = new SXFCCInterface(portName);
                         break;
                     default:
@@ -333,11 +359,11 @@ public class SX4 {
 
     }
 
-    private static String readPortName(CommandLine cl) {
+    private static String readSerialPortName(CommandLine cl) {
         String port = "/dev/ttyUSB0";
-        if (cl.hasOption("D")) {
+        if (cl.hasOption("s")) {
 
-            port = cl.getOptionValue("D");
+            port = cl.getOptionValue("s");
         }
         return port;
     }
