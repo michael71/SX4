@@ -153,36 +153,31 @@ public class SXnetClient implements Runnable {
             sendMessage(res);
             return;
         }
-        if (param.length < 2) {
-            System.out.println("not enough params in msg: " + m);
-        }
+        
 
         String result = "";
-        switch (param[0]) {
+        switch (param[0]) {    // commands with 1 or more parameters
             case "SETPOWER":
-                setPower(param);
+                result = setPower(param);
                 break;
-            //case "SETLOCO":   // complete byte set (for loco typically)
-            //    setLocoMessage(param);
-            //    break;
-            //case "READLOCO":    // returns byte
-            //    result = readLocoMessage(param);
-            //    break;
+
             case "SETLOCO":   // complete byte set 
             case "S":    // SX Byte set, used by SX-Loconet Bridge and Andropanel
             case "SX":
                 result = setSXByteMessage(param);
-                break;
-                
-            case "READLOCO":
+                break;            
+            
             case "R":    // read sx value, used by SX-Loconet Bridge and Andropanel
                 result = readSXByteMessage(param);
+                break;
+            case "READLOCO":
+                result = readLocoMessage(param);
                 break;
             //case "REQ":
             //    result = requestRouteMessage(param);
             //    break;
             case "SET": // for addresses > 1200 (lanbahn sim./routes)
-                  setLanbahnMessage(param);
+                  result = setLanbahnMessage(param);
                   break;
             case "READ": // for addresses > 1200 (lanbahn sim./routes)
                  result = createLanbahnFeedbackMessage(param);
@@ -200,7 +195,10 @@ public class SXnetClient implements Runnable {
     // used by SX-Loconet Bridge and Andropanel
     private String readSXByteMessage(String[] par) {
         if (DEBUG) {
-            System.out.println("createSXFeedbackMessage");
+            //System.out.println("createSXFeedbackMessage");
+        }
+        if (par.length < 2) {
+            return "ERROR";
         }
         int adr = getSXAddrFromString(par[1]);
         if (adr == INVALID_INT) {
@@ -212,7 +210,10 @@ public class SXnetClient implements Runnable {
 
     private String readLocoMessage(String[] par) {
         if (DEBUG) {
-            System.out.println("readLocoMessage");
+            //System.out.println("readLocoMessage");
+        }
+        if (par.length < 2) {
+            return "ERROR";
         }
         int adr = getSXAddrFromString(par[1]);
         if (adr == INVALID_INT) {
@@ -305,10 +306,13 @@ public class SXnetClient implements Runnable {
         if (DEBUG) {
             System.out.println("setPowerMessage");
         }
+        if (par.length < 2) {
+            return "ERROR";
+        }
         int value = getByteFromString(par[1]);
-        int powerValue = SXData.setPower(value, true);
-     
-        return "XPOWER "+powerValue;
+        SXData.setPower(value, true);
+        powerCopy = SXData.getPower();
+        return "OK";
      
     }
 
@@ -316,7 +320,7 @@ public class SXnetClient implements Runnable {
         if (DEBUG) {
             System.out.println("readPowerMessage");
         }
-        return "XPOWER "+SXData.getPower();
+        return "XPOWER " + SXData.getPower();
     }
  
     /**
@@ -337,7 +341,7 @@ public class SXnetClient implements Runnable {
             System.out.println("setLanbahnMessage");
         }
 
-        if (par.length <= 2) {
+        if (par.length < 3) {
             return "ERROR";
         }
         int lbadr = getLanbahnAddrFromString(par[1]);
@@ -380,6 +384,9 @@ public class SXnetClient implements Runnable {
     private String createLanbahnFeedbackMessage(String[] par) {
         if (DEBUG) {
             System.out.println("createLanbahnFeedbackMessage");
+        }
+        if (par.length < 2) {
+            return "ERROR";
         }
         int lbAddr = getLanbahnAddrFromString(par[1]);
         if (lbAddr == INVALID_INT) {
@@ -576,7 +583,7 @@ public class SXnetClient implements Runnable {
         StringBuilder msg = new StringBuilder();
         boolean first = true;
 
-        // report change in power channel
+        // report change in power channel (but only if "stable")
         if (SXData.getPower() != powerCopy) {
             powerCopy = SXData.getPower(); 
             msg.append("XPOWER "+SXData.getPower());

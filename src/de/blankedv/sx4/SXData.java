@@ -5,9 +5,8 @@
  */
 package de.blankedv.sx4;
 
-import static de.blankedv.sx4.SX4.DEBUG;
-import static de.blankedv.sx4.SX4.SXMAX;
-import static de.blankedv.sx4.SX4.sxi;
+import static de.blankedv.sx4.SX4.*;
+
 
 /**
  *
@@ -19,14 +18,20 @@ import static de.blankedv.sx4.SX4.sxi;
 public class SXData {
     
     static private int[] d = new int[SXMAX];
-    static private boolean pow = false;
+    static private int power = INVALID_INT;
     
+  
     public static synchronized int update(int addr, int data, boolean writeFlag) {
         if (!SXUtils.isValidSXAddress(addr)) return 0;
         
         d[addr] = 0xFF & data;
         if (writeFlag && (sxi != null)) {
-            sxi.sendWrite(addr, d[addr]);
+            try {
+                dataToSend.put(new IntegerPair(addr, d[addr]));
+            } catch (InterruptedException ex) {
+                System.out.println("ERROR - sendqueue full");
+            }
+            //sxi.sendWrite(addr, d[addr]);
         }
         //  System.out.println("set: SX[" + addr + "]=" + d[addr] + " ");
 
@@ -37,6 +42,9 @@ public class SXData {
         return d[addr];
     }
     
+    public static int getPower() {
+        return power;
+    }
     
     synchronized static public void setBit(int addr, int bit, boolean writeFlag) { 
         if (!SXUtils.isValidSXAddress(addr) || (!SXUtils.isValidSXBit(bit))) return;
@@ -45,7 +53,12 @@ public class SXData {
         d[addr] = SXUtils.setBit(d[addr], bit);  
         if (DEBUG) System.out.println("sxData["+addr+"]="+d[addr]);
         if (writeFlag && (sxi != null)) {
-            sxi.sendWrite(addr, d[addr]);
+            try {
+                dataToSend.put(new IntegerPair(addr, d[addr]));
+            } catch (InterruptedException ex) {
+                System.out.println("ERROR - sendqueue full");
+            }
+            //sxi.sendWrite(addr, d[addr]);
         }
     }
 
@@ -56,40 +69,27 @@ public class SXData {
         d[addr] = SXUtils.clearBit(d[addr], bit);  
         if (DEBUG) System.out.println("sxData["+addr+"]="+d[addr]);
         if (writeFlag && (sxi != null)) {
-            sxi.sendWrite(addr, d[addr]);
+            try {
+                dataToSend.put(new IntegerPair(addr, d[addr]));
+            } catch (InterruptedException ex) {
+                System.out.println("ERROR - sendqueue full");
+            }
+            //sxi.sendWrite(addr, d[addr]);
         }
     }
-    
-    public static synchronized int setPower(boolean on, boolean writeFlag) {
-        pow = on;
+      
+    public static void setPower(int onState, boolean writeFlag) {
+        //System.out.println("SetPower to " + onState);
+        if (onState != 0) {
+            power = 1;
+        } else {
+            power = 0;
+        }
         if (writeFlag) {
-           sxi.setPower(on);           
+           powerToBe.set(power);       
         }
-        if (pow) {
-            return 1;
-        } else {
-            return 0;
-        }
+        
     }
     
-    public static synchronized int setPower(int onState, boolean writeFlag) {
-        pow = (onState == 1);
-        if (writeFlag) {
-           sxi.setPower(pow);           
-        }
-        if (pow) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-    
-    public static int getPower() {
-        if (pow) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-    
+     
 }

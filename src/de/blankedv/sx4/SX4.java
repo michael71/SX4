@@ -8,7 +8,10 @@ package de.blankedv.sx4;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,6 +75,8 @@ public class SX4 {
     static WifiThrottle wifiThrottle;
 
     public static AtomicBoolean running = new AtomicBoolean(false);
+    public static BlockingQueue<IntegerPair> dataToSend = new ArrayBlockingQueue(400);
+    public static AtomicInteger powerToBe = new AtomicInteger(INVALID_INT);
 
     public static ArrayList<Integer> locoAddresses = new ArrayList<Integer>();
     public static List<InetAddress> myips;
@@ -130,7 +135,7 @@ public class SX4 {
         while (running.get()) {
             try {
                 Thread.sleep(250);
-                doUpdate();
+                doUpdate();    // TODO?? put on different thread
             } catch (InterruptedException ex) {
                 Logger.getLogger(SX4.class.getName()).log(Level.SEVERE, null, ex);
             }

@@ -37,12 +37,7 @@ public class SXSimulationInterface extends GenericSXInterface {
         // TODO ?? check
     }
 
-    @Override
-    public int setPower(boolean on) {
-        // not needed, because sim-state is represented in SXData.pow values
-        return SXData.getPower();
-    }
-
+   
     @Override
     public void unregisterFeedback(int addr) {
         // not necessary, because it is polled every second
@@ -60,12 +55,6 @@ public class SXSimulationInterface extends GenericSXInterface {
     }
 
     @Override
-    public synchronized boolean sendWrite(int addr, int data) {
-        // not needed, because sim-state is represented in SXData.d values
-        return true;
-    }
-
-     @Override
     public synchronized boolean request(int addr) {
         // not needed, because sim-state is represented in SXData.d values
         return true;

@@ -20,6 +20,9 @@ import static de.blankedv.sx4.SX4.*;
 /**
  *
  * @author mblank
+ * 
+ * TODO - output auf standard thread bringen
+ * 
  */
 public class SXInterface extends GenericSXInterface {
 
@@ -120,7 +123,7 @@ public class SXInterface extends GenericSXInterface {
         connected = false;
     }
 
-    @Override
+    
     public synchronized boolean sendWrite(int addr, int data) {
         // darf nicht unterbrochen werden     
 

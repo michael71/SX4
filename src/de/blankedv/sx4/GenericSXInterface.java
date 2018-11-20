@@ -46,19 +46,17 @@ abstract public class GenericSXInterface {
 
     abstract public boolean request(int addr);   // send request to update a channel to command station
 
-    abstract public int setPower(boolean on) ;
+    public int setPower(boolean on) {
+       if (on) {
+           powerToBe.set(1);
+       } else {
+           powerToBe.set(0);
+       }
+       return powerToBe.get();
+    }
    
     abstract public void requestPower();  // trigger power read from command station
-
-    abstract public boolean sendWrite(int addr, int data) ;
-     /*   if (!SXUtils.isValidSXAddress(adr)) {
-            System.out.println("ERROR in sendChannel2SX, adr="+adr+ " is invalid");
-            return false;
-        }
-        int data = SXData.get(addr);
-        Byte[] b = {(byte) (addr + 128), (byte) data};  // bit 7 muss gesetzt sein zum Schreiben
-        return send(b); */
-    
+  
     /**
      * sends a loco control command (always SX0 !) to the SX interface
      * 

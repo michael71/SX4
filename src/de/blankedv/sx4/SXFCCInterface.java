@@ -114,8 +114,13 @@ public class SXFCCInterface extends GenericSXInterface {
         connected = false;
     }
 
+    /*
+    send update (if necessary) for power and sx-channels to FCC
+    then read all channels from FCC
+    (this routine is run > 3 times a second)
+    */
     @Override
-    public synchronized String doUpdate() {
+    public String doUpdate() {
 
         if (fccErrorCount > 10) {
             System.out.println("ERROR: FCC does not respond");
@@ -129,6 +134,16 @@ public class SXFCCInterface extends GenericSXInterface {
                 }
             } catch (IOException ex) {
                 ;
+            }
+            if ( (powerToBe.get() != INVALID_INT) && (powerToBe.get() != SXData.getPower()) ) {
+                //System.out.println("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
+                sendPower();
+            }
+            while (!dataToSend.isEmpty()) {
+                IntegerPair sxd = dataToSend.poll();
+                if (sxd != null) {
+                    sendWrite(sxd);
+                }
             }
             try {
                 // request block of SX0 / SX1 bus data
@@ -160,13 +175,17 @@ public class SXFCCInterface extends GenericSXInterface {
                 for (int count = 0; count < 226; count++) {
 
                     if (count < SXMAX_USED) {
+                        if ((buf[count] & 0xff) != SXData.get(count)) {
                         SXData.update(count, (buf[count] & 0xff), false);
+                        }
                     } else if (count == 112) {
                         //System.out.println("power="+buf[count]);
                         if (buf[count] == 0) {
                             SXData.setPower(0, false);
+                            //System.out.println("FCC power is off");
                         } else {
-                             SXData.setPower(1, false);
+                            SXData.setPower(1, false);
+                            //System.out.println("FCC power is on");
                         }
                     } // ignore SX1 data
 
@@ -195,6 +214,7 @@ public class SXFCCInterface extends GenericSXInterface {
         if (!connected) {
             return "-";
         }
+        
         // siehe FCC Interface Manual, Seite 7
         switch (SXData.get(110) & 0x0f) {
             case 0x00:
@@ -228,15 +248,15 @@ public class SXFCCInterface extends GenericSXInterface {
     //Vom PC: 0x00 0xFF Ungleich 0x00 Zum PC: 0x00
     //Gleisspannung aus (SX1/2-Bus 0):
     //Vom PC: 0x00 0xFF Gleich 0x00 Zum PC: 0x00
-    @Override
-    public synchronized int setPower(boolean on) {
+   
+
+    private void sendPower() {
         int retPower = 0;
         Byte[] b = {(byte) 0x00, (byte) 0xFF, (byte) 0x00};
-        if (on) {
+        if (powerToBe.get() != 0) {
             System.out.println("FCC: switchPowerOn");
             b[2] = (byte) 0x01;
             retPower = 1;
-
         } else {
             System.out.println("FCC: switchPowerOff");
             b[2] = (byte) 0x00;
@@ -256,9 +276,8 @@ public class SXFCCInterface extends GenericSXInterface {
         } catch (IOException ex) {
             System.out.println("Error: Serial Fehler beim Empfangen");
         }
-        return retPower;
-    }
-
+     }
+    
  @Override
     public void requestPower() {
         // not necessary, because it is polled every second
@@ -287,8 +306,11 @@ public class SXFCCInterface extends GenericSXInterface {
      * für alle Schreibbefehle an die FCC muss zusätzlich zur Kanalnummer das
      * höchste Bit auf 1 gesetzt werden 
      */
-    @Override
-    public synchronized boolean sendWrite(int addr, int data) {
+    
+    private boolean sendWrite(IntegerPair sxd) {
+        int addr = sxd.addr;
+        int data = sxd.data;
+        
         if (addr > SXMAX_USED) {
             System.out.println("ERROR: SX addr invalid addr="+addr);
             return false;
