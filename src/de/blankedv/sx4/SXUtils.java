@@ -5,7 +5,7 @@
  */
 package de.blankedv.sx4;
 
-import static de.blankedv.sx4.SX4.*;
+import static de.blankedv.sx4.Constants.*;
 
 //import de.blankedv.timetable.PanelElement;
 

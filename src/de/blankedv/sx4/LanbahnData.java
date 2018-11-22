@@ -5,6 +5,7 @@
  */
 package de.blankedv.sx4;
 
+import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
 import java.util.concurrent.ConcurrentHashMap;
 

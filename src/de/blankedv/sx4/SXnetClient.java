@@ -1,21 +1,15 @@
 package de.blankedv.sx4;
 
+import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.prefs.Preferences;
 
 /**
  * hanles one session (=1 mobile device)
@@ -32,13 +26,12 @@ public class SXnetClient implements Runnable {
 
     // list of channels which are of interest for this device
     private final int[] sxDataCopy = new int[SXMAX_USED + 1];
-    private int lastConnected = INVALID_INT;
+    private int lastClientConnect = INVALID_INT;
     // private final ConcurrentHashMap<Integer, Integer> oldPEStateCopy = new ConcurrentHashMap<>(500);
 
     private int powerCopy = INVALID_INT;
     private int centralRoutingCopy = INVALID_INT;
 
-    private final AtomicBoolean running = new AtomicBoolean(false);
     private Thread worker;
 
     /**
@@ -55,8 +48,7 @@ public class SXnetClient implements Runnable {
     }
 
     public void stop() {
-        running.set(false);
-        worker.interrupt();
+         worker.interrupt();
     }
 
     /**
@@ -64,7 +56,6 @@ public class SXnetClient implements Runnable {
      *
      */
     public void run() {
-        running.set(true);
         worker = Thread.currentThread();
         try {
             OutputStream outStream = incoming.getOutputStream();
@@ -78,11 +69,11 @@ public class SXnetClient implements Runnable {
 
             sendMessage("SXnetServer - client" + sn);  // welcome string
 
-            while (running.get() && in.hasNextLine()) {
+            while (running && in.hasNextLine()) {
                 String msg = in.nextLine().trim().toUpperCase();
                 if (msg.length() > 0) {
-                    if (DEBUG) {
-                        System.out.println("sxnet" + sn + " read: " + msg);
+                    if (debug) {
+                        //System.out.println("sxnet" + sn + " read: " + msg);
                     }
                     String[] cmds = msg.split(";");  // multiple commands per line possible, separated by semicolon
                     for (String cmd : cmds) {
@@ -92,7 +83,7 @@ public class SXnetClient implements Runnable {
                     lastCommand = System.currentTimeMillis();
                 } else {
                     // ignore empty lines
-                    if (DEBUG) {
+                    if (debug) {
                         System.out.println("sxnet" + sn + " read empty line");
                     }
                 }
@@ -194,7 +185,7 @@ public class SXnetClient implements Runnable {
 
     // used by SX-Loconet Bridge and Andropanel
     private String readSXByteMessage(String[] par) {
-        if (DEBUG) {
+        if (debug) {
             //System.out.println("createSXFeedbackMessage");
         }
         if (par.length < 2) {
@@ -209,7 +200,7 @@ public class SXnetClient implements Runnable {
     }
 
     private String readLocoMessage(String[] par) {
-        if (DEBUG) {
+        if (debug) {
             //System.out.println("readLocoMessage");
         }
         if (par.length < 2) {
@@ -286,7 +277,7 @@ public class SXnetClient implements Runnable {
         if (par.length < 3) {
             return "ERROR";
         }
-        if (DEBUG) {
+        if (debug) {
             System.out.println("setSXByteMessage");
         }
         int adr = getSXAddrFromString(par[1]);
@@ -302,7 +293,7 @@ public class SXnetClient implements Runnable {
     }
 
     private String setPower(String[] par) {
-        if (DEBUG) {
+        if (debug) {
             System.out.println("setPowerMessage");
         }
         if (par.length < 2) {
@@ -316,7 +307,7 @@ public class SXnetClient implements Runnable {
     }
 
     private String readPower() {
-        if (DEBUG) {
+        if (debug) {
             System.out.println("readPowerMessage");
         }
         return "XPOWER " + SXData.getPower();
@@ -334,7 +325,7 @@ public class SXnetClient implements Runnable {
      * @return
      */
     private String setLanbahnMessage(String[] par) {
-        if (DEBUG) {
+        if (debug) {
             System.out.println("setLanbahnMessage");
         }
 
@@ -371,7 +362,7 @@ public class SXnetClient implements Runnable {
     }
 
     private String createLanbahnFeedbackMessage(String[] par) {
-        if (DEBUG) {
+        if (debug) {
             System.out.println("createLanbahnFeedbackMessage");
         }
         if (par.length < 2) {
@@ -439,7 +430,7 @@ public class SXnetClient implements Runnable {
      * @return addr (or INVALID_INT)
      */
     int getSXAddrFromString(String s) {
-        if (DEBUG) {
+        if (debug) {
             //System.out.println("get SXAddr from " + s);
         }
         try {
@@ -501,7 +492,7 @@ public class SXnetClient implements Runnable {
      * @return lbaddr (or INVALID_INT)
      */
     int getLanbahnAddrFromString(String s) {
-        if (DEBUG) {
+        if (debug) {
             //System.out.println("getLanbahnAddrFromString s=" + s);
         }
         Integer lbAddr;
@@ -533,7 +524,7 @@ public class SXnetClient implements Runnable {
 
         out.println(res);
         //out.flush(); autoflush is set to true
-        if (DEBUG) {
+        if (debug) {
             System.out.println("sxnet" + sn + " send: " + res);
         }
     }
@@ -572,13 +563,13 @@ public class SXnetClient implements Runnable {
         }
 
         // report change in connect status
-        if ((lastConnected == INVALID_INT) || (sxi.connState() != lastConnected)) {
-            lastConnected = sxi.connState();
+        if ((lastClientConnect == INVALID_INT) || (sxi.connState() != lastClientConnect)) {
+            lastClientConnect = sxi.connState();
             if (!first) {
                 msg.append(";");
             }
             msg.append("XCONN ");
-            msg.append(lastConnected); // 1 or 0
+            msg.append(lastClientConnect); // 1 or 0
             first = false;
         }
 

@@ -11,11 +11,11 @@ import static de.blankedv.sx4.SX4.*;
  *
  * @author mblank
  */
-public class SXSimulationInterface extends GenericSXInterface {
+public class SimulationInterface extends GenericSXInterface {
 
     Boolean serialPortGeoeffnet = false;
 
-    SXSimulationInterface() {
+    SimulationInterface() {
     }
     
     @Override

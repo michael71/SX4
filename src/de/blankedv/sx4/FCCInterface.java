@@ -5,6 +5,7 @@
  */
 package de.blankedv.sx4;
 
+import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
 import gnu.io.CommPortIdentifier;
 import gnu.io.PortInUseException;
@@ -22,7 +23,7 @@ import java.util.logging.Logger;
  *
  * @author mblank
  */
-public class SXFCCInterface extends GenericSXInterface {
+public class FCCInterface extends GenericSXInterface {
 
     private String portName;
 
@@ -38,7 +39,7 @@ public class SXFCCInterface extends GenericSXInterface {
 
     private static int fccErrorCount = 0;
 
-    SXFCCInterface(String port) {
+    FCCInterface(String port) {
         this.portName = port;
     }
 
@@ -82,7 +83,7 @@ public class SXFCCInterface extends GenericSXInterface {
             System.out.println("Keinen Zugriff auf InputStream");
         }
         /*try {
-            serialPort.addEventListener(new SXFCCInterface.serialPortEventListener());
+            serialPort.addEventListener(new FCCInterface.serialPortEventListener());
         } catch (Exception e) {
             System.out.println("TooManyListenersException für Serialport");
         }
@@ -128,6 +129,7 @@ public class SXFCCInterface extends GenericSXInterface {
 
         }
         if (serialPortGeoeffnet) {
+            lastConnected = System.currentTimeMillis();
             try {  // empty input
                 while (inputStream.available() >= 1) {
                     int b = inputStream.read();
@@ -205,7 +207,7 @@ public class SXFCCInterface extends GenericSXInterface {
         try {
             Thread.sleep(40);
         } catch (InterruptedException ex) {
-            Logger.getLogger(SXFCCInterface.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(FCCInterface.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

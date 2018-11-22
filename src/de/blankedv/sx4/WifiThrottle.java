@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
-import javax.swing.text.BadLocationException;
 
 /**
  *
@@ -82,7 +82,7 @@ public class WifiThrottle  {
                 byte[] bytes = new byte[100];
                 DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
 
-                while (running.get()) {
+                while (running) {
                     // Warten auf Nachricht
                     multicastsocket.receive(packet);
                     String message = new String(packet.getData(), 0, packet.getLength(), TEXT_ENCODING);
@@ -112,7 +112,7 @@ public class WifiThrottle  {
                 return;
             }
             int sxaddr, sxdata;
-            if (DEBUG) {
+            if (debug) {
                 System.out.println("MCast: "+msg);
             }
             String cmd[] = msg.split(" ");

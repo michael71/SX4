@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.TooManyListenersException;
+import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
 
 /**
@@ -24,7 +25,7 @@ import static de.blankedv.sx4.SX4.*;
  * TODO - output auf standard thread bringen
  *
  */
-public class SXInterface extends GenericSXInterface {
+public class SLX825Interface extends GenericSXInterface {
 
     private String portName;
 
@@ -43,7 +44,7 @@ public class SXInterface extends GenericSXInterface {
     Boolean regFeedback = false;
     int regFeedbackAdr = 0;
 
-    public SXInterface(String portName, int baud) {
+    public SLX825Interface(String portName, int baud) {
 
         this.portName = portName;
         this.baudrate = baud;
@@ -141,7 +142,7 @@ public class SXInterface extends GenericSXInterface {
             return false;
         }
 
-        if (DEBUG) {
+        if (debug) {
             System.out.println("wr-Cmd: adr=" + lastAdrSent + ", data=" + data);
         }
 
@@ -275,7 +276,7 @@ public class SXInterface extends GenericSXInterface {
 
             while (inputStream.available() > 1) {
                 int numBytes = inputStream.read(readBuffer);
-                if (DEBUG) {
+                if (debug) {
                     // System.out.println("read n=" + numBytes);
                 }
                 int offset;

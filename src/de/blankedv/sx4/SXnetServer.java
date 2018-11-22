@@ -5,11 +5,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.prefs.Preferences;
-
-import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -23,8 +19,9 @@ public class SXnetServer {
     // Preferences
     //Preferences prefs = Preferences.userNodeForPackage(this.getClass());
     protected Thread t;
-
     private ServerSocket s;
+    
+    private ArrayList<SXnetClient> clients = new ArrayList<>();
 
     /**
      * Creates new form SRCPServerUI
@@ -57,6 +54,14 @@ public class SXnetServer {
         }
 
     }
+    
+    public void stopClients() {
+        for (SXnetClient c : clients) {
+            c.stop();
+        }
+        running = false;
+    }
+
 
     /*The finalize() method is called by the Java virtual machine (JVM)* before 
     the program exits to give the program a chance to clean up and release resources.
@@ -84,13 +89,14 @@ public class SXnetServer {
 
         public void run() {
             try {
-                while (running.get() == true) {
+                while (running) {
                     Socket incoming = s.accept();  // wait for client to connect
 
                     System.out.println("new client connected " + incoming.getRemoteSocketAddress().toString() + "\n");
 
                     // after new client has connected start new thread to handle this client
                     SXnetClient r = new SXnetClient(incoming);
+                    clients.add(r);
                     Thread t = new Thread(r);
                     t.start();
 

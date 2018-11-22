@@ -5,6 +5,7 @@
  */
 package de.blankedv.sx4;
 
+import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
 
 
@@ -60,9 +61,9 @@ public class SXData {
     synchronized static public void setBit(int addr, int bit, boolean writeFlag) { 
         if (!SXUtils.isValidSXAddress(addr) || (!SXUtils.isValidSXBit(bit))) return;
         
-        if (DEBUG) System.out.println("setBit addr="+addr+" bit="+bit);
+        if (debug) System.out.println("setBit addr="+addr+" bit="+bit);
         d[addr] = SXUtils.setBit(d[addr], bit);  
-        if (DEBUG) System.out.println("sxData["+addr+"]="+d[addr]);
+        if (debug) System.out.println("sxData["+addr+"]="+d[addr]);
         if (writeFlag && (sxi != null)) {
             try {
                 dataToSend.put(new IntegerPair(addr, d[addr]));
@@ -76,9 +77,9 @@ public class SXData {
     synchronized static public void clearBit(int addr, int bit, boolean writeFlag) {
         if (!SXUtils.isValidSXAddress(addr) || (!SXUtils.isValidSXBit(bit))) return;
          
-        if (DEBUG) System.out.println("clearBit addr="+addr+" bit="+bit);
+        if (debug) System.out.println("clearBit addr="+addr+" bit="+bit);
         d[addr] = SXUtils.clearBit(d[addr], bit);  
-        if (DEBUG) System.out.println("sxData["+addr+"]="+d[addr]);
+        if (debug) System.out.println("sxData["+addr+"]="+d[addr]);
         if (writeFlag && (sxi != null)) {
             try {
                 dataToSend.put(new IntegerPair(addr, d[addr]));

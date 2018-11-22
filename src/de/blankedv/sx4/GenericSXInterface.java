@@ -5,6 +5,7 @@
  */
 package de.blankedv.sx4;
 
+import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
 
 
@@ -79,7 +80,7 @@ abstract public class GenericSXInterface {
         if (speed < 0) {
             speed = 0;
         }
-        if (DEBUG) {
+        if (debug) {
             //System.out.println("adr:" + lok_adr + " s:" + speed + " l:" + licht + " forw:" + forward + " h:" + horn);
         }
         data = speed;  // die unteren 5 bits (0..4)
@@ -92,7 +93,7 @@ abstract public class GenericSXInterface {
         if (forward == false) {
             data += 32; //bit5
         }
-        if (DEBUG) {
+        if (debug) {
             //System.out.println("update loco " + Integer.toHexString(data));
         }
         

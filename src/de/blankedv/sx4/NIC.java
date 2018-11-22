@@ -1,6 +1,6 @@
 package de.blankedv.sx4;
 
-import static de.blankedv.sx4.SX4.DEBUG;
+import static de.blankedv.sx4.SX4.debug;
 import java.net.*;
 import java.util.*;
 
@@ -39,7 +39,7 @@ class NIC {
                         && (!ifc.getName().toString().contains("vir"))
                         && (!ifc.getName().toString().contains("lxc"))) {
                     addrList.add(address);
-                    if (DEBUG) {
+                    if (debug) {
                         System.out.println("found ip (not local, not ipv6, not virtual): " + address.getHostAddress());
                     }
                     //	System.out.println("FOUND ADDRESS ON NIC: " + address.getHostAddress());
