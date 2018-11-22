@@ -23,9 +23,9 @@ import org.apache.commons.cli.ParseException;
 public class EvalOptions {
 
     static public void sx4options(String[] args) {
-        for (String a : args) {
-            System.out.println("option _" + a + "_");
-        }
+        //for (String a : args) {
+        //    System.out.println("option _" + a + "_");
+        //}
         CommandLine commandLine;
         Option option_h = Option.builder("h")
                 .required(false)
