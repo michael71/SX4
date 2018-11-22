@@ -22,6 +22,10 @@ abstract public class GenericSXInterface {
     
     abstract public void close();
     
+    abstract public void request(int addr);   // send request to update a channel to command station
+    
+    abstract public void requestPower();  // trigger power read from command station
+    
     public boolean isConnected() {
         return connected;
     }
@@ -40,22 +44,21 @@ abstract public class GenericSXInterface {
     
     public String doUpdate() {
         ;  // implemented in SXFCCInterface, where a full update can be
-        // requested regularly
+        // requested regularly and in SLX825 (data updates received automatically)
         return "";
     }
 
-    abstract public boolean request(int addr);   // send request to update a channel to command station
-
-    public int setPower(boolean on) {
-       if (on) {
+  
+    
+    public void setPower(int onState) {
+       if (onState != 0) {
            powerToBe.set(1);
        } else {
            powerToBe.set(0);
        }
-       return powerToBe.get();
     }
    
-    abstract public void requestPower();  // trigger power read from command station
+    
   
     /**
      * sends a loco control command (always SX0 !) to the SX interface
@@ -96,24 +99,16 @@ abstract public class GenericSXInterface {
         return SXData.update(lok_adr, data, true); // send to SX Command station
     }
 
-    abstract public void registerFeedback(int adr);
+    // the feedback routines are only needed for "polling mode", i.e. for the
+    // very simple 66824 interface which does send updated SX data not 
+    // automatically
+    public void registerFeedback(int adr){};
 
- 
-
-    public void resetAll() {
-
-        for (int i = 0; i < 112; i++) {
-            SXData.update(i, 0, true);
-        };
-
-    }
 
     public void unregisterFeedback() {
-    }
-    ;
+    };
 
     public void unregisterFeedback(int adr) {
-    }
-    ;
+    };
 
  }

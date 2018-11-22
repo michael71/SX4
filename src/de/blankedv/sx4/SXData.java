@@ -25,20 +25,31 @@ public class SXData {
         if (!SXUtils.isValidSXAddress(addr)) return 0;
         
         d[addr] = 0xFF & data;
-        if (writeFlag && (sxi != null)) {
+        if (sxi != null) {
+        if (writeFlag) {  //WRITE to central station
             try {
                 dataToSend.put(new IntegerPair(addr, d[addr]));
             } catch (InterruptedException ex) {
                 System.out.println("ERROR - sendqueue full");
             }
-            //sxi.sendWrite(addr, d[addr]);
-        }
+        } 
+                }
         //  System.out.println("set: SX[" + addr + "]=" + d[addr] + " ");
 
         return d[addr];
     }
     
     public static int get(int addr) {
+        if ((sxi != null) && (d[addr] == INVALID_INT)) {
+            // this can only happen for "old SX Interface", where data are
+            // polled - for FCC and SLX we always have valid data for ALL channels
+            try {
+                // request data read
+                dataToSend.put(new IntegerPair(addr, INVALID_INT));
+            } catch (InterruptedException ex) {
+                System.out.println("ERROR - sendqueue full");
+            }
+        }
         return d[addr];
     }
     

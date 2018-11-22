@@ -43,9 +43,8 @@ public class SXSimulationInterface extends GenericSXInterface {
     }
 
     @Override
-    public synchronized boolean request(int addr) {
+    public void request(int addr) {
         // not needed, because sim-state is represented in SXData.d values
-        return true;
     }
 
     

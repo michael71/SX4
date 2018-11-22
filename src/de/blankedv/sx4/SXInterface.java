@@ -20,9 +20,9 @@ import static de.blankedv.sx4.SX4.*;
 /**
  *
  * @author mblank
- * 
+ *
  * TODO - output auf standard thread bringen
- * 
+ *
  */
 public class SXInterface extends GenericSXInterface {
 
@@ -123,19 +123,26 @@ public class SXInterface extends GenericSXInterface {
         connected = false;
     }
 
-    
-    public synchronized boolean sendWrite(int addr, int data) {
-        // darf nicht unterbrochen werden     
+    private boolean sendToInterface(int addr, int data) {
+        // darf nicht unterbrochen werden    
+        Byte[] b = {0, 0};
+        if (data == INVALID_INT) {
+            // this is a READ
+            b[0] = (byte) (addr);
+            b[1] = (byte) 0;
+        } else {
+            // this is a WRITE
+            b[0] = (byte) (addr + 128);
+            b[1] = (byte) data;
+        }
 
-        Byte[] b = {(byte) (addr + 128), (byte) data}; 
-        
         if (serialPortGeoeffnet != true) {
             System.out.println("Fehler beim Senden, serial port nicht geöffnet.");
             return false;
         }
 
         if (DEBUG) {
-                System.out.println("wr-Cmd: adr=" + lastAdrSent + ", data=" +data);            
+            System.out.println("wr-Cmd: adr=" + lastAdrSent + ", data=" + data);
         }
 
         try {
@@ -199,68 +206,43 @@ public class SXInterface extends GenericSXInterface {
         }
     }
 
-    @Override
-    public synchronized int setPower(boolean on) {
-        // 127 (ZE ein/aus) +128(schreiben) = 0x00   
-        int retPower = 0;
-        Byte[] b = {(byte) 0xFF, (byte) 0x00};
-        if (on) {
-           b[1] =  (byte) 0x80;
-           retPower = 1;
-        }
-        try {
-            outputStream.write(b[0]);
-            outputStream.write(b[1]);
-            outputStream.flush();
-        } catch (IOException e) {
-            System.out.println("Fehler beim Senden");
-        }
-        return retPower;
+    private void sendPower(int onState) {
+        if (serialPortGeoeffnet)
+       dataToSend.add(new IntegerPair(127, onState));
     }
 
     @Override
-    public synchronized void requestPower() {
-        Byte[] b = {(byte) 127, (byte) 0x00};   // read power state
-        try {
-            outputStream.write(b[0]);
-            outputStream.write(b[1]);
-            outputStream.flush();
-        } catch (IOException e) {
-            System.out.println("Fehler beim Senden");
-        }
+    public void requestPower() {
+        if (serialPortGeoeffnet)
+       dataToSend.add(new IntegerPair(127, INVALID_INT));
     }
 
     @Override
-    public void registerFeedback(int sensorAdr) {
-        regFeedbackAdr = sensorAdr;
-        regFeedback = true;
+    public void request(int addr) {
+        if (serialPortGeoeffnet)
+        dataToSend.add(new IntegerPair(addr, INVALID_INT));
+
     }
 
     @Override
-    public void unregisterFeedback() {
-        regFeedback = false;
-    }
-
-    @Override
-    public void unregisterFeedback(int adr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean request(int addr) {
-        Byte[] b = {(byte) (addr & 0x7F), (byte) 0x00};   // request channel state
-        try {
-            outputStream.write(b[0]);
-            outputStream.write(b[1]);
-            outputStream.flush();
-            return true;
-        } catch (IOException e) {
-            System.out.println("Fehler beim Senden");
-            return false;
+    public String doUpdate() {
+        if (serialPortGeoeffnet) {
+            if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != SXData.getPower())) {
+                //System.out.println("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
+                sendPower(powerToBe.get());
+            }
         }
 
+        while (!dataToSend.isEmpty()) {
+            IntegerPair sxd = dataToSend.poll();
+            if (sxd != null) {
+                sendToInterface(sxd.addr, sxd.data);
+            }
+        }
+        return "";
     }
 
+    /* async read from interface */
     class serialPortEventListener implements SerialPortEventListener {
 
         @Override
@@ -268,7 +250,7 @@ public class SXInterface extends GenericSXInterface {
             switch (event.getEventType()) {
                 case SerialPortEvent.DATA_AVAILABLE:
                     connectionOK = true;
-                    readSerialPortWriteToSX();
+                    readSerialPortAndUpdateSXData();
                     break;
                 case SerialPortEvent.BI:
                 case SerialPortEvent.CD:
@@ -283,7 +265,7 @@ public class SXInterface extends GenericSXInterface {
         }
     }
 
-    void readSerialPortWriteToSX() {
+    private void readSerialPortAndUpdateSXData() {
 
         // Achtung: immer auf 2 Byte warten .... TODO: timer reset wenn länger als 10 ms keine Bytes
         try {

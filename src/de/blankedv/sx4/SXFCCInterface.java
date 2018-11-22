@@ -251,12 +251,10 @@ public class SXFCCInterface extends GenericSXInterface {
    
 
     private void sendPower() {
-        int retPower = 0;
         Byte[] b = {(byte) 0x00, (byte) 0xFF, (byte) 0x00};
         if (powerToBe.get() != 0) {
             System.out.println("FCC: switchPowerOn");
             b[2] = (byte) 0x01;
-            retPower = 1;
         } else {
             System.out.println("FCC: switchPowerOff");
             b[2] = (byte) 0x00;
@@ -282,25 +280,7 @@ public class SXFCCInterface extends GenericSXInterface {
     public void requestPower() {
         // not necessary, because it is polled every second
         connectionOK = true;
-    }
-    
-    @Override
-    public void unregisterFeedback(int adr
-    ) {
-        // not necessary, because it is polled every second
-    }
-
-    @Override
-    public void resetAll() {
-        return; // "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void unregisterFeedback() {
-        // not necessary, because it is polled every second
-    }
-
-   
+    }   
 
     /**
      * für alle Schreibbefehle an die FCC muss zusätzlich zur Kanalnummer das
@@ -343,9 +323,8 @@ public class SXFCCInterface extends GenericSXInterface {
     }
 
     @Override
-    public boolean request(int addr) {
+    public void request(int addr) {
         // not necessary because of regular update from FCC
-        return true;
     }
 
 
