@@ -4,12 +4,6 @@
  */
 package de.blankedv.sx4;
 
-import gnu.io.SerialPortEvent;
-import gnu.io.SerialPortEventListener;
-import gnu.io.CommPortIdentifier;
-import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
-import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,6 +11,12 @@ import java.util.Enumeration;
 import java.util.TooManyListenersException;
 import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
+import purejavacomm.CommPortIdentifier;
+import purejavacomm.PortInUseException;
+import purejavacomm.SerialPort;
+import purejavacomm.SerialPortEvent;
+import purejavacomm.SerialPortEventListener;
+import purejavacomm.UnsupportedCommOperationException;
 
 /**
  *
@@ -91,8 +91,8 @@ public class SLX825Interface extends GenericSXInterface {
         }
         try {
             serialPort.addEventListener(new serialPortEventListener());
-        } catch (TooManyListenersException e) {
-            System.out.println("TooManyListenersException für Serialport");
+        } catch (TooManyListenersException ex) {
+            System.out.println("ERROR: "+ ex.getMessage());
         }
         serialPort.notifyOnDataAvailable(true);
 

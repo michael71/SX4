@@ -308,7 +308,7 @@ public class SXnetClient implements Runnable {
 
     private String readPower() {
         if (debug) {
-            System.out.println("readPowerMessage");
+            //System.out.println("readPowerMessage");
         }
         return "XPOWER " + SXData.getPower();
     }
