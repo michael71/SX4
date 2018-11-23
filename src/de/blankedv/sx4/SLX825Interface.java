@@ -260,11 +260,11 @@ public class SLX825Interface extends GenericSXInterface {
     private void sendPower() {
         if (serialPortGeoeffnet && (powerToBe.get() != INVALID_INT)) {
             if (powerToBe.get() != 0) {
-                System.out.println("SLX825: switchPowerOn");
+                if (debug) System.out.println("SLX825: switchPowerOn");
                 //sendToInterface(POWER_CHAN, 1);
                 switchPowerOn();
             } else {
-                System.out.println("SLX825: switchPowerOff");
+                if (debug) System.out.println("SLX825: switchPowerOff");
                 //sendToInterface(POWER_CHAN, 0);
                 switchPowerOff();
             }
@@ -302,7 +302,7 @@ public class SLX825Interface extends GenericSXInterface {
             //dataToSend.add(new IntegerPair(POWER_CHAN, INVALID_INT));
             //sendToInterface(POWER_CHAN, INVALID_INT);
             dataToSend.add(new IntegerPair(POWER_CHAN, INVALID_INT));
-            System.out.println("requestPower sent");
+            if (debug) System.out.println("requestPower sent");
         }
 
     }
@@ -416,10 +416,10 @@ public class SLX825Interface extends GenericSXInterface {
                                 SXData.setPower(0, false);
                                 lastPowerState = 0;
                             }
-                            System.out.println("rec. power=" + data);
+                            if (debug) System.out.println("rec. power=" + data);
                         } else {
                             SXData.update(adr, data, false); // DO NOT SEND BACK TO SXI (loop !)
-                            System.out.println("read a=" + adr + " d=" + data);
+                            if (debug) System.out.println("read a=" + adr + " d=" + data);
                         }
                         leftoverFlag = false;
                         

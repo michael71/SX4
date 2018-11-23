@@ -35,7 +35,7 @@ public class SXData {
                 }
             }
         }
-        System.out.println("set: SX[" + addr + "]=" + d[addr] + " ");
+        if (debug) System.out.println("set: SX[" + addr + "]=" + d[addr] + " ");
 
         return d[addr];
     }

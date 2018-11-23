@@ -26,5 +26,30 @@ java -Djava.library.path="/usr/lib/jni/" -jar dist/SX4.jar -s ttyUSB0 -t SLX825 
 java -Djava.library.path="/usr/lib/jni/" -jar dist/SX4.jar -t SIM -d
 
 
+# sxnet - tcp/ip
+
+## sx channel commands
+
+the deamon listens to ASCII commands on port 4104, currently supported
+
+S <c> <d>  - set an sx-channel <c> to value <d>  ("S 44 12" -> result "OK")
+SX <c> <d> = same as S <c> <d>
+R <c> - read a channel ("R 44 -> result  would be "X 44 12)
+
+## power on/off
+
+SETPOWER 1  => track power on (SETPOWER 0 => track power off)
+READPOWER  -> result "XPOWER 1" or "XPOWER 0"
+
+##single SX bit operations:
+
+for example "set bit 3 of channel 85" = SET 853 1 ('..0' is 'clear')
+READ 853 -> XL 853 1 (or ... 0)
+
+
+
+
+
+
 
 
