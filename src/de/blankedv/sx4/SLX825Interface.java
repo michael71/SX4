@@ -11,6 +11,8 @@ import java.util.Enumeration;
 import java.util.TooManyListenersException;
 import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import purejavacomm.CommPortIdentifier;
 import purejavacomm.PortInUseException;
 import purejavacomm.SerialPort;
@@ -43,6 +45,10 @@ public class SLX825Interface extends GenericSXInterface {
 
     Boolean regFeedback = false;
     int regFeedbackAdr = 0;
+    private int interfaceActiveCount = 0;
+    private final int POWER_CHAN = 127;
+    private boolean firstPowerFlag = true;
+    private int lastPowerState = INVALID_INT;
 
     public SLX825Interface(String portName, int baud) {
 
@@ -73,7 +79,7 @@ public class SLX825Interface extends GenericSXInterface {
             return false;
         }
         try {
-            serialPort = (SerialPort) serialPortId.open("Öffnen und Senden", 500);
+            serialPort = (SerialPort) serialPortId.open("Öffnen und Senden", 10);
         } catch (PortInUseException e) {
             System.out.println("Port belegt");
         }
@@ -89,12 +95,6 @@ public class SLX825Interface extends GenericSXInterface {
         } catch (IOException e) {
             System.out.println("Keinen Zugriff auf InputStream");
         }
-        try {
-            serialPort.addEventListener(new serialPortEventListener());
-        } catch (TooManyListenersException ex) {
-            System.out.println("ERROR: "+ ex.getMessage());
-        }
-        serialPort.notifyOnDataAvailable(true);
 
         try {
             serialPort.setSerialPortParams(baudrate,
@@ -103,11 +103,30 @@ public class SLX825Interface extends GenericSXInterface {
         } catch (UnsupportedCommOperationException e) {
             System.out.println("Konnte Schnittstellen-Paramter nicht setzen");
         }
+        /*try {
+            serialPort.addEventListener(new serialPortEventListener());
+        } catch (TooManyListenersException ex) {
+            System.out.println("ERROR: " + ex.getMessage());
+        }
+        serialPort.notifyOnDataAvailable(true); */
+        
+        
+       /* serialPort.setInputBufferSize(65536);
+        try {
+            serialPort.enableReceiveThreshold(2);
+        } catch (UnsupportedCommOperationException ex) {
+            Logger.getLogger(SLX825Interface.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            serialPort.enableReceiveTimeout(10);
+        } catch (UnsupportedCommOperationException ex) {
+            Logger.getLogger(SLX825Interface.class.getName()).log(Level.SEVERE, null, ex);
+        } */
 
         serialPortGeoeffnet = true;
         connected = true;
 
-        setInterfaceMode();
+        setInterfaceMode();   // start "Rautenhaus mode"
 
         return true;
     }
@@ -124,17 +143,22 @@ public class SLX825Interface extends GenericSXInterface {
         connected = false;
     }
 
-    private boolean sendToInterface(int addr, int data) {
+    private synchronized boolean sendToInterface(int addr, int data) {
         // darf nicht unterbrochen werden    
         Byte[] b = {0, 0};
+
         if (data == INVALID_INT) {
             // this is a READ
             b[0] = (byte) (addr);
             b[1] = (byte) 0;
         } else {
             // this is a WRITE
-            b[0] = (byte) (addr + 128);
+            b[0] = (byte) (addr + 0x80);
             b[1] = (byte) data;
+            if ((addr == POWER_CHAN) && (data != 0)) {
+                data = 0x80;
+                b[1] = (byte) data;
+            }
         }
 
         if (serialPortGeoeffnet != true) {
@@ -143,13 +167,39 @@ public class SLX825Interface extends GenericSXInterface {
         }
 
         if (debug) {
-            System.out.println("wr-Cmd: adr=" + lastAdrSent + ", data=" + data);
+            if ((b[0] & 0x80) != 0) {
+                System.out.println("wr-Cmd: adr=" + addr + ", data=" + (int) b[1]);
+            } else {
+                System.out.println("rd-Cmd: adr=" + addr);
+            }
         }
 
         try {
             outputStream.write(b[0]);
             outputStream.write(b[1]);
             outputStream.flush();
+        } catch (IOException e) {
+            System.out.println("Fehler beim Senden");
+            return false;
+        }
+        return true;
+
+    }
+
+    public synchronized boolean send(Byte[] data) {
+        // darf nicht unterbrochen werden     
+
+        if (serialPortGeoeffnet != true) {
+            System.out.println("Fehler beim Senden, serial port nicht geöffnet und simul. nicht gesetzt");
+            return false;
+        }
+
+        try {
+
+            outputStream.write(data[0]);
+            outputStream.write(data[1]);
+            outputStream.flush();
+
         } catch (IOException e) {
             System.out.println("Fehler beim Senden");
             return false;
@@ -207,44 +257,108 @@ public class SLX825Interface extends GenericSXInterface {
         }
     }
 
-    private void sendPower(int onState) {
-        if (serialPortGeoeffnet)
-       dataToSend.add(new IntegerPair(127, onState));
+    private void sendPower() {
+        if (serialPortGeoeffnet && (powerToBe.get() != INVALID_INT)) {
+            if (powerToBe.get() != 0) {
+                System.out.println("SLX825: switchPowerOn");
+                //sendToInterface(POWER_CHAN, 1);
+                switchPowerOn();
+            } else {
+                System.out.println("SLX825: switchPowerOff");
+                //sendToInterface(POWER_CHAN, 0);
+                switchPowerOff();
+            }
+        }
+    }
+
+    public synchronized void switchPowerOff() {
+        // 127 (ZE ein/aus) +128(schreiben) = 0x00       
+        Byte[] b = {(byte) 0xFF, (byte) 0x00};
+        try {
+            outputStream.write(b[0]);
+            outputStream.write(b[1]);
+            outputStream.flush();
+        } catch (IOException e) {
+            System.out.println("Fehler beim Senden");
+        }
+
+    }
+
+    public synchronized void switchPowerOn() {
+        // 127 (ZE ein/aus) +128(schreiben) = 0xFF   
+        Byte[] b = {(byte) 0xFF, (byte) 0x80};
+        try {
+            outputStream.write(b[0]);
+            outputStream.write(b[1]);
+            outputStream.flush();
+        } catch (IOException e) {
+            System.out.println("Fehler beim Senden");
+        }
     }
 
     @Override
     public void requestPower() {
-        if (serialPortGeoeffnet)
-       dataToSend.add(new IntegerPair(127, INVALID_INT));
+        if (serialPortGeoeffnet) {
+            //dataToSend.add(new IntegerPair(POWER_CHAN, INVALID_INT));
+            //sendToInterface(POWER_CHAN, INVALID_INT);
+            dataToSend.add(new IntegerPair(POWER_CHAN, INVALID_INT));
+            System.out.println("requestPower sent");
+        }
+
+    }
+
+    public synchronized void readPower() {
+        Byte[] b = {(byte) 127, (byte) 0x00};   // read power state
+        send(b);
     }
 
     @Override
     public void request(int addr) {
-        if (serialPortGeoeffnet)
-        dataToSend.add(new IntegerPair(addr, INVALID_INT));
+        if (serialPortGeoeffnet) {
+            dataToSend.add(new IntegerPair(addr, INVALID_INT));
+        }
 
     }
 
     @Override
     public String doUpdate() {
         if (serialPortGeoeffnet) {
-            if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != SXData.getPower())) {
+            readSerialPortAndUpdateSXData();
+            if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != lastPowerState) || (firstPowerFlag)) {
                 //System.out.println("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
-                sendPower(powerToBe.get());
+                sendPower();
+                firstPowerFlag = false;
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(SLX825Interface.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                readSerialPortAndUpdateSXData();
             }
+            while (!dataToSend.isEmpty()) {
+                IntegerPair sxd = dataToSend.poll();
+                if (sxd != null) {
+                    sendToInterface(sxd.addr, sxd.data);
+                    try {
+                    Thread.sleep(20);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(SLX825Interface.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                readSerialPortAndUpdateSXData();
+                }
+            }
+            if (interfaceActiveCount > 10) {
+                interfaceActiveCount = 0;
+                requestPower();
+            }
+            interfaceActiveCount++;
         }
 
-        while (!dataToSend.isEmpty()) {
-            IntegerPair sxd = dataToSend.poll();
-            if (sxd != null) {
-                sendToInterface(sxd.addr, sxd.data);
-            }
-        }
         return "";
     }
 
     /* async read from interface */
-    class serialPortEventListener implements SerialPortEventListener {
+    /*class serialPortEventListener implements SerialPortEventListener {
 
         @Override
         public void serialEvent(SerialPortEvent event) {
@@ -264,7 +378,7 @@ public class SLX825Interface extends GenericSXInterface {
                 default:
             }
         }
-    }
+    } */
 
     private void readSerialPortAndUpdateSXData() {
 
@@ -272,12 +386,13 @@ public class SLX825Interface extends GenericSXInterface {
         try {
             int adr, data;
 
-            byte[] readBuffer = new byte[200];
-
+            byte[] readBuffer = new byte[500];
+            lastConnected = System.currentTimeMillis();
             while (inputStream.available() > 1) {
+
                 int numBytes = inputStream.read(readBuffer);
                 if (debug) {
-                    // System.out.println("read n=" + numBytes);
+                    System.out.println("read n=" + numBytes);
                 }
                 int offset;
                 if (leftoverFlag) {
@@ -291,8 +406,23 @@ public class SLX825Interface extends GenericSXInterface {
                     adr = (int) (readBuffer[0 + i] & 0xFF);
                     if ((i + 1) < numBytes) {
                         data = (int) (readBuffer[1 + i] & 0xFF);
-                        SXData.update(adr, data, false); // DO NOT SEND BACK TO SXI (loop !)
+                        if ((adr == 0) && (data == 0)) {
+                            // ignore, this seems to be a bug in purejavacomm
+                        } else if (adr == POWER_CHAN) {  // power channel
+                            if (data != 0) {
+                                SXData.setPower(1, false);
+                                lastPowerState = 1;
+                            } else {
+                                SXData.setPower(0, false);
+                                lastPowerState = 0;
+                            }
+                            System.out.println("rec. power=" + data);
+                        } else {
+                            SXData.update(adr, data, false); // DO NOT SEND BACK TO SXI (loop !)
+                            System.out.println("read a=" + adr + " d=" + data);
+                        }
                         leftoverFlag = false;
+                        
                     } else {
                         // leftover data, no even number of data sent
                         // use next time

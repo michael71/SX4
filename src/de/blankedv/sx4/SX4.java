@@ -51,9 +51,11 @@ public class SX4 {
 
         EvalOptions.sx4options(args);
 
-        initSXInterface(portName, baudrate);
-
-        boolean result = sxi.open();
+        boolean result = false;
+        sxi = initSXInterface(portName, baudrate);
+        if (sxi != null) {
+            result = sxi.open();
+        }
         if (!result) {
             System.out.println("ERROR - SX4 program ends.");
             System.exit(1);
@@ -143,22 +145,24 @@ public class SX4 {
         //CompRoute.auto();
     }
 
-    private static void initSXInterface(String port, int baud) {
-
+    private static GenericSXInterface initSXInterface(String port, int baud) {
+        GenericSXInterface sxInterface = null;
         if (simulation) {
-            sxi = new SimulationInterface();
+            sxInterface = new SimulationInterface();
              // switch on power for simulation
             SXData.setPower(1, false);
             // no connectivityCheck for simulation
         } else if (ifType.contains("FCC")) { // fcc has different interface handling ! 
-            sxi = new FCCInterface(port);
+            sxInterface = new FCCInterface(port);
             initConnectivityCheck();
             System.out.println("FCC mode=" + sxi.getMode());
-        } else {
+   
+        } else if (ifType.contains("SLX825")){
             //portName = "/dev/ttyUSB825";
-            sxi = new SLX825Interface(port, baud);
+            sxInterface = new SLX825Interface(port, baud);
             initConnectivityCheck();
-        }
+        } 
+        return sxInterface; 
         
     }
     

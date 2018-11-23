@@ -41,7 +41,7 @@ public class EvalOptions {
                 .build();
         Option option_s = Option.builder("s")
                 .required(false)
-                .desc("Serial Device - default=/dev/ttyUSB0")
+                .desc("Serial Device - default=ttyUSB0")
                 .longOpt("Device")
                 .hasArg(true)
                 .build();
@@ -107,7 +107,7 @@ public class EvalOptions {
                         simulation = true;
                         sxi = new SimulationInterface();
                         break;
-                    case "SXL825":
+                    case "SLX825":
                         System.out.println("SX Interface Type=" + ifType);
                         simulation = false;
                         portName = readSerialPortName(commandLine);
