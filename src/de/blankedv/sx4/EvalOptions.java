@@ -42,12 +42,12 @@ public class EvalOptions {
         Option option_s = Option.builder("s")
                 .required(false)
                 .desc("Serial Device - default=ttyUSB0")
-                .longOpt("Device")
+                .longOpt("serial")
                 .hasArg(true)
                 .build();
         Option option_b = Option.builder("b")
                 .required(false)
-                .desc("Baudrate (only needed for SLX825), default=9600")
+                .desc("Baudrate (not needed for FCC and SIM), default=9600")
                 .hasArg(true)
                 .longOpt("baudrate")
                 .build();
@@ -168,7 +168,7 @@ public class EvalOptions {
 
         if (cl.hasOption("b")) {
             try {
-                baud = Integer.parseInt(cl.getOptionValue("r"));
+                baud = Integer.parseInt(cl.getOptionValue("b"));
             } catch (NumberFormatException e) {
                 System.out.println("ERROR in baudrate parameter, using 9600");
                 baud = 9600;

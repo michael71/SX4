@@ -14,7 +14,7 @@ public class Constants {
         /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "SX4 - rev1.02 - 22 Nov 2018";
+    public static final String VERSION = "SX4 - rev1.03 - 23 Nov 2018";
 
 
     public static final int STATUS_CONNECTED = 1;
