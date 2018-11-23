@@ -11,18 +11,20 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static de.blankedv.sx4.Constants.*;
 
+/**
+ * 
+ * with main() function
+ * 
+ * @author mblank
+ */
 public class SX4 {
-
-
-
-        public static boolean debug = false;
+    public static boolean debug = false;
     public static volatile boolean running = true;
-    public static BlockingQueue<IntegerPair> dataToSend = new ArrayBlockingQueue(400);
+    public static ArrayBlockingQueue<IntegerPair> dataToSend = new ArrayBlockingQueue<>(400);
     public static AtomicInteger powerToBe = new AtomicInteger(INVALID_INT);
 
     public static ArrayList<Integer> locoAddresses = new ArrayList<Integer>();
