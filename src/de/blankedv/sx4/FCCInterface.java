@@ -40,6 +40,8 @@ public class FCCInterface extends GenericSXInterface {
 
     private static int fccErrorCount = 0;
 
+    private int lastPowerState = INVALID_INT;
+
     FCCInterface(String port) {
         this.portName = port;
     }
@@ -138,7 +140,7 @@ public class FCCInterface extends GenericSXInterface {
             } catch (IOException ex) {
                 ;
             }
-            if ( (powerToBe.get() != INVALID_INT) && (powerToBe.get() != SXData.getPower()) ) {
+           if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != lastPowerState) ) {
                 //System.out.println("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
                 sendPower();
             }
@@ -185,9 +187,11 @@ public class FCCInterface extends GenericSXInterface {
                         //System.out.println("power="+buf[count]);
                         if (buf[count] == 0) {
                             SXData.setPower(0, false);
+                            lastPowerState = 0;
                             //System.out.println("FCC power is off");
                         } else {
                             SXData.setPower(1, false);
+                            lastPowerState = 1;
                             //System.out.println("FCC power is on");
                         }
                     } // ignore SX1 data

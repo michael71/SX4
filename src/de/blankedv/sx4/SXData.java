@@ -116,12 +116,12 @@ public class SXData {
             if (onState != 0) {
                 power = 1;
                 if (debug) {
-                    System.out.println("setPower=1");
+                    //System.out.println("setPower=1");
                 }
             } else {
                 power = 0;
                 if (debug) {
-                    System.out.println("setPower=0");
+                    //System.out.println("setPower=0");
                 }
             }
         }
