@@ -2,9 +2,9 @@
 
 Deamon for controlling a selectrix railroad (serial interface, RS232 or USB) via TCP/IP commands
 
-Currently in BETA state, please wait for a fully implemented and tested version (or contact me when you want to participate in testing)
+Currently in BETA state, please wait for a fully implemented and tested version (or contact me when you want to participate in testing).
 
-# usage:
+# USAGE
 
 	usage: SX4 [-b <arg>] [-d] [-h] [-s <arg>] [-t <arg>] [-v]
 
@@ -16,7 +16,7 @@ Currently in BETA state, please wait for a fully implemented and tested version 
 	-v,--version          program version and date
 
 
-# examples
+# EXAMPLES
 
 ## FCC / ttyUSB0, debugging on
 	java -Djava.library.path="/usr/lib/jni/" -jar dist/SX4.jar -s ttyUSB0 -t FCC -d
@@ -28,11 +28,11 @@ Currently in BETA state, please wait for a fully implemented and tested version 
 	java -Djava.library.path="/usr/lib/jni/" -jar dist/SX4.jar -t SIM -d
 
 
-# sxnet - tcp/ip
+# SXnet - ASCII tcp/ip (port 4104)
 
 ## sx channel commands
 
-the deamon listens to ASCII commands on port 4104, currently supported
+The deamon listens to ASCII commands on port 4104, currently supported
 
 	S <c> <d>  - set an sx-channel <c> to value <d>  ("S 44 12" -> result "OK")
 	SX <c> <d> = same as S <c> <d>
@@ -45,12 +45,22 @@ the deamon listens to ASCII commands on port 4104, currently supported
 
 ## single SX bit operations:
 
-for example "set bit 3 of channel 85" = SET 853 1 ('..0' is 'clear')
+To support easy switching of turnouts (i.e. a single bit, not the complete byte of an SX channel/address), so can for example "set bit 3 of channel 85" with the command:
+	
+	SET 853 1 ('..0' is 'clear')
 
-	READ 853 -> XL 853 1 (or ... 0)
+	READ 853 
+	   response will be something like 'XL 853 1' (or ... 0)
 
 
 
+## more info:
+
+https://opensx.net/sx4
+
+## licence
+
+GPL v3.0
 
 
 
