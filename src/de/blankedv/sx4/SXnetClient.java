@@ -33,6 +33,8 @@ public class SXnetClient implements Runnable {
     private int centralRoutingCopy = INVALID_INT;
 
     private Thread worker;
+    
+    protected int tickCounter = 0;
 
     /**
      * Constructs a handler.
@@ -62,10 +64,9 @@ public class SXnetClient implements Runnable {
             out = new PrintWriter(outStream, true /* autoFlush */);
             InputStream inStream = incoming.getInputStream();
             Scanner in = new Scanner(inStream);
-            long lastCommand = System.currentTimeMillis();
-
+ 
             Timer sendUpdatesTimer = new Timer();
-            sendUpdatesTimer.schedule(new SendUpdatesTask(), 1000, 200);
+            sendUpdatesTimer.schedule(new SendUpdatesTask(), 1000, 200);  // every 200 msecs
 
             sendMessage("SXnetServer - client" + sn);  // welcome string
 
@@ -73,14 +74,13 @@ public class SXnetClient implements Runnable {
                 String msg = in.nextLine().trim().toUpperCase();
                 if (msg.length() > 0) {
                     if (debug) {
-                        //System.out.println("sxnet" + sn + " read: " + msg);
+                        System.out.println("sxnet" + sn + " read: " + msg);
                     }
                     String[] cmds = msg.split(";");  // multiple commands per line possible, separated by semicolon
                     for (String cmd : cmds) {
                         handleCommand(cmd.trim());
                         // sends feedback message  XL 'addr' 'data' (or INVALID_INT) back to mobile device
                     }
-                    lastCommand = System.currentTimeMillis();
                 } else {
                     // ignore empty lines
                     if (debug) {
@@ -115,9 +115,10 @@ public class SXnetClient implements Runnable {
     // feedback both for low (<256) addresses == SX-only (+ Lanbahn if mapping exists)
     // and for high "lanbahn" type addresses
     class SendUpdatesTask extends TimerTask {
-
+        
         public void run() {
-            checkForChangedSXDataAndSendUpdates();
+            tickCounter++;
+            checkForChangedSXDataAndSendUpdates(tickCounter);
             //checkForLanbahnChangesAndSendUpdates();
         }
     }
@@ -513,8 +514,8 @@ public class SXnetClient implements Runnable {
 
     public void sendMessage(String res) {
 
-        // don't send empty messages and don't send duplicate messages within 300 ms
-        if (res.isEmpty() || (res.equals(lastRes) && (System.currentTimeMillis() - lastSent < 300))) {
+        // don't send empty messages and don't send duplicate messages within 200 ms
+        if (res.isEmpty() || (res.equals(lastRes) && (System.currentTimeMillis() - lastSent < 200))) {
             return;
         }
 
@@ -551,12 +552,14 @@ public class SXnetClient implements Runnable {
     /**
      * check for changed sxData and send update in case of change
      */
-    private void checkForChangedSXDataAndSendUpdates() {
+    private void checkForChangedSXDataAndSendUpdates(int tick) {
         StringBuilder msg = new StringBuilder();
         boolean first = true;
+        
 
         // report change in power channel (but only if "stable")
-        if (SXData.getPower() != powerCopy) {
+        // send also as "connected" tick
+        if (((tick % 20) == 0) || (SXData.getPower() != powerCopy)) {
             powerCopy = SXData.getPower();
             msg.append("XPOWER " + SXData.getPower());
             first = false;
