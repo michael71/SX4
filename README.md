@@ -18,14 +18,14 @@ Currently in BETA state, please wait for a fully implemented and tested version 
 
 # examples
 
-# FCC an ttyUSB0, debugging on
-java -Djava.library.path="/usr/lib/jni/" -jar dist/SX4.jar -s ttyUSB0 -t FCC -d
+## FCC / ttyUSB0, debugging on
+	java -Djava.library.path="/usr/lib/jni/" -jar dist/SX4.jar -s ttyUSB0 -t FCC -d
 
-# SLX825 an ttyUSB0, debugging on
-java -Djava.library.path="/usr/lib/jni/" -jar dist/SX4.jar -s ttyUSB0 -t SLX825 -b 9600 -d
+## SLX825 / ttyUSB0, debugging on
+	java -Djava.library.path="/usr/lib/jni/" -jar dist/SX4.jar -s ttyUSB0 -t SLX825 -b 9600 -d
 
-# Simulation only, debugging on
-java -Djava.library.path="/usr/lib/jni/" -jar dist/SX4.jar -t SIM -d
+## Simulation only, debugging on
+	java -Djava.library.path="/usr/lib/jni/" -jar dist/SX4.jar -t SIM -d
 
 
 # sxnet - tcp/ip
@@ -43,10 +43,11 @@ the deamon listens to ASCII commands on port 4104, currently supported
 	SETPOWER 1  => track power on (SETPOWER 0 => track power off)
 	READPOWER  -> result "XPOWER 1" or "XPOWER 0"
 
-##single SX bit operations:
+## single SX bit operations:
 
 for example "set bit 3 of channel 85" = SET 853 1 ('..0' is 'clear')
-READ 853 -> XL 853 1 (or ... 0)
+
+	READ 853 -> XL 853 1 (or ... 0)
 
 
 
