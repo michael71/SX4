@@ -1,6 +1,6 @@
 # SX4
 
-Deamon for controlling a selectrix railroad (serial interface, RS232 or USB) via TCP/IP commands
+Daemon for controlling a selectrix railroad (serial interface, RS232 or USB) via TCP/IP commands
 
 Currently in BETA state, please wait for a fully implemented and tested version (or contact me when you want to participate in testing).
 
@@ -32,7 +32,7 @@ Currently in BETA state, please wait for a fully implemented and tested version 
 
 ## sx channel commands
 
-The deamon listens to ASCII commands on port 4104, currently supported
+The daemon listens to ASCII commands on port 4104, currently supported
 
 	S <c> <d>  - set an sx-channel <c> to value <d>  ("S 44 12" -> result "OK")
 	SX <c> <d> = same as S <c> <d>
