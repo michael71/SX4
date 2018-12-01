@@ -46,6 +46,16 @@ public class SimulationInterface extends GenericSXInterface {
     public void request(int addr) {
         // not needed, because sim-state is represented in SXData.d values
     }
+    
+    @Override
+    public String doUpdate() {
+        // empty send queue
+       while (!dataToSend.isEmpty()) {
+                IntegerPair sxd = dataToSend.poll();
+               
+       }
+       return "OK";
+    }
 
     
 }
