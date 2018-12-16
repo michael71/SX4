@@ -122,7 +122,45 @@ public class FCCInterface extends GenericSXInterface {
     send update (if necessary) for power and sx-channels to FCC
     then read all channels from FCC
     (this routine is run > 3 times a second)
-    */
+     */
+    @Override
+    public String doSendUpdate() {
+        if (fccErrorCount > 10) {
+            System.out.println("ERROR: FCC does not respond");
+            return ("ERROR: Keine Response von der FCC, SerialPort Settings überprüfen");
+
+        }
+        if (serialPortGeoeffnet) {
+            lastConnected = System.currentTimeMillis();
+            //System.out.println(lastConnected);
+            try {  // empty input
+                while (inputStream.available() >= 1) {
+                    int b = inputStream.read();
+                }
+            } catch (IOException ex) {
+                ;
+            }
+            if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != lastPowerState)) {
+                //System.out.println("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
+                sendPower();
+            }
+            while (!dataToSend.isEmpty()) {
+                IntegerPair sxd = dataToSend.poll();
+                if (sxd != null) {
+                    sendWrite(sxd);
+                }
+
+            }
+            connectionOK = true;
+        }
+        return "";
+    }
+
+    /*
+    send update (if necessary) for power and sx-channels to FCC
+    then read all channels from FCC
+    (this routine is run > 3 times a second)
+     */
     @Override
     public String doUpdate() {
 
@@ -133,6 +171,7 @@ public class FCCInterface extends GenericSXInterface {
         }
         if (serialPortGeoeffnet) {
             lastConnected = System.currentTimeMillis();
+            //System.out.println(lastConnected);
             try {  // empty input
                 while (inputStream.available() >= 1) {
                     int b = inputStream.read();
@@ -140,7 +179,7 @@ public class FCCInterface extends GenericSXInterface {
             } catch (IOException ex) {
                 ;
             }
-           if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != lastPowerState) ) {
+            if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != lastPowerState)) {
                 //System.out.println("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
                 sendPower();
             }
@@ -181,7 +220,7 @@ public class FCCInterface extends GenericSXInterface {
 
                     if (count < SXMAX_USED) {
                         if ((buf[count] & 0xff) != SXData.get(count)) {
-                        SXData.update(count, (buf[count] & 0xff), false);
+                            SXData.update(count, (buf[count] & 0xff), false);
                         }
                     } else if (count == 112) {
                         //System.out.println("power="+buf[count]);
@@ -215,13 +254,21 @@ public class FCCInterface extends GenericSXInterface {
             Logger.getLogger(FCCInterface.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    private void veryShortSleep() {
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(FCCInterface.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     @Override
     public String getMode() {
         if (!connected) {
             return "-";
         }
-        
+
         // siehe FCC Interface Manual, Seite 7
         switch (SXData.get(110) & 0x0f) {
             case 0x00:
@@ -255,8 +302,6 @@ public class FCCInterface extends GenericSXInterface {
     //Vom PC: 0x00 0xFF Ungleich 0x00 Zum PC: 0x00
     //Gleisspannung aus (SX1/2-Bus 0):
     //Vom PC: 0x00 0xFF Gleich 0x00 Zum PC: 0x00
-   
-
     private void sendPower() {
         Byte[] b = {(byte) 0x00, (byte) 0xFF, (byte) 0x00};
         if (powerToBe.get() != 0) {
@@ -275,44 +320,46 @@ public class FCCInterface extends GenericSXInterface {
         } catch (IOException e) {
             System.out.println("Error: Serial Fehler beim Senden");
         }
-        shortSleep();
+        veryShortSleep();
         try {
-            inputStream.read();
+            int result = inputStream.read();
+            if (result != 0) {
+                System.out.println("Error: Serial Fehler beim Senden");
+            }
         } catch (IOException ex) {
             System.out.println("Error: Serial Fehler beim Empfangen");
         }
-     }
-    
- @Override
+    }
+
+    @Override
     public void requestPower() {
         // not necessary, because it is polled every second
         connectionOK = true;
-    }   
+    }
 
     /**
      * für alle Schreibbefehle an die FCC muss zusätzlich zur Kanalnummer das
-     * höchste Bit auf 1 gesetzt werden 
+     * höchste Bit auf 1 gesetzt werden
      */
-    
     private boolean sendWrite(IntegerPair sxd) {
         int addr = sxd.addr;
         int data = sxd.data;
-        
+
         if (addr > SXMAX_USED) {
-            System.out.println("ERROR: SX addr invalid addr="+addr);
+            System.out.println("ERROR: SX addr invalid addr=" + addr);
             return false;
         }
-        try { 
+        try {
             outputStream.write((byte) 0);  // BUS SX0
-            outputStream.write((byte)(addr + 0x80)); // set highest bit for writing
-            outputStream.write((byte)data);
+            outputStream.write((byte) (addr + 0x80)); // set highest bit for writing
+            outputStream.write((byte) data);
             outputStream.flush();
             // done via polling in LanbahnUI // doLanbahnUpdate((byte)(data[0] & 0x7f), data[1]);
         } catch (IOException e) {
             System.out.println("Fehler beim Senden");
             return false;
         }
-        shortSleep();
+        veryShortSleep();
         // quittung abwarten
         try {
             int result = inputStream.read();
@@ -333,6 +380,5 @@ public class FCCInterface extends GenericSXInterface {
     public void request(int addr) {
         // not necessary because of regular update from FCC
     }
-
 
 }

@@ -128,7 +128,7 @@ public class WifiThrottle  {
                                 return;
                             }
                             sxdata = Integer.parseInt(cmd[2]);
-                           // SXData.update(sxaddr, sxdata, true);
+                            SXData.update(sxaddr, sxdata, true);
                         }
                     } catch (Exception e) {
                         System.out.println("could not understand SX command format: " + msg + " error=" + e.getMessage());

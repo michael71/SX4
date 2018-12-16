@@ -43,12 +43,17 @@ abstract public class GenericSXInterface {
         return "-";
     }
     
-    public String doUpdate() {
+    public String doSendUpdate() {
         ;  // implemented in SXFCCInterface, where a full update can be
         // requested regularly and in SLX825 (data updates received automatically)
         return "";
     }
 
+    public String doUpdate() {
+        ;  // implemented in SXFCCInterface, where a full update can be
+        // requested regularly and in SLX825 (data updates received automatically)
+        return "";
+    }
   
     
     public void setPower(int onState) {
