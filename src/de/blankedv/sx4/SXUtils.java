@@ -47,10 +47,10 @@ public class SXUtils {
      */
     public static boolean isValidSXAddress(int a) {
         if (((a >= SXMIN) && (a <= SXMAX))) {
-            //if (DEBUG) System.out.println("isValidSXAddress? "+a + " true (SX0");
+            //if (DEBUG) error("isValidSXAddress? "+a + " true (SX0");
             return true;  // in range 0..111
         }
-        //if (DEBUG) System.out.println("isValidSXAddress? "+a + " false");
+        //if (DEBUG) error("isValidSXAddress? "+a + " false");
         return false;
     }
 
@@ -66,7 +66,7 @@ public class SXUtils {
             return true;  // 1..8
         }
 
-        //if (DEBUG) System.out.println("isValidSXAddress? "+a + " false");
+        //if (DEBUG) error("isValidSXAddress? "+a + " false");
         return false;
     }
 

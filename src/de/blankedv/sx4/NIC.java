@@ -1,8 +1,8 @@
 package de.blankedv.sx4;
 
-import static de.blankedv.sx4.SX4.debug;
 import java.net.*;
 import java.util.*;
+import static com.esotericsoftware.minlog.Log.*;
 
 class NIC {
 
@@ -13,7 +13,7 @@ class NIC {
         try {
             interfaces = NetworkInterface.getNetworkInterfaces();
         } catch (SocketException e) {
-            System.out.println("ERROR: no network interfaces found.");
+            error("ERROR: no network interfaces found.");
             return null;
         }
 
@@ -22,27 +22,26 @@ class NIC {
         try {
             localhost = InetAddress.getByName("127.0.0.1");
         } catch (UnknownHostException e) {
-            System.out.println("ERROR: could not determine ip of 'localhost'");
+            error("ERROR: could not determine ip of 'localhost'");
             return null;
         }
 
         while (interfaces.hasMoreElements()) {
             NetworkInterface ifc = interfaces.nextElement();
-            //if (DEBUG) System.out.println("Network Interface="+ifc.getName());
+            //if (DEBUG) error("Network Interface="+ifc.getName());
             Enumeration<InetAddress> addressesOfAnInterface = ifc.getInetAddresses();
 
             while (addressesOfAnInterface.hasMoreElements()) {
                 InetAddress address = addressesOfAnInterface.nextElement();
-                //if (DEBUG) System.out.println("has address=" + address.getHostAddress());
+                //if (DEBUG) error("has address=" + address.getHostAddress());
                 // look for IPv4 addresses which are not==127.0.0.1
                 if (!address.equals(localhost) && !address.toString().contains(":")
                         && (!ifc.getName().toString().contains("vir"))
                         && (!ifc.getName().toString().contains("lxc"))) {
                     addrList.add(address);
-                    if (debug) {
-                        System.out.println("found ip (not local, not ipv6, not virtual): " + address.getHostAddress());
-                    }
-                    //	System.out.println("FOUND ADDRESS ON NIC: " + address.getHostAddress());
+                    debug("found IP to use (not local, not ipv6, not virtual): " + address.getHostAddress());
+
+                    //	error("FOUND ADDRESS ON NIC: " + address.getHostAddress());
 
                 }
             }

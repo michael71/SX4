@@ -15,7 +15,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
+import static com.esotericsoftware.minlog.Log.*;
 /**
  *
  * @author mblank
@@ -24,7 +24,7 @@ public class EvalOptions {
 
     static public void sx4options(String[] args) {
         //for (String a : args) {
-        //    System.out.println("option _" + a + "_");
+        //    error("option _" + a + "_");
         //}
         CommandLine commandLine;
         Option option_h = Option.builder("h")
@@ -85,16 +85,9 @@ public class EvalOptions {
             }
 
             if (commandLine.hasOption("v")) {
-                System.out.println("SX4 version: " + VERSION);
-                System.out.println("use option '-h' to get possible program options");
+                info("SX4 version: " + VERSION);
+                info("use option '-h' to get possible program options");
                 System.exit(0);
-            }
-
-            if (commandLine.hasOption("d")) {
-                System.out.println("switching on debug output");
-                debug = true;
-            } else {
-                debug = false;
             }
 
             simulation = false;
@@ -103,53 +96,54 @@ public class EvalOptions {
                 ifType = commandLine.getOptionValue("t");
                 switch (ifType) {
                     case "SIM":
-                        System.out.println("SX Interface Type=" + ifType);
+                        info("SX Interface Type=" + ifType);
                         simulation = true;
                         sxi = new SimulationInterface();
                         break;
                     case "SLX825":
-                        System.out.println("SX Interface Type=" + ifType);
+                        info("SX Interface Type=" + ifType);
                         simulation = false;
                         portName = readSerialPortName(commandLine);
-                        System.out.println("serial port device = " + portName);
+                        info("serial port device = " + portName);
                         baudrate = readBaudrate(commandLine);
-                        System.out.println("serial baudrate = " + baudrate);
+                        info("serial baudrate = " + baudrate);
                         sxi = new SLX825Interface(portName, baudrate);
                         break;
                     case "FCC":
-                        System.out.println("SX Interface Type=" + ifType);
+                        info("SX Interface Type=" + ifType);
                         simulation = false;
                         portName = readSerialPortName(commandLine);
-                        System.out.println("serial port device = " + portName);
+                        info("serial port device = " + portName);
                         baudrate = 230400;
-                        System.out.println("serial baudrate = " + baudrate);
+                        info("serial baudrate = " + baudrate);
                         sxi = new FCCInterface(portName);
                         break;
                     default:
-                        System.out.println("ERROR: invalid interface type=" + ifType);
-                        System.out.println("SX4 program ends.");
+                        error("ERROR: invalid interface type=" + ifType);
+                        error("SX4 program ends.");
                         System.exit(1);
                 }
             } else {
                 simulation = true;
                 ifType = "SIM";
                 sxi = new SimulationInterface();
-                System.out.println("option -t not set, using SIM as interface");
+                info("option -t not set, using SIM as interface");
             }
 
             String[] remainder = commandLine.getArgs();
             if (remainder.length > 0) {
-                System.out.print("invalid options: ");
+                StringBuilder sb = new StringBuilder();
+                sb.append("invalid options: ");
                 for (String argument : remainder) {
-                    System.out.print(argument);
-                    System.out.print(" ");
+                    sb.append(argument);
+                    sb.append(" ");
                 }
-                System.out.println();
+                error(sb.toString());
             }
 
         } catch (ParseException exception) {
             System.out.print("Parse error: ");
-            System.out.println(exception.getMessage());
+            error(exception.getMessage());
         }
 
     }
@@ -170,7 +164,7 @@ public class EvalOptions {
             try {
                 baud = Integer.parseInt(cl.getOptionValue("b"));
             } catch (NumberFormatException e) {
-                System.out.println("ERROR in baudrate parameter, using 9600");
+                error("ERROR in baudrate parameter, using 9600");
                 baud = 9600;
             }
         }

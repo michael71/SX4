@@ -7,6 +7,7 @@ package de.blankedv.sx4;
 
 import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
+import static com.esotericsoftware.minlog.Log.*;
 
 /**
  *
@@ -31,11 +32,11 @@ public class SXData {
                 try {
                     dataToSend.put(new IntegerPair(addr, d[addr]));
                 } catch (InterruptedException ex) {
-                    System.out.println("ERROR - sendqueue full");
+                    error("ERROR - sendqueue full");
                 }
             }
         }
-        if (debug) System.out.println("set: SX[" + addr + "]=" + d[addr] + " ");
+        debug("set: SX[" + addr + "]=" + d[addr] + " ");
 
         return d[addr];
     }
@@ -48,7 +49,7 @@ public class SXData {
                 // request data read
                 dataToSend.put(new IntegerPair(addr, INVALID_INT));
             } catch (InterruptedException ex) {
-                System.out.println("ERROR - sendqueue full");
+                error("ERROR - sendqueue full");
             }
         }
         return d[addr];
@@ -59,18 +60,17 @@ public class SXData {
             return;
         }
 
-        if (debug) {
-            System.out.println("setBit addr=" + addr + " bit=" + bit);
-        }
+        debug("setBit addr=" + addr + " bit=" + bit);
+
         d[addr] = SXUtils.setBit(d[addr], bit);
-        if (debug) {
-            System.out.println("sxData[" + addr + "]=" + d[addr]);
-        }
+
+        debug("sxData[" + addr + "]=" + d[addr]);
+
         if (writeFlag && (sxi != null)) {
             try {
                 dataToSend.put(new IntegerPair(addr, d[addr]));
             } catch (InterruptedException ex) {
-                System.out.println("ERROR - sendqueue full");
+                error("ERROR - sendqueue full");
             }
             //sxi.sendWrite(addr, d[addr]);
         }
@@ -81,18 +81,17 @@ public class SXData {
             return;
         }
 
-        if (debug) {
-            System.out.println("clearBit addr=" + addr + " bit=" + bit);
-        }
+        debug("clearBit addr=" + addr + " bit=" + bit);
+
         d[addr] = SXUtils.clearBit(d[addr], bit);
-        if (debug) {
-            System.out.println("sxData[" + addr + "]=" + d[addr]);
-        }
+
+        debug("sxData[" + addr + "]=" + d[addr]);
+
         if (writeFlag && (sxi != null)) {
             try {
                 dataToSend.put(new IntegerPair(addr, d[addr]));
             } catch (InterruptedException ex) {
-                System.out.println("ERROR - sendqueue full");
+                error("ERROR - sendqueue full");
             }
             //sxi.sendWrite(addr, d[addr]);
         }
@@ -103,26 +102,18 @@ public class SXData {
     }
 
     public static void setPower(int onState, boolean writeFlag) {
-        //System.out.println("SetPower to " + onState);
+        //error("SetPower to " + onState);
 
         if ((writeFlag) && (!simulation)) {
             // sending power command to interface
             powerToBe.set(onState);
-            if (debug) {
-                System.out.println("powerToBe=" + power);
-            }
+            debug("powerToBe=" + power);
         } else {
             //received power feedback from interface
             if (onState != 0) {
                 power = 1;
-                if (debug) {
-                    //System.out.println("setPower=1");
-                }
             } else {
                 power = 0;
-                if (debug) {
-                    //System.out.println("setPower=0");
-                }
             }
         }
 

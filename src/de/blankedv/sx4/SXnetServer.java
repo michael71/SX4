@@ -6,6 +6,7 @@ import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import static com.esotericsoftware.minlog.Log.*;
 
 /**
  *
@@ -29,17 +30,17 @@ public class SXnetServer {
     public SXnetServer() {
         
         if (myips.isEmpty()) {
-            System.out.println("ERROR, no usable network interface. EXITING");
-            System.exit(0);
+            error("ERROR, no usable network interface. EXITING");
+            System.exit(1);
         }
         try {
             s = new ServerSocket(SXNET_PORT, 0, myips.get(0));
-            System.out.println("new sxnet server listening at " + myips.get(0) + ":" + SXNET_PORT);
+            info("new sxnet server listening at " + myips.get(0) + ":" + SXNET_PORT);
             //title.s
 
         } catch (IOException ex) {
-            System.out.println("could not open server socket on port=" + SXNET_PORT);
-            System.out.println("is another instance of the SX4 program running already?  now closing SX4");
+            error("could not open server socket on port=" + SXNET_PORT);
+            error("is another instance of the SX4 program running already?  now closing SX4");
             System.exit(0);
             return;
         }
@@ -80,7 +81,7 @@ public class SXnetServer {
         try {
             s.close();
         } catch (IOException e) {
-            System.out.println("Could not close socket");
+            error("Could not close socket");
             System.exit(-1);
         }
     }
@@ -92,7 +93,7 @@ public class SXnetServer {
                 while (running) {
                     Socket incoming = s.accept();  // wait for client to connect
 
-                    System.out.println("new client connected " + incoming.getRemoteSocketAddress().toString() + "\n");
+                    info("new client connected " + incoming.getRemoteSocketAddress().toString() + "\n");
 
                     // after new client has connected start new thread to handle this client
                     SXnetClient r = new SXnetClient(incoming);
@@ -101,17 +102,17 @@ public class SXnetServer {
                     t.start();
 
                 }
-                System.out.println("SXnetServerThread closing.");
+                info("SXnetServerThread closing.");
                 s.close();
             } catch (InterruptedIOException e1) {
                 try {
-                    System.out.println("SXnetServerThread interrupted, closing socket");
+                    info("SXnetServerThread interrupted, closing socket");
                     s.close();
                 } catch (IOException ex) {
-                    System.out.println("closing error " + ex);
+                    error("closing error " + ex);
                 }
             } catch (IOException ex) {
-                System.out.println("SXnetServer error:" + ex);
+                error("SXnetServer error:" + ex);
             }
 
         }

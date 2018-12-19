@@ -14,6 +14,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static de.blankedv.sx4.Constants.*;
+import static com.esotericsoftware.minlog.Log.*;
 
 /**
  *
@@ -23,7 +24,6 @@ import static de.blankedv.sx4.Constants.*;
  */
 public class SX4 {
 
-    public static boolean debug = false;
     public static volatile boolean running = true;
     public static ArrayBlockingQueue<IntegerPair> dataToSend = new ArrayBlockingQueue<>(400);
     public static AtomicInteger powerToBe = new AtomicInteger(INVALID_INT);
@@ -50,6 +50,18 @@ public class SX4 {
     @SuppressWarnings("SleepWhileInLoop")
     public static void main(String[] args) {
 
+        if (isDebugFlagSet(args)) {  // must be done first to log errors during command line eval)          
+            set(LEVEL_DEBUG);
+            debug("switching on debug output");
+        } else {
+             // only 2 different logging levels are used INFO or DEBUG (if "-d" on command line start)
+            set(LEVEL_INFO);
+        }
+        
+        // start simple logging
+        setLogger(new MyLogger("log.txt"));
+        info("SX4 starting");
+
         EvalOptions.sx4options(args);
 
         boolean result = false;
@@ -58,7 +70,7 @@ public class SX4 {
             result = sxi.open();
         }
         if (!result) {
-            System.out.println("ERROR - SX4 program ends.");
+            error("SX4 program ends.");
             System.exit(1);
         }
 
@@ -73,7 +85,7 @@ public class SX4 {
 
             while (running) {
                 try {
-                  /*  Thread.sleep(50);
+                    /*  Thread.sleep(50);
                     sxi.doSendUpdate(); // only check sendqueue
                     Thread.sleep(50);
                     sxi.doSendUpdate();
@@ -83,15 +95,16 @@ public class SX4 {
                     sxi.doSendUpdate(); */
                     Thread.sleep(100);
                     sxi.doUpdate();     // includes reading all SX data 
-                    
+
                     //Route.auto();
                     //CompRoute.auto();
                 } catch (InterruptedException ex) {
-                    System.out.println("ERROR" + ex.getMessage());
+                    error("ERROR" + ex.getMessage());
+                    error(ex.getMessage());
                 }
             }
         } else {
-            System.out.println("ERROR: no network - SX4 program ends.");
+            error("no network - SX4 program ends.");
             System.exit(1);
         }
     }
@@ -104,7 +117,7 @@ public class SX4 {
                     running = false;  // shutdown all threads
                     server.stopClients();
                     Thread.sleep(200);
-                    System.out.println("SX4 ends.");
+                    error("SX4 ends.");
                     //some cleaning up code...
 
                 } catch (InterruptedException e) {
@@ -122,16 +135,16 @@ public class SX4 {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                // System.out.println("conn check");
+                // error("conn check");
                 if ((System.currentTimeMillis() - lastConnected) >= 10 * 1000) {
-                    System.out.println("ERROR: lost connection.");
+                    error("lost connection.");
                     running = false;  // stop all threads
                     try {
                         Thread.sleep(200);
                     } catch (InterruptedException ex) {
-                        System.out.println("ERROR" + ex.getMessage());
+                        error("ERROR" + ex.getMessage());
                     }
-                    System.out.println("SX4 shutdown.");
+                    error("SX4 shutdown.");
                     System.exit(1);
                 }
             }
@@ -142,21 +155,30 @@ public class SX4 {
         GenericSXInterface sxInterface = null;
         if (simulation) {
             sxInterface = new SimulationInterface();
+            info("simulation");
             // switch on power for simulation
             SXData.setPower(1, false);
             // no connectivityCheck for simulation
         } else if (ifType.contains("FCC")) { // fcc has different interface handling ! 
             sxInterface = new FCCInterface(port);
             initConnectivityCheck();
-            System.out.println("FCC mode=" + sxi.getMode());
+            info("FCC mode=" + sxi.getMode());
 
         } else if (ifType.contains("SLX825")) {
             //portName = "/dev/ttyUSB825";
             sxInterface = new SLX825Interface(port, baud);
+            info("SLX825 interface");
             initConnectivityCheck();
         }
         return sxInterface;
 
     }
 
+    private static boolean isDebugFlagSet(String[] args) {
+        for (String s :args) {
+            System.out.println(s);
+            if (s.equals("-d")) return true;
+        }
+        return false;
+    }
 }

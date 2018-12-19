@@ -12,13 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import purejavacomm.CommPortIdentifier;
 import purejavacomm.PortInUseException;
 import purejavacomm.SerialPort;
 import purejavacomm.UnsupportedCommOperationException;
+import static com.esotericsoftware.minlog.Log.*;
 
 /**
  *
@@ -50,10 +48,10 @@ public class FCCInterface extends GenericSXInterface {
     public boolean open() {
         Boolean foundPort = false;
         if (serialPortGeoeffnet != false) {
-            System.out.println("Serialport bereits geöffnet");
+            error("Serialport bereits geöffnet");
             return false;
         }
-        System.out.println("Öffne Serialport " + portName);
+        info("Öffne Serialport " + portName);
         enumComm = CommPortIdentifier.getPortIdentifiers();
         while (enumComm.hasMoreElements()) {
             serialPortId = (CommPortIdentifier) enumComm.nextElement();
@@ -63,18 +61,20 @@ public class FCCInterface extends GenericSXInterface {
             }
         }
         if (foundPort != true) {
-            System.out.println("Serialport nicht gefunden: " + portName);
+            error("Serialport nicht gefunden: " + portName);
             return false;
         }
         try {
             serialPort = (SerialPort) serialPortId.open("Öffnen und Senden", 500);
         } catch (PortInUseException e) {
-            System.out.println("Port belegt");
+            error("Port belegt");
+            return false;
         }
         try {
             outputStream = serialPort.getOutputStream();
         } catch (IOException e) {
-            System.out.println("Keinen Zugriff auf OutputStream");
+            error("Keinen Zugriff auf OutputStream");
+            return false;
         }
 
         try {
@@ -83,20 +83,16 @@ public class FCCInterface extends GenericSXInterface {
                 int b = inputStream.read();
             }
         } catch (IOException e) {
-            System.out.println("Keinen Zugriff auf InputStream");
+            error("Keinen Zugriff auf InputStream");
+            return false;
         }
-        /*try {
-            serialPort.addEventListener(new FCCInterface.serialPortEventListener());
-        } catch (Exception e) {
-            System.out.println("TooManyListenersException für Serialport");
-        }
-        serialPort.notifyOnDataAvailable(true); */
 
         try {
             serialPort.setSerialPortParams(230400, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
             // fixed baudrate for FCC
         } catch (UnsupportedCommOperationException e) {
-            System.out.println("Konnte Schnittstellen-Paramter nicht setzen");
+            error("Konnte Schnittstellen-Paramter nicht setzen");
+            return false;
         }
 
         serialPortGeoeffnet = true;
@@ -108,11 +104,11 @@ public class FCCInterface extends GenericSXInterface {
     @Override
     public void close() {
         if (serialPortGeoeffnet == true) {
-            System.out.println("Schließe Serialport");
+            debug("Schließe Serialport");
             serialPort.close();
             serialPortGeoeffnet = false;
         } else {
-            //System.out.println("Serialport bereits geschlossen");
+            //error("Serialport bereits geschlossen");
         }
         fccErrorCount = 0; // reset errors
         connected = false;
@@ -126,13 +122,13 @@ public class FCCInterface extends GenericSXInterface {
     @Override
     public String doSendUpdate() {
         if (fccErrorCount > 10) {
-            System.out.println("ERROR: FCC does not respond");
+            error("ERROR: Keine Response von der FCC, SerialPort Settings überprüfen");
             return ("ERROR: Keine Response von der FCC, SerialPort Settings überprüfen");
 
         }
         if (serialPortGeoeffnet) {
             lastConnected = System.currentTimeMillis();
-            //System.out.println(lastConnected);
+            //error(lastConnected);
             try {  // empty input
                 while (inputStream.available() >= 1) {
                     int b = inputStream.read();
@@ -141,7 +137,7 @@ public class FCCInterface extends GenericSXInterface {
                 ;
             }
             if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != lastPowerState)) {
-                //System.out.println("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
+                //error("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
                 sendPower();
             }
             while (!dataToSend.isEmpty()) {
@@ -165,13 +161,13 @@ public class FCCInterface extends GenericSXInterface {
     public String doUpdate() {
 
         if (fccErrorCount > 10) {
-            System.out.println("ERROR: FCC does not respond");
+            error("ERROR: Keine Response von der FCC, SerialPort Settings überprüfen");
             return ("ERROR: Keine Response von der FCC, SerialPort Settings überprüfen");
 
         }
         if (serialPortGeoeffnet) {
             lastConnected = System.currentTimeMillis();
-            //System.out.println(lastConnected);
+            //error(lastConnected);
             try {  // empty input
                 while (inputStream.available() >= 1) {
                     int b = inputStream.read();
@@ -180,7 +176,7 @@ public class FCCInterface extends GenericSXInterface {
                 ;
             }
             if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != lastPowerState)) {
-                //System.out.println("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
+                //error("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
                 sendPower();
             }
             while (!dataToSend.isEmpty()) {
@@ -196,7 +192,7 @@ public class FCCInterface extends GenericSXInterface {
                 outputStream.write(b[1]);
                 outputStream.flush();
             } catch (IOException ex) {
-                System.out.println("ERROR: Serial-IO where trying to write");
+                error("ERROR: Serial-IO where trying to write");
                 fccErrorCount++;
             }
             shortSleep();  // must wait 40 milliseconds to have all 226 channels received
@@ -208,12 +204,12 @@ public class FCCInterface extends GenericSXInterface {
                 int nread = inputStream.read(buf, 0, 226);
 
                 if (nread != 226) {
-                    System.out.println("ERROR wrong number of bytes read=" + nread);
+                    error("ERROR wrong number of bytes read=" + nread);
                     fccErrorCount++;
                     return "ERROR";
                 } else {
                     fccErrorCount = 0;
-                    //System.out.println("226 bytes gelesen");
+                    //error("226 bytes gelesen");
                 }
 
                 for (int count = 0; count < 226; count++) {
@@ -223,15 +219,15 @@ public class FCCInterface extends GenericSXInterface {
                             SXData.update(count, (buf[count] & 0xff), false);
                         }
                     } else if (count == 112) {
-                        //System.out.println("power="+buf[count]);
+                        //error("power="+buf[count]);
                         if (buf[count] == 0) {
                             SXData.setPower(0, false);
                             lastPowerState = 0;
-                            //System.out.println("FCC power is off");
+                            //error("FCC power is off");
                         } else {
                             SXData.setPower(1, false);
                             lastPowerState = 1;
-                            //System.out.println("FCC power is on");
+                            //error("FCC power is on");
                         }
                     } // ignore SX1 data
 
@@ -239,7 +235,7 @@ public class FCCInterface extends GenericSXInterface {
                 connectionOK = true;
 
             } catch (IOException ex) {
-                System.out.println("ERROR: Serial-IO where trying to read");
+                error("ERROR: Serial-IO where trying to read");
                 fccErrorCount++;
             }
         }
@@ -251,15 +247,15 @@ public class FCCInterface extends GenericSXInterface {
         try {
             Thread.sleep(40);
         } catch (InterruptedException ex) {
-            Logger.getLogger(FCCInterface.class.getName()).log(Level.SEVERE, null, ex);
+            error("FCC " + ex.getMessage());
         }
     }
-    
+
     private void veryShortSleep() {
         try {
             Thread.sleep(10);
         } catch (InterruptedException ex) {
-            Logger.getLogger(FCCInterface.class.getName()).log(Level.SEVERE, null, ex);
+            error("FCC " + ex.getMessage());
         }
     }
 
@@ -305,10 +301,10 @@ public class FCCInterface extends GenericSXInterface {
     private void sendPower() {
         Byte[] b = {(byte) 0x00, (byte) 0xFF, (byte) 0x00};
         if (powerToBe.get() != 0) {
-            System.out.println("FCC: switchPowerOn");
+            debug("FCC: switchPowerOn");
             b[2] = (byte) 0x01;
         } else {
-            System.out.println("FCC: switchPowerOff");
+            debug("FCC: switchPowerOff");
             b[2] = (byte) 0x00;
         }
 
@@ -318,16 +314,16 @@ public class FCCInterface extends GenericSXInterface {
             outputStream.write(b[2]);
             outputStream.flush();
         } catch (IOException e) {
-            System.out.println("Error: Serial Fehler beim Senden");
+            error("Error: Serial Fehler beim Senden");
         }
         veryShortSleep();
         try {
             int result = inputStream.read();
             if (result != 0) {
-                System.out.println("Error: Serial Fehler beim Senden");
+                error("Error: Serial Fehler beim Empfangen");
             }
         } catch (IOException ex) {
-            System.out.println("Error: Serial Fehler beim Empfangen");
+            error("Error: Serial Fehler beim Empfangen");
         }
     }
 
@@ -346,7 +342,7 @@ public class FCCInterface extends GenericSXInterface {
         int data = sxd.data;
 
         if (addr > SXMAX_USED) {
-            System.out.println("ERROR: SX addr invalid addr=" + addr);
+            error("ERROR: SX addr invalid addr=" + addr);
             return false;
         }
         try {
@@ -356,7 +352,7 @@ public class FCCInterface extends GenericSXInterface {
             outputStream.flush();
             // done via polling in LanbahnUI // doLanbahnUpdate((byte)(data[0] & 0x7f), data[1]);
         } catch (IOException e) {
-            System.out.println("Fehler beim Senden");
+            error("Fehler beim Senden");
             return false;
         }
         veryShortSleep();
@@ -364,13 +360,13 @@ public class FCCInterface extends GenericSXInterface {
         try {
             int result = inputStream.read();
             if (result != 0) {
-                System.out.println("Error: Serial Fehler beim Senden");
+                error("Error: Serial Fehler beim Empfangen");
                 return false;
             } else {
                 return true;
             }
         } catch (IOException ex) {
-            System.out.println("Error: Serial Fehler beim Empfangen");
+            error("Error: Serial Fehler beim Empfangen");
             return false;
         }
 

@@ -1,5 +1,6 @@
 package de.blankedv.sx4;
 
+import static com.esotericsoftware.minlog.Log.*;
 import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
 import java.io.IOException;
@@ -33,7 +34,7 @@ public class SXnetClient implements Runnable {
     private int centralRoutingCopy = INVALID_INT;
 
     private Thread worker;
-    
+
     protected int tickCounter = 0;
 
     /**
@@ -50,7 +51,7 @@ public class SXnetClient implements Runnable {
     }
 
     public void stop() {
-         worker.interrupt();
+        worker.interrupt();
     }
 
     /**
@@ -64,7 +65,7 @@ public class SXnetClient implements Runnable {
             out = new PrintWriter(outStream, true /* autoFlush */);
             InputStream inStream = incoming.getInputStream();
             Scanner in = new Scanner(inStream);
- 
+
             Timer sendUpdatesTimer = new Timer();
             sendUpdatesTimer.schedule(new SendUpdatesTask(), 1000, 200);  // every 200 msecs
 
@@ -73,9 +74,8 @@ public class SXnetClient implements Runnable {
             while (running && in.hasNextLine()) {
                 String msg = in.nextLine().trim().toUpperCase();
                 if (msg.length() > 0) {
-                    if (debug) {
-                        System.out.println("sxnet" + sn + " read: " + msg);
-                    }
+                    debug("sxnet" + sn + " read: " + msg);
+
                     String[] cmds = msg.split(";");  // multiple commands per line possible, separated by semicolon
                     for (String cmd : cmds) {
                         handleCommand(cmd.trim());
@@ -83,39 +83,38 @@ public class SXnetClient implements Runnable {
                     }
                 } else {
                     // ignore empty lines
-                    if (debug) {
-                        System.out.println("sxnet" + sn + " read empty line");
-                    }
+
+                    debug("sxnet" + sn + " read empty line");
+
                 }
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    System.out.println(
-                            "client" + sn + " Thread was interrupted");
+                    error("client" + sn + " Thread was interrupted");
                 }
 
             }
-            System.out.println("client" + sn + " disconnected" + incoming.getRemoteSocketAddress().toString() + "\n");
+            info("client" + sn + " disconnected" + incoming.getRemoteSocketAddress().toString() + "\n");
             sendUpdatesTimer.cancel();
 
         } catch (IOException e) {
-            System.out.println("SXnetServerHandler" + sn + " Error: " + e);
+            error("SXnetServerHandler" + sn + " Error: " + e);
         }
         try {
             incoming.close();
         } catch (IOException ex) {
-            System.out.println("SXnetServerHandler" + sn + " Error: " + ex);
+            error("SXnetServerHandler" + sn + " Error: " + ex);
         }
 
-        System.out.println("Closing SXnetserverHandler" + sn + "\n");
+        info("Closing SXnetserverHandler" + sn + "\n");
     }
 
     // handles feedback, if the sxData have been changed on the SX-Bus
     // feedback both for low (<256) addresses == SX-only (+ Lanbahn if mapping exists)
     // and for high "lanbahn" type addresses
     class SendUpdatesTask extends TimerTask {
-        
+
         public void run() {
             tickCounter++;
             checkForChangedSXDataAndSendUpdates(tickCounter);
@@ -139,7 +138,7 @@ public class SXnetClient implements Runnable {
     private void handleCommand(String m) {
         String[] param = m.split("\\s+");  // remove >1 whitespace
         if (param == null) {
-            System.out.println("irregular msg: " + m);
+            error("irregular msg: " + m);
         }
         if (param[0].equals("READPOWER")) {
             String res = readPower();  // no parameters
@@ -186,30 +185,24 @@ public class SXnetClient implements Runnable {
 
     // used by SX-Loconet Bridge and Andropanel
     private String readSXByteMessage(String[] par) {
-        if (debug) {
-            //System.out.println("createSXFeedbackMessage");
-        }
         if (par.length < 2) {
             return "ERROR";
         }
         int adr = getSXAddrFromString(par[1]);
         if (adr == INVALID_INT) {
-            System.out.println("addr in msg invalid");
+            error("addr in msg invalid");
             return "ERROR";
         }
         return "X " + adr + " " + SXData.get(adr);
     }
 
     private String readLocoMessage(String[] par) {
-        if (debug) {
-            //System.out.println("readLocoMessage");
-        }
         if (par.length < 2) {
             return "ERROR";
         }
         int adr = getSXAddrFromString(par[1]);
         if (adr == INVALID_INT) {
-            System.out.println("addr in msg invalid");
+            error("addr in msg invalid");
             return "ERROR";
         }
         if (!locoAddresses.contains(adr)) {
@@ -221,11 +214,11 @@ public class SXnetClient implements Runnable {
     /*
     private String requestRouteMessage(String[] par) {
         if (DEBUG) {
-            System.out.println("requestRouteMessage");
+            error("requestRouteMessage");
         }
         if (par.length <= 2) {
             if (DEBUG) {
-                System.out.println("par.length <=2");
+                error("par.length <=2");
             }
             return "ERROR";
         }
@@ -235,7 +228,7 @@ public class SXnetClient implements Runnable {
         int lbdata = getLanbahnDataFromString(par[2]);   // can only be 1= set and 0=clear
         if ((lbAddr == INVALID_INT) || ((lbdata != 0) && (lbdata != 1))) {
             if (DEBUG) {
-                System.out.println("LB-addr or -data invalid");
+                error("LB-addr or -data invalid");
             }
             return "ERROR";
         }
@@ -248,7 +241,7 @@ public class SXnetClient implements Runnable {
                 return "XL " + lbAddr + " " + r.getState();  // success
             } else {
                 if (DEBUG) {
-                    System.out.println("route invalid");
+                    error("route invalid");
                 }
                 return "ROUTE_INVALID";
             }
@@ -262,13 +255,13 @@ public class SXnetClient implements Runnable {
                 return "XL " + lbAddr + " " + cr.getState();  // success
             } else {
                 if (DEBUG) {
-                    System.out.println("comp route invalid");
+                    error("comp route invalid");
                 }
                 return "ROUTE_INVALID";
             }
         }
         if (DEBUG) {
-            System.out.println("no route or compound found");
+            error("no route or compound found");
         }
         return "ERROR";
 
@@ -278,9 +271,8 @@ public class SXnetClient implements Runnable {
         if (par.length < 3) {
             return "ERROR";
         }
-        if (debug) {
-            System.out.println("setSXByteMessage");
-        }
+        debug("setSXByteMessage");
+
         int adr = getSXAddrFromString(par[1]);
         int data = getByteFromString(par[2]);
 
@@ -294,9 +286,9 @@ public class SXnetClient implements Runnable {
     }
 
     private String setPower(String[] par) {
-        if (debug) {
-            System.out.println("setPowerMessage");
-        }
+
+        info("setPowerMessage");
+
         if (par.length < 2) {
             return "ERROR";
         }
@@ -308,9 +300,6 @@ public class SXnetClient implements Runnable {
     }
 
     private String readPower() {
-        if (debug) {
-            //System.out.println("readPowerMessage");
-        }
         return "XPOWER " + SXData.getPower();
     }
 
@@ -326,9 +315,8 @@ public class SXnetClient implements Runnable {
      * @return
      */
     private String setLanbahnMessage(String[] par) {
-        if (debug) {
-            System.out.println("setLanbahnMessage");
-        }
+
+        info("setLanbahnMessage");
 
         if (par.length < 3) {
             return "ERROR";
@@ -363,9 +351,9 @@ public class SXnetClient implements Runnable {
     }
 
     private String createLanbahnFeedbackMessage(String[] par) {
-        if (debug) {
-            System.out.println("createLanbahnFeedbackMessage");
-        }
+
+        debug("createLanbahnFeedbackMessage");
+
         if (par.length < 2) {
             return "ERROR";
         }
@@ -375,7 +363,7 @@ public class SXnetClient implements Runnable {
         }
         if (lbAddr >= LBPURE) {
             int d = LanbahnData.get(lbAddr);
-            if ( d != INVALID_INT) {
+            if (d != INVALID_INT) {
                 return "XL " + lbAddr + " " + d;
             }
         } else {
@@ -391,7 +379,7 @@ public class SXnetClient implements Runnable {
             }
         }
         return "ERROR";
-        
+
     }
 
     private int getByteFromString(String s) {
@@ -431,9 +419,7 @@ public class SXnetClient implements Runnable {
      * @return addr (or INVALID_INT)
      */
     int getSXAddrFromString(String s) {
-        if (debug) {
-            //System.out.println("get SXAddr from " + s);
-        }
+
         try {
             int channel = Integer.parseInt(s);
             if ((channel >= SXMIN) && (channel <= SXMAX_USED)) {
@@ -443,7 +429,7 @@ public class SXnetClient implements Runnable {
             }
 
         } catch (Exception e) {
-            System.out.println("ERROR: number conversion error input=" + s);
+            error("ERROR: number conversion error input=" + s);
             return INVALID_INT;
         }
     }
@@ -458,12 +444,12 @@ public class SXnetClient implements Runnable {
     /*
     SxAbit getSXAbitFromString(String s) {
         if (DEBUG) {
-            System.out.println("get SXAbit from " + s);
+            debug("get SXAbit from " + s);
         }
         String[] sxab = s.split("\\.");  // regular expression! not character
         if (sxab.length != 2) {
             if (DEBUG) {
-                System.out.println("length != 2 - l=" + sxab.length);
+                debug("length != 2 - l=" + sxab.length);
             }
             return new SxAbit(INVALID_INT, INVALID_INT);
         }
@@ -473,14 +459,14 @@ public class SXnetClient implements Runnable {
                 int bit = Integer.parseInt(sxab[1]);
                 if (SXUtils.isValidSXBit(bit)) {
                     if (DEBUG) {
-                        System.out.println("valid, a=" + channel + " bit=" + bit);
+                        debug("valid, a=" + channel + " bit=" + bit);
                     }
                     return new SxAbit(channel, bit);
                 }
             }
 
         } catch (Exception e) {
-            System.out.println("ERROR: number conversion error input=" + s);
+            error("number conversion error input=" + s);
 
         }
         return new SxAbit(INVALID_INT, INVALID_INT);
@@ -493,9 +479,7 @@ public class SXnetClient implements Runnable {
      * @return lbaddr (or INVALID_INT)
      */
     int getLanbahnAddrFromString(String s) {
-        if (debug) {
-            //System.out.println("getLanbahnAddrFromString s=" + s);
-        }
+
         Integer lbAddr;
         try {
             lbAddr = Integer.parseInt(s);
@@ -503,11 +487,11 @@ public class SXnetClient implements Runnable {
                 return lbAddr;
                 // OK, valid lanbahn channel - either SX-mapped or PURE lanbahn
             } else {
-                System.out.println("ERROR: lbAddr=" + lbAddr + " not valid");
+                error("lbAddr=" + lbAddr + " not valid");
                 return INVALID_INT;
             }
         } catch (Exception e) {
-            System.out.println("ERROR: number conversion error input=" + s);
+            error("number conversion error input=" + s);
             return INVALID_INT;
         }
     }
@@ -525,9 +509,9 @@ public class SXnetClient implements Runnable {
 
         out.println(res);
         //out.flush(); autoflush is set to true
-        if (debug) {
-            System.out.println("sxnet" + sn + " send: " + res);
-        }
+
+        debug("sxnet" + sn + " send: " + res);
+
     }
 
     /**
@@ -543,7 +527,7 @@ public class SXnetClient implements Runnable {
 
         String msg = "X " + sxAddr + " " + sxDataCopy[sxAddr];  // SX Feedback Message
         if (DEBUG) {
-            System.out.println("sent: " + msg);
+            debug("sent: " + msg);
         }
 
         sendMessage(msg);  // send all messages, separated with ";"
@@ -555,7 +539,6 @@ public class SXnetClient implements Runnable {
     private void checkForChangedSXDataAndSendUpdates(int tick) {
         StringBuilder msg = new StringBuilder();
         boolean first = true;
-        
 
         // report change in power channel (but only if "stable")
         // send also as "connected" tick
