@@ -67,7 +67,7 @@ public class SXnetClient implements Runnable {
             Scanner in = new Scanner(inStream);
 
             Timer sendUpdatesTimer = new Timer();
-            sendUpdatesTimer.schedule(new SendUpdatesTask(), 1000, 200);  // every 200 msecs
+            sendUpdatesTimer.schedule(new SendUpdatesTask(), 500, 200);  // every 200 msecs
 
             sendMessage("SXnetServer - client" + sn);  // welcome string
 
@@ -81,12 +81,7 @@ public class SXnetClient implements Runnable {
                         handleCommand(cmd.trim());
                         // sends feedback message  XL 'addr' 'data' (or INVALID_INT) back to mobile device
                     }
-                } else {
-                    // ignore empty lines
-
-                    debug("sxnet" + sn + " read empty line");
-
-                }
+                } 
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
@@ -280,7 +275,8 @@ public class SXnetClient implements Runnable {
             return "ERROR";
         }
 
-        sxDataCopy[adr] = SXData.update(adr, data, true);  // synchronized  // store locally (to not duplicate the feedback message)
+        int dNew = SXData.update(adr, data, true);  // synchronized 
+        // TODO ?? sxDataCopy[adr] = dNew;  // + store locally (to not duplicate the feedback message)
 
         return "OK";
     }
@@ -434,44 +430,7 @@ public class SXnetClient implements Runnable {
         }
     }
 
-    /**
-     * extract the selectrix address from a string and the SX bit only valid
-     * addresses 0...111,127 are allowed and valid bit (1..8)
-     *
-     * @param s
-     * @return SxAbit (addr,bit)
-     */
-    /*
-    SxAbit getSXAbitFromString(String s) {
-        if (DEBUG) {
-            debug("get SXAbit from " + s);
-        }
-        String[] sxab = s.split("\\.");  // regular expression! not character
-        if (sxab.length != 2) {
-            if (DEBUG) {
-                debug("length != 2 - l=" + sxab.length);
-            }
-            return new SxAbit(INVALID_INT, INVALID_INT);
-        }
-        try {
-            int channel = Integer.parseInt(sxab[0]);
-            if (SXUtils.isValidSXAddress(channel)) {
-                int bit = Integer.parseInt(sxab[1]);
-                if (SXUtils.isValidSXBit(bit)) {
-                    if (DEBUG) {
-                        debug("valid, a=" + channel + " bit=" + bit);
-                    }
-                    return new SxAbit(channel, bit);
-                }
-            }
-
-        } catch (Exception e) {
-            error("number conversion error input=" + s);
-
-        }
-        return new SxAbit(INVALID_INT, INVALID_INT);
-    }
-     */
+   
     /**
      * parse String to extract a lanbahn address
      *
@@ -514,25 +473,6 @@ public class SXnetClient implements Runnable {
 
     }
 
-    /**
-     * if channel data changed, send update to clients
-     *
-     * @param lbaddr
-     */
-    /*private void sendSXUpdates(int lbAddr) {
-
-        int sxAddr = lbAddr / 10;
-
-        sxDataCopy[sxAddr] = sxData.get(sxAddr);
-
-        String msg = "X " + sxAddr + " " + sxDataCopy[sxAddr];  // SX Feedback Message
-        if (DEBUG) {
-            debug("sent: " + msg);
-        }
-
-        sendMessage(msg);  // send all messages, separated with ";"
-
-    } */
     /**
      * check for changed sxData and send update in case of change
      */

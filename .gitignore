@@ -15,7 +15,8 @@ paneldesc.xml
 build.xml
 .project
 .classpath
-SX3-PC.iml
+log.txt
+lanbahnpanel.apk
 
 archiv/
 *.backup

@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static de.blankedv.sx4.Constants.*;
 import static com.esotericsoftware.minlog.Log.*;
+import java.util.logging.Level;
 
 /**
  *
@@ -74,6 +75,12 @@ public class SX4 {
             System.exit(1);
         }
 
+        try {
+            new ConfigWebserver();
+        } catch (Exception ex) {
+            error(ex.getMessage());
+        }
+        
         myips = NIC.getmyip();
         if (!myips.isEmpty()) {
 
@@ -107,6 +114,8 @@ public class SX4 {
             error("no network - SX4 program ends.");
             System.exit(1);
         }
+        
+        
     }
 
     private static void shutdownHook(SXnetServer server) {
