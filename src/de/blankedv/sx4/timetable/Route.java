@@ -2,6 +2,7 @@ package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.*;
 import static de.blankedv.sx4.Constants.*;
+import de.blankedv.sx4.LanbahnData;
 import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.SXUtils;
 import static de.blankedv.sx4.timetable.ReadConfig.CFG_DEBUG;
@@ -44,7 +45,7 @@ public class Route extends PanelElement {
     /**
      * constructs a route
      *
-     * @param id unique identifier (int)
+     * @param routeAddr unique identifier (int)
      * @param route string for route setting like "770,1;720,2"
      * @param allSensors string for sensors like "2000,2001,2002"
      * @param offending string with offending allRoutes, separated by comma
@@ -103,7 +104,8 @@ public class Route extends PanelElement {
                 if (pe.isSensor()) {
                     if (pe.getAdr() == Integer.parseInt(sensorAddresses[i])) {
                         rtSensors.add(pe);
-                        // debug("RT, add sensor " + pe.getAdr());
+                        
+                        debug("RT, add sensor " + pe.getAdr());
                     }
                 }
             }
@@ -135,8 +137,10 @@ public class Route extends PanelElement {
 
         // deactivate sensors
         for (PanelElement se : rtSensors) {
-            se.setBit1(false);
+            se.setInRoute(false);
+            LanbahnData.update(se.getSecondaryAdr(), 0);
         }
+        
         Set<Integer> sxAddressesToUpdate = new HashSet<>();
         // set signals turnout red
         for (RouteSignal rs : rtSignals) {
@@ -213,9 +217,12 @@ public class Route extends PanelElement {
 
         clearOffendingRoutes();
 
-        // activate sensors, set "IN_ROUTE" not
+        
+        // activate sensors, set "IN_ROUTE" (this is stored in as "LanbahnData"
+        // in secondary address of the sensor
         for (PanelElement se : rtSensors) {
-            se.setBit1(true);
+            se.setInRoute(true);
+            LanbahnData.update(se.getSecondaryAdr(), 1);
             // only virtual, no matching real SX address
         }
 

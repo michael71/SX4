@@ -30,7 +30,8 @@ public class PanelElement {
     private int state = 0;
     private int adr = INVALID_INT;
     private int secondaryAdr = INVALID_INT;  // needed for DCC sensors/signals 
-    private int nbit = 1;  // number of significant bits
+    private int nbit = 1;  // number of significant bits for signals
+    private boolean inRoute = false;
     private String typeString = "AC";
     // with 2 addresses (adr1=occ/free, 2=in-route)
     protected String route = "";
@@ -57,9 +58,7 @@ public class PanelElement {
     // sensors
     protected static final int STATE_FREE = 0;
     protected static final int STATE_OCCUPIED = 1;
-    protected static final int STATE_INROUTE = 2;
-    protected static final int N_STATES_SENSORS = 3;
-
+   
     protected long lastToggle = 0L;
     protected long lastUpdateTime = 0L;
 
@@ -77,6 +76,7 @@ public class PanelElement {
         typeString = "AC";
         this.state = 0;  // initialized to CLOSED / RED / FREE
         lastUpdateTime = System.currentTimeMillis();
+        
     }
 
     public PanelElement(String t, int adr) {
@@ -118,6 +118,16 @@ public class PanelElement {
         return state;
     }
 
+    public boolean isInRoute() {
+        return inRoute;
+    }
+
+    public void setInRoute(boolean inRoute) {
+        this.inRoute = inRoute;
+    }
+    
+    
+
     public boolean hasAdrX(int address) {
         if (adr == address) {
             return true;
@@ -150,6 +160,7 @@ public class PanelElement {
         return state;
     }
 
+    // used for multi-aspect signals
     public int setBit1(boolean occ) {
         lastUpdateTime = System.currentTimeMillis();
         if (occ) {
@@ -169,6 +180,7 @@ public class PanelElement {
         }
     }
 
+    // used for multi-aspect signals
     public boolean isBit1() {
         if ((state & 0x02) != 0) {
             return true;
