@@ -337,28 +337,6 @@ public class SLX825Interface extends GenericSXInterface {
         return "";
     }
 
-    /* async read from interface */
- /*class serialPortEventListener implements SerialPortEventListener {
-
-        @Override
-        public void serialEvent(SerialPortEvent event) {
-            switch (event.getEventType()) {
-                case SerialPortEvent.DATA_AVAILABLE:
-                    connectionOK = true;
-                    readSerialPortAndUpdateSXData();
-                    break;
-                case SerialPortEvent.BI:
-                case SerialPortEvent.CD:
-                case SerialPortEvent.CTS:
-                case SerialPortEvent.DSR:
-                case SerialPortEvent.FE:
-                case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
-                case SerialPortEvent.PE:
-                case SerialPortEvent.RI:
-                default:
-            }
-        }
-    } */
     private void readSerialPortAndUpdateSXData() {
 
         // Achtung: immer auf 2 Byte warten .... TODO: timer reset wenn länger als 10 ms keine Bytes

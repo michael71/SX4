@@ -114,44 +114,7 @@ public class FCCInterface extends GenericSXInterface {
         connected = false;
     }
 
-    /*
-    send update (if necessary) for power and sx-channels to FCC
-    then read all channels from FCC
-    (this routine is run > 3 times a second)
-     */
-    @Override
-    public String doSendUpdate() {
-        if (fccErrorCount > 10) {
-            error("ERROR: Keine Response von der FCC, SerialPort Settings überprüfen");
-            return ("ERROR: Keine Response von der FCC, SerialPort Settings überprüfen");
-
-        }
-        if (serialPortGeoeffnet) {
-            lastConnected = System.currentTimeMillis();
-            //error(lastConnected);
-            try {  // empty input
-                while (inputStream.available() >= 1) {
-                    int b = inputStream.read();
-                }
-            } catch (IOException ex) {
-                ;
-            }
-            if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != lastPowerState)) {
-                //error("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
-                sendPower();
-            }
-            while (!dataToSend.isEmpty()) {
-                IntegerPair sxd = dataToSend.poll();
-                if (sxd != null) {
-                    sendWrite(sxd);
-                }
-
-            }
-            connectionOK = true;
-        }
-        return "";
-    }
-
+    
     /*
     send update (if necessary) for power and sx-channels to FCC
     then read all channels from FCC

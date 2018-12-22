@@ -61,7 +61,7 @@ public class SX4 {
         
         // start simple logging
         setLogger(new MyLogger("log.txt"));
-        info("SX4 starting");
+        info("starting "+VERSION);
 
         EvalOptions.sx4options(args);
 
@@ -92,15 +92,8 @@ public class SX4 {
 
             while (running) {
                 try {
-                    /*  Thread.sleep(50);
-                    sxi.doSendUpdate(); // only check sendqueue
-                    Thread.sleep(50);
-                    sxi.doSendUpdate();
-                    Thread.sleep(50);
-                    sxi.doSendUpdate();
-                    Thread.sleep(50);
-                    sxi.doSendUpdate(); */
-                    Thread.sleep(100);
+
+                    Thread.sleep(300);
                     sxi.doUpdate();     // includes reading all SX data 
 
                     //Route.auto();
@@ -139,7 +132,7 @@ public class SX4 {
     private static void initConnectivityCheck() {
         // init timer for connectivity check (if not in simulation)
         // this program is shutdown, if there is no connection for 10 seconds
-
+        info("initConnectivityCheck");
         lastConnected = System.currentTimeMillis();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -170,14 +163,14 @@ public class SX4 {
             // no connectivityCheck for simulation
         } else if (ifType.contains("FCC")) { // fcc has different interface handling ! 
             sxInterface = new FCCInterface(port);
-            initConnectivityCheck();
+            // TODO initConnectivityCheck();
             info("FCC mode=" + sxi.getMode());
 
         } else if (ifType.contains("SLX825")) {
             //portName = "/dev/ttyUSB825";
             sxInterface = new SLX825Interface(port, baud);
             info("SLX825 interface");
-            initConnectivityCheck();
+            //TODO initConnectivityCheck();
         }
         return sxInterface;
 
@@ -185,7 +178,7 @@ public class SX4 {
 
     private static boolean isDebugFlagSet(String[] args) {
         for (String s :args) {
-            System.out.println(s);
+            //System.out.println(s);
             if (s.equals("-d")) return true;
         }
         return false;
