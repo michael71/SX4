@@ -15,7 +15,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static de.blankedv.sx4.Constants.*;
 import static com.esotericsoftware.minlog.Log.*;
-import java.util.logging.Level;
+import de.blankedv.sx4.timetable.CompRoute;
+
+import de.blankedv.sx4.timetable.ReadConfig;
+import de.blankedv.sx4.timetable.Route;
 
 /**
  *
@@ -26,11 +29,15 @@ import java.util.logging.Level;
 public class SX4 {
 
     public static volatile boolean running = true;
+    public static boolean routingEnabled = false;
+
     public static ArrayBlockingQueue<IntegerPair> dataToSend = new ArrayBlockingQueue<>(400);
     public static AtomicInteger powerToBe = new AtomicInteger(INVALID_INT);
 
     public static ArrayList<Integer> locoAddresses = new ArrayList<Integer>();
+
     public static List<InetAddress> myips;
+    public static String configFilename = "";
 
     public static GenericSXInterface sxi;
     static WifiThrottle wifiThrottle;
@@ -55,13 +62,13 @@ public class SX4 {
             set(LEVEL_DEBUG);
             debug("switching on debug output");
         } else {
-             // only 2 different logging levels are used INFO or DEBUG (if "-d" on command line start)
+            // only 2 different logging levels are used INFO or DEBUG (if "-d" on command line start)
             set(LEVEL_INFO);
         }
-        
+
         // start simple logging
         setLogger(new MyLogger("log.txt"));
-        info("starting "+VERSION);
+        info("starting " + VERSION);
 
         EvalOptions.sx4options(args);
 
@@ -74,13 +81,19 @@ public class SX4 {
             error("SX4 program ends.");
             System.exit(1);
         }
+        configFilename = SXUtils.getConfigFilename();
 
-        try {
-            new ConfigWebserver();
-        } catch (Exception ex) {
-            error(ex.getMessage());
+        if (configFilename.isEmpty()) {
+            error("no panel...xml file found, NOT starting config server");
+        } else {
+            ReadConfig.readXML(configFilename);
+            try {
+                new ConfigWebserver(configFilename);
+            } catch (Exception ex) {
+                error(ex.getMessage());
+            }
         }
-        
+
         myips = NIC.getmyip();
         if (!myips.isEmpty()) {
 
@@ -96,8 +109,10 @@ public class SX4 {
                     Thread.sleep(300);
                     sxi.doUpdate();     // includes reading all SX data 
 
-                    //Route.auto();
-                    //CompRoute.auto();
+                    if (routingEnabled) {
+                        Route.auto();
+                        CompRoute.auto();
+                    }
                 } catch (InterruptedException ex) {
                     error("ERROR" + ex.getMessage());
                     error(ex.getMessage());
@@ -107,8 +122,7 @@ public class SX4 {
             error("no network - SX4 program ends.");
             System.exit(1);
         }
-        
-        
+
     }
 
     private static void shutdownHook(SXnetServer server) {
@@ -177,9 +191,11 @@ public class SX4 {
     }
 
     private static boolean isDebugFlagSet(String[] args) {
-        for (String s :args) {
+        for (String s : args) {
             //System.out.println(s);
-            if (s.equals("-d")) return true;
+            if (s.equals("-d")) {
+                return true;
+            }
         }
         return false;
     }

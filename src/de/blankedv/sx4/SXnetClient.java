@@ -3,14 +3,22 @@ package de.blankedv.sx4;
 import static com.esotericsoftware.minlog.Log.*;
 import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
+import de.blankedv.sx4.timetable.CompRoute;
+import de.blankedv.sx4.timetable.PanelElement;
+import de.blankedv.sx4.timetable.Route;
+import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * hanles one session (=1 mobile device)
@@ -28,10 +36,11 @@ public class SXnetClient implements Runnable {
     // list of channels which are of interest for this device
     private final int[] sxDataCopy = new int[SXMAX_USED + 1];
     private int lastClientConnect = INVALID_INT;
-    // private final ConcurrentHashMap<Integer, Integer> oldPEStateCopy = new ConcurrentHashMap<>(500);
+    private final ConcurrentHashMap<Integer, Integer> oldPEStateCopy = new ConcurrentHashMap<>(500);
 
     private int powerCopy = INVALID_INT;
     private int centralRoutingCopy = INVALID_INT;
+    private int lastRouting = INVALID_INT;
 
     private Thread worker;
 
@@ -81,7 +90,7 @@ public class SXnetClient implements Runnable {
                         handleCommand(cmd.trim());
                         // sends feedback message  XL 'addr' 'data' (or INVALID_INT) back to mobile device
                     }
-                } 
+                }
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
@@ -113,7 +122,7 @@ public class SXnetClient implements Runnable {
         public void run() {
             tickCounter++;
             checkForChangedSXDataAndSendUpdates(tickCounter);
-            //checkForLanbahnChangesAndSendUpdates();
+            checkForLanbahnChangesAndSendUpdates();
         }
     }
 
@@ -159,9 +168,13 @@ public class SXnetClient implements Runnable {
             case "READLOCO":
                 result = readLocoMessage(param);
                 break;
-            //case "REQ":
-            //    result = requestRouteMessage(param);
-            //    break;
+            case "REQ":
+                if (routingEnabled) {
+                    result = requestRouteMessage(param);
+                } else {
+                    result = "ERROR";
+                }
+                break;
             case "SET": // for addresses > 1200 (lanbahn sim./routes)
                 result = setLanbahnMessage(param);
                 break;
@@ -206,7 +219,6 @@ public class SXnetClient implements Runnable {
         return "XLOCO " + adr + " " + SXData.get(adr);
     }
 
-    /*
     private String requestRouteMessage(String[] par) {
         if (DEBUG) {
             error("requestRouteMessage");
@@ -260,7 +272,8 @@ public class SXnetClient implements Runnable {
         }
         return "ERROR";
 
-    }  */
+    }
+
     // used by SX-Loconet Bridge and Andropanel
     private String setSXByteMessage(String[] par) {
         if (par.length < 3) {
@@ -430,7 +443,6 @@ public class SXnetClient implements Runnable {
         }
     }
 
-   
     /**
      * parse String to extract a lanbahn address
      *
@@ -499,6 +511,21 @@ public class SXnetClient implements Runnable {
             first = false;
         }
 
+        // report routing status (only ONCE ! at startup)
+        if (lastRouting == INVALID_INT) {
+            if (routingEnabled) {
+                lastRouting = 1;
+            } else {
+                lastRouting = 0;
+            }
+            if (!first) {
+                msg.append(";");
+            }
+            msg.append("ROUTING ");
+            msg.append(lastRouting); // 1 or 0
+            first = false;
+        }
+
         // report changes in other channels
         for (int ch = 0; ch <= SXMAX_USED; ch++) {
             if (SXData.get(ch) != sxDataCopy[ch]) {
@@ -532,31 +559,8 @@ public class SXnetClient implements Runnable {
      * change
      *
      */
-    /*
     private void checkForLanbahnChangesAndSendUpdates() {
         StringBuilder msg = new StringBuilder();
-        int globalPower = (sxData.get(127) & 0x80) ;
-        if ((globalPowerCopy != globalPower) && (globalPower != INVALID_INT)) {
-            // power state has changed
-            globalPowerCopy = globalPower;
-            msg.append("XPOWER ");
-            msg.append(globalPower);
-        }
-
-        Preferences prefs = Preferences.userNodeForPackage(this.getClass());
-        int centralR = 0;
-        if (prefs.getBoolean("centralRouting", false)) {
-            centralR = 1;
-        }
-        if (centralRoutingCopy != centralR) {
-            // power state has changed
-            centralRoutingCopy = centralR;
-            if (msg.length() != 0) {
-                msg.append(";");
-            }
-            msg.append("ROUTING ");
-            msg.append(centralRoutingCopy);
-        }
 
         TreeMap<Integer, Integer> actData = peStateCopy();
         for (Map.Entry<Integer, Integer> e : actData.entrySet()) {
@@ -582,9 +586,22 @@ public class SXnetClient implements Runnable {
 
     private TreeMap<Integer, Integer> peStateCopy() {
         TreeMap<Integer, Integer> hm = new TreeMap<>();
-        panelElements.forEach((pe) -> hm.put(pe.getAdr(), pe.getState()));
+        for (PanelElement pe : panelElements) {
+            if (pe.isLanbahnAddress()) {
+                hm.put(pe.getAdr(), pe.getState());
+            } else {
+                // the first address is an SX address, but the secondary is a lanbahn address (sensor switch panel lighting, for example)
+                if (pe.isSecondaryLanbahnAddress()) {
+                    if (pe.isBit1()) {
+                        hm.put(pe.getSecondaryAdr(), 1);
+                    } else {
+                        hm.put(pe.getSecondaryAdr(), 0);
+                    }
+                }
+            }
+        }
         return hm;
+
     }
-    
-     */
+
 }

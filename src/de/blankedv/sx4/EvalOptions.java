@@ -64,6 +64,13 @@ public class EvalOptions {
                 .longOpt("debug")
                 .build();
 
+        Option option_r = Option.builder("r")
+                .required(false)
+                .desc("enable routing")
+                .hasArg(false)
+                .longOpt("enable routing")
+                .build();
+        
         Options options = new Options();
         CommandLineParser parser = new DefaultParser();
 
@@ -73,6 +80,7 @@ public class EvalOptions {
         options.addOption(option_s);
         options.addOption(option_b);
         options.addOption(option_v);
+        options.addOption(option_r);
 
         HelpFormatter formatter = new HelpFormatter();
 
@@ -88,6 +96,11 @@ public class EvalOptions {
                 info("SX4 version: " + VERSION);
                 info("use option '-h' to get possible program options");
                 System.exit(0);
+            }
+            
+            if (commandLine.hasOption("r")) {
+                info("routing is enabled");
+                routingEnabled = true;
             }
 
             simulation = false;

@@ -5,7 +5,13 @@
  */
 package de.blankedv.sx4;
 
+import static com.esotericsoftware.minlog.Log.debug;
+import static com.esotericsoftware.minlog.Log.trace;
 import static de.blankedv.sx4.Constants.*;
+import de.blankedv.sx4.timetable.PanelElement;
+import de.blankedv.sx4.timetable.SXAddrAndBits;
+import static de.blankedv.sx4.timetable.Vars.panelElements;
+import java.io.File;
 
 //import de.blankedv.timetable.PanelElement;
 
@@ -35,10 +41,18 @@ public class SXUtils {
         return d & ~(1 << (bit - 1));  // selectrix sxbit !!! 1 ..8
     }
 
+     synchronized static public void setBitSxData(int addr, int bit, boolean writeFlag) {
+        debug("setBit addr="+addr+" bit="+bit);
+        SXData.update(addr,  setBit(SXData.get(addr), bit), writeFlag);
+        debug("sxData["+addr+"]="+SXData.get(addr));
+    }
+
+    synchronized static public void clearBitSxData(int addr, int bit, boolean writeFlag) {
+        debug("clearBit addr="+addr+" bit="+bit);
+        SXData.update(addr, clearBit(SXData.get(addr),bit), writeFlag);
+        debug("sxData["+addr+"]="+SXData.get(addr));
+    }
     
-
-
-
     /**
      * is the address a valid SX0 or SX1 address
      *
@@ -70,7 +84,6 @@ public class SXUtils {
         return false;
     }
 
-    /*
     public static SXAddrAndBits lbAddr2SX(int lbAddr) {
         if (lbAddr == INVALID_INT) {
             return null;
@@ -82,7 +95,7 @@ public class SXUtils {
         } else {
             return null;
         }
-    } */
+    }
 
     /** update the internal state if there is a (or several) matching panel 
      * elements for this sxAddr
@@ -91,7 +104,6 @@ public class SXUtils {
      * @param sxAddr
      * @param sxdata 
      */
-    /*
     public static void updatePanelElementsStateFromSX(int sxAddr, int sxdata) {
         for (int sxbit = 1; sxbit <= 8; sxbit++) {
             // check if we have a matching panel element
@@ -105,7 +117,24 @@ public class SXUtils {
                 }
             }
         }
-    } */
+    }
     
-    
+    public static String getConfigFilename() {
+        String fileName = "";
+   
+        File curDir = new File(".");
+        File[] filesList = curDir.listFiles();
+        for (File f : filesList) {
+            if (f.getName().matches("panel(.*).xml")) {
+                trace("found panel file in cur dir: " + f.getName());
+                fileName = f.getName();
+            }
+        }
+
+        if (fileName.length() > 8) {
+            return fileName;
+        } else {
+           return "";
+        }
+    }
 }

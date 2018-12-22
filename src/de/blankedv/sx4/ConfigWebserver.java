@@ -28,38 +28,28 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 /**
- * very simple http server to be able for update the layout config file in 
+ * very simple http server to be able for update the layout config file in
  * client applications like lanbahnPanel (Android) from the SX4 program
- * 
+ *
  * @author mblank
  */
 public class ConfigWebserver {
 
     String fileName = "";
     HttpServer server;
-    private final int PORT = 8000;  // used by android software
+    private final int PORT = 8000;  // fixed port used by android software
 
-    public ConfigWebserver() throws Exception {
-
-        File curDir = new File(".");
-        File[] filesList = curDir.listFiles();
-        for (File f : filesList) {
-            if (f.getName().matches("panel(.*).xml")) {
-                trace("found panel file in cur dir: " + f.getName());
-                fileName = f.getName();
-            }
+    public ConfigWebserver(String fname) throws Exception {
+        fileName = fname;
+        if (fileName.isEmpty()) {
+            return;
         }
-
-        if (fileName.length() > 8) {
-            info("starting config server on port " + PORT + ", serving: " + fileName);
-            server = HttpServer.create(new InetSocketAddress(PORT), 0);
-            server.createContext("/", new MyHandler());
-            server.setExecutor(null); // creates a default executor
-            server.start();
-        } else {
-            error("no panel...xml file found, NOT starting config server");
-        }
-
+        
+        info("starting config server on port " + PORT + ", serving: " + fileName);
+        server = HttpServer.create(new InetSocketAddress(PORT), 0);
+        server.createContext("/", new MyHandler());
+        server.setExecutor(null); // creates a default executor
+        server.start();
     }
 
     public void stop() {
@@ -75,9 +65,9 @@ public class ConfigWebserver {
             URI requestURI = t.getRequestURI();
             Headers h = t.getResponseHeaders();
             debug("config server URI=" + requestURI.getPath());
-            OutputStream os = null;
+            OutputStream os;
             try {
-                 if (requestURI.getPath().contains("config")) {
+                if (requestURI.getPath().contains("config")) {
                     response = new String(Files.readAllBytes(Paths.get(fileName)));
                     h.add("Content-Type", "text/xml ; charset=utf-8");
                     t.sendResponseHeaders(200, response.length());
@@ -108,8 +98,8 @@ public class ConfigWebserver {
                 }
 
             } catch (IOException ex) {
-                error( ex.getMessage());
-            } 
+                error(ex.getMessage());
+            }
 
         }
     }
