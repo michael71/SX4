@@ -7,6 +7,7 @@ package de.blankedv.sx4;
 
 import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -21,7 +22,7 @@ public class LanbahnData {
                 || (data < LBDATAMIN) || (data > LBDATAMAX)) return INVALID_INT;
         
         d.put(addr, data);
-
+        
         return data;
     }
     
@@ -33,6 +34,10 @@ public class LanbahnData {
             update(addr, 0); // initialize
             return 0;
         }
+    }
+    
+    public static HashMap<Integer, Integer> getAll() {
+        return new HashMap(d);
     }
     
 }

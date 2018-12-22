@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
@@ -36,10 +37,9 @@ public class SXnetClient implements Runnable {
     // list of channels which are of interest for this device
     private final int[] sxDataCopy = new int[SXMAX_USED + 1];
     private int lastClientConnect = INVALID_INT;
-    private final ConcurrentHashMap<Integer, Integer> oldPEStateCopy = new ConcurrentHashMap<>(500);
+    private final ConcurrentHashMap<Integer, Integer> oldLanbahnData = new ConcurrentHashMap<>(500);
 
     private int powerCopy = INVALID_INT;
-    private int centralRoutingCopy = INVALID_INT;
     private int lastRouting = INVALID_INT;
 
     private Thread worker;
@@ -561,14 +561,26 @@ public class SXnetClient implements Runnable {
      */
     private void checkForLanbahnChangesAndSendUpdates() {
         StringBuilder msg = new StringBuilder();
-
-        TreeMap<Integer, Integer> actData = peStateCopy();
-        for (Map.Entry<Integer, Integer> e : actData.entrySet()) {
-            Integer key = e.getKey();
-            Integer value = e.getValue();
-            if (!oldPEStateCopy.containsKey(key) || (!Objects.equals(oldPEStateCopy.get(key), actData.get(key)))) {  // null-safe '=='
-                // value is new or has changed
-                oldPEStateCopy.put(key, value);
+        for (Map.Entry e : LanbahnData.getAll().entrySet()) {
+            Integer key = (Integer) e.getKey();
+            Integer value = (Integer) e.getValue();
+            if (oldLanbahnData.containsKey(key)) {
+                // key (channel) is known, but data have changed
+                if (!Objects.equals(oldLanbahnData.get(key), value)) {
+                    // value has changed
+                    oldLanbahnData.put(key, value);
+                    if (msg.length() != 0) {
+                        msg.append(";");
+                    }
+                    msg.append("XL ").append(key).append(" ").append(value);
+                    if (msg.length() > 60) {
+                        sendMessage(msg.toString());
+                        msg.setLength(0);  // =delete content
+                    }
+                }
+            } else {
+                // new key
+                oldLanbahnData.put(key, value);
                 if (msg.length() != 0) {
                     msg.append(";");
                 }
@@ -577,6 +589,7 @@ public class SXnetClient implements Runnable {
                     sendMessage(msg.toString());
                     msg.setLength(0);  // =delete content
                 }
+
             }
         }
         if (msg.length() > 0) {
@@ -584,6 +597,7 @@ public class SXnetClient implements Runnable {
         }
     }
 
+    /* not using the PanelElement data here BUT THE REAL LANBAHNDATA hashmap
     private TreeMap<Integer, Integer> peStateCopy() {
         TreeMap<Integer, Integer> hm = new TreeMap<>();
         for (PanelElement pe : panelElements) {
@@ -602,6 +616,5 @@ public class SXnetClient implements Runnable {
         }
         return hm;
 
-    }
-
+    } */
 }
