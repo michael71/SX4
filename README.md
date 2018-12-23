@@ -6,7 +6,7 @@ Currently in BETA state, please wait for a fully implemented and tested version 
 
 # USAGE
 
-	usage: SX4 [-b <arg>] [-d] [-h] [-s <arg>] [-t <arg>] [-v]
+	usage: SX4 [-b <arg>] [-d] [-h] [-s <arg>] [-t <arg>] [-v] [-r]
 
 	-b,--baudrate <arg>   Baudrate (only needed for SLX825), default=9600
 	-d,--debug            debug output on
@@ -14,6 +14,7 @@ Currently in BETA state, please wait for a fully implemented and tested version 
 	-s,--serial <arg>     Serial Device - default=ttyUSB0
 	-t,--type <arg>       Interface Type (SLX825, FCC, SIM), default=SIM
 	-v,--version          program version and date
+        -r,--routing          enable routing
 
 
 # EXAMPLES
