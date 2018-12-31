@@ -68,7 +68,7 @@ public class EvalOptions {
                 .required(false)
                 .desc("enable routing")
                 .hasArg(false)
-                .longOpt("enable routing")
+                .longOpt("routing")
                 .build();
         
         Options options = new Options();
