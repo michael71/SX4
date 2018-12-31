@@ -103,9 +103,8 @@ public class Route extends PanelElement {
             for (PanelElement pe : panelElements) {
                 if (pe.isSensor()) {
                     if (pe.getAdr() == Integer.parseInt(sensorAddresses[i])) {
-                        rtSensors.add(pe);
-                        
-                        debug("RT, add sensor " + pe.getAdr());
+                        rtSensors.add(pe);                      
+                         if (CFG_DEBUG) debug("RT, add sensor " + pe.getAdr());
                     }
                 }
             }

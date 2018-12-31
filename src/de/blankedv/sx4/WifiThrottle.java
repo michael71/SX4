@@ -10,6 +10,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import static de.blankedv.sx4.SX4.*;
 import static com.esotericsoftware.minlog.Log.*;
+import static de.blankedv.sx4.Constants.INVALID_INT;
 
 /**
  *
@@ -113,7 +114,7 @@ public class WifiThrottle {
                 return;
             }
             int sxaddr, sxdata;
-            debug("MCast: " + msg);
+            debug("MC read: " + msg);
 
             String cmd[] = msg.split(" ");
 
@@ -134,6 +135,29 @@ public class WifiThrottle {
                         error("could not understand SX command format: " + msg + " error=" + e.getMessage());
                     }
                     break;
+                case "R":
+                    // read status of selectrix channel
+                    try {
+                        if (cmd.length >= 2) {
+                            sxaddr = Integer.parseInt(cmd[1]);
+                            if (!SXUtils.isValidSXAddress(sxaddr)) {
+                                // ignore invalid sx addresses
+                                return;
+                            }
+                            int data = SXData.get(sxaddr);
+                            if ((data != INVALID_INT) && (multicastsocket != null)) {
+                                String str ="X "+sxaddr+" "+data+"\n";
+                                byte[] buf = str.getBytes();
+                                DatagramPacket packet = new DatagramPacket(buf, buf.length, mgroup, LANBAHN_PORT);
+                                multicastsocket.send(packet);
+                                debug("MC sent: "+str.substring(0, str.length()-1));  // newline removed from string
+                            }
+                            
+                        }
+                    } catch (Exception e) {
+                        error("could not understand SX command format: " + msg + " error=" + e.getMessage());
+                    }
+                    break;
 
                 case "A":
                     // announcement of name / ip-address / battery-state
@@ -148,7 +172,7 @@ public class WifiThrottle {
                                 //} else {
                                 //    FunkreglerUI fu1 = new FunkreglerUI(name, cmd);
                                 //}
-                                info("wiThrottle status: " + cmd);
+                                info("wiThrottle status: " + msg);
 
                             }
                         }

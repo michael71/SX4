@@ -1,0 +1,16 @@
+[Unit]
+Description=SX4 service
+After=network.target
+
+[Service]
+ExecStart=/bin/bash /home/pi/NetBeansProjects/SX4/start.sh 
+WorkingDirectory=/home/pi/NetBeansProjects/SX4
+StandardOutput=inherit
+StandardError=inherit
+Type=simple
+Restart=always
+RestartSec=10
+User=pi
+
+[Install]
+WantedBy=multi-user.target
