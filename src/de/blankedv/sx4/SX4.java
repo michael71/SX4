@@ -12,6 +12,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.text.SimpleDateFormat;
 
 import static de.blankedv.sx4.Constants.*;
 import static com.esotericsoftware.minlog.Log.*;
@@ -19,6 +20,9 @@ import de.blankedv.sx4.timetable.CompRoute;
 
 import de.blankedv.sx4.timetable.ReadConfig;
 import de.blankedv.sx4.timetable.Route;
+import java.io.File;
+import java.util.Collections;
+import java.util.Date;
 
 /**
  *
@@ -50,6 +54,7 @@ public class SX4 {
     public static final int TIMEOUT_SECONDS = 10;  // check for connection every 30secs
 
     public static boolean connectionOK = false;  // watchdog for connection
+    public static final int NUMBER_OF_FILES_TO_RETAIN = 5;
 
     private static int updateCount = 0;
     private static Timer timer = new Timer();
@@ -60,16 +65,13 @@ public class SX4 {
 
         if (isDebugFlagSet(args)) {  // must be done first to log errors during command line eval)          
             set(LEVEL_DEBUG);
-            debug("switching on debug output");
         } else {
-            // only 2 different logging levels are used INFO or DEBUG (if "-d" on command line start)
+            // only 2 different logging levels are used: INFO or DEBUG (if "-d" on command line start)
             set(LEVEL_INFO);
         }
-
-        // start simple logging
-        setLogger(new MyLogger("log.txt"));
-        info("starting " + VERSION);
-
+    
+        startLogging();  // start simple logging
+ 
         EvalOptions.sx4options(args);
 
         boolean result = false;
@@ -198,5 +200,37 @@ public class SX4 {
             }
         }
         return false;
+    }
+
+    private static void deleteOlderLogfiles() {
+        File curDir = new File(".");
+        ArrayList<File> logFiles = new ArrayList<>();
+        File[] filesList = curDir.listFiles();
+
+        for (File f : filesList) {
+            if (f.isFile() && f.getName().startsWith("log") && f.getName().endsWith(".txt")) {
+                logFiles.add(f);
+            }
+        }
+        Collections.sort(logFiles);
+        if (!logFiles.isEmpty() && (logFiles.size() > NUMBER_OF_FILES_TO_RETAIN)) {
+            for (int i = 0; i < (logFiles.size() - NUMBER_OF_FILES_TO_RETAIN); i++) {
+                //debug("deleting old log file" + logFiles.get(i).getName());
+                logFiles.get(i).delete();
+            }
+        } 
+    }
+    
+    private static void startLogging() {
+        // start simple logging
+        SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        String currDateTime = df.format(new Date());
+        String logFileName = "log." + currDateTime + ".txt";
+        setLogger(new MyLogger(logFileName));
+        info("starting " + VERSION);
+        info("datetime=" +currDateTime);
+        deleteOlderLogfiles();
+        
+        
     }
 }

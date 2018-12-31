@@ -15,7 +15,7 @@ paneldesc.xml
 build.xml
 .project
 .classpath
-log.txt
+log.*.txt
 lanbahnpanel.apk
 
 archiv/
