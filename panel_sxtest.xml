@@ -5,6 +5,7 @@
 <loco adr="40" name="ET440" mass="3" vmax="160" />
 <loco adr="29" name="ET423-1" mass="2" vmax="120" />
 <loco adr="25" name="ET423-2" mass="2" vmax="120" />
+<loco adr="42" name="ET442-BW" mass="2" vmax="160" />
 </locolist>
 <panel name="sxtest" version="2018-12-20">
 <track x="80" y="20" x2="100" y2="40" />
