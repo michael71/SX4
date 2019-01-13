@@ -23,6 +23,8 @@ import de.blankedv.sx4.timetable.Route;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
+import java.util.prefs.Preferences;
 
 /**
  *
@@ -34,7 +36,7 @@ public class SX4 {
 
     public static volatile boolean running = true;
     public static boolean routingEnabled = false;
-
+    
     public static ArrayBlockingQueue<IntegerPair> dataToSend = new ArrayBlockingQueue<>(400);
     public static AtomicInteger powerToBe = new AtomicInteger(INVALID_INT);
 
@@ -59,9 +61,16 @@ public class SX4 {
     private static int updateCount = 0;
     private static Timer timer = new Timer();
     public static volatile long lastConnected = System.currentTimeMillis();
+    
+   
+   @SuppressWarnings("SleepWhileInLoop")
+    public static void main(String[] args) {
+        SX4 app = new SX4();
+        app.runSX4(args);
+    }
 
     @SuppressWarnings("SleepWhileInLoop")
-    public static void main(String[] args) {
+    public void runSX4(String[] args) {
 
         if (isDebugFlagSet(args)) {  // must be done first to log errors during command line eval)          
             set(LEVEL_DEBUG);
@@ -69,9 +78,10 @@ public class SX4 {
             // only 2 different logging levels are used: INFO or DEBUG (if "-d" on command line start)
             set(LEVEL_INFO);
         }
-    
+
         startLogging();  // start simple logging
- 
+
+
         EvalOptions.sx4options(args);
 
         boolean result = false;
@@ -85,6 +95,8 @@ public class SX4 {
         }
         configFilename = SXUtils.getConfigFilename();
 
+        loadTrainNumbers();
+        
         if (configFilename.isEmpty()) {
             error("no panel...xml file found, NOT starting config server");
         } else {
@@ -104,7 +116,7 @@ public class SX4 {
             wifiThrottle = new WifiThrottle();
 
             shutdownHook(serv);
-
+            int count = 0;
             while (running) {
                 try {
 
@@ -114,6 +126,12 @@ public class SX4 {
                     if (routingEnabled) {
                         Route.auto();
                         CompRoute.auto();
+                    }
+                    // TrainNumberData.auto();  will be actively reset by fahrstrassensteurung
+                    count++;
+                    if (count > 10) {  // save current state every few seconds
+                        count = 0;
+                        saveTrainNumbers();
                     }
                 } catch (InterruptedException ex) {
                     error("ERROR" + ex.getMessage());
@@ -127,7 +145,7 @@ public class SX4 {
 
     }
 
-    private static void shutdownHook(SXnetServer server) {
+    private void shutdownHook(SXnetServer server) {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
@@ -135,6 +153,7 @@ public class SX4 {
                     running = false;  // shutdown all threads
                     server.stopClients();
                     Thread.sleep(200);
+                    
                     error("SX4 ends.");
                     //some cleaning up code...
 
@@ -145,6 +164,43 @@ public class SX4 {
         });
     }
 
+    private void saveTrainNumbers() {
+        StringBuilder state = new StringBuilder();
+        for (Map.Entry e : TrainNumberData.getAll().entrySet()) {
+            Integer key = (Integer) e.getKey();
+            Integer value = (Integer) e.getValue();
+            if (value != 0) {
+                state.append(key);
+                state.append(" ");
+                state.append(value);
+                state.append(";");
+            }
+        }
+        final Preferences prefs = Preferences.userNodeForPackage(this.getClass());
+        prefs.put("trainNumbers", state.toString());
+    }
+    
+    private void loadTrainNumbers() {
+        final Preferences prefs = Preferences.userNodeForPackage(this.getClass());
+        String trainState = prefs.get("trainNumbers", "");
+        if (trainState.isEmpty()) return;
+        
+        info("read previous state="+trainState);     
+        String[] states = trainState.split(";");
+        for (String s : states) {
+            String[] keyValue = s.split(" ");
+            if (keyValue.length == 2) {
+                try {
+                int addr = Integer.parseInt(keyValue[0]);
+                int data = Integer.parseInt(keyValue[1]);              
+                TrainNumberData.update(addr,data);
+                } catch (NumberFormatException e) {
+                    // invalid data
+                }
+            }
+        }
+    }
+    
     private static void initConnectivityCheck() {
         // init timer for connectivity check (if not in simulation)
         // this program is shutdown, if there is no connection for 10 seconds
@@ -218,9 +274,9 @@ public class SX4 {
                 //debug("deleting old log file" + logFiles.get(i).getName());
                 logFiles.get(i).delete();
             }
-        } 
+        }
     }
-    
+
     private static void startLogging() {
         // start simple logging
         SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd_HHmmss");
@@ -228,9 +284,8 @@ public class SX4 {
         String logFileName = "log." + currDateTime + ".txt";
         setLogger(new MyLogger(logFileName));
         info("starting " + VERSION);
-        info("datetime=" +currDateTime);
+        info("datetime=" + currDateTime);
         deleteOlderLogfiles();
-        
-        
+
     }
 }

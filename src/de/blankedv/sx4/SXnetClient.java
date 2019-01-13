@@ -38,6 +38,7 @@ public class SXnetClient implements Runnable {
     private final int[] sxDataCopy = new int[SXMAX_USED + 1];
     private int lastClientConnect = INVALID_INT;
     private final ConcurrentHashMap<Integer, Integer> oldLanbahnData = new ConcurrentHashMap<>(500);
+    private final ConcurrentHashMap<Integer, Integer> oldTrainNumberData = new ConcurrentHashMap<>(500);
 
     private int powerCopy = INVALID_INT;
     private int lastRouting = INVALID_INT;
@@ -123,6 +124,7 @@ public class SXnetClient implements Runnable {
             tickCounter++;
             checkForChangedSXDataAndSendUpdates(tickCounter);
             checkForLanbahnChangesAndSendUpdates();
+            checkForTrainNumberChangesAndSendUpdates();
         }
     }
 
@@ -178,11 +180,14 @@ public class SXnetClient implements Runnable {
             case "SET": // for addresses > 1200 (lanbahn sim./routes)
                 result = setLanbahnMessage(param);
                 break;
+            case "SETTRAIN": // for addresses > 1200 (lanbahn sim./routes)
+                result = setLanbahnTrainMessage(param);
+                break;
+            case "READTRAIN": // for addresses > 1200 (lanbahn sim./routes)
+                result = createLanbahnTrainMessage(param);
+                break;
             case "READ": // for addresses > 1200 (lanbahn sim./routes)
                 result = createLanbahnFeedbackMessage(param);
-                break;
-            case "QUIT": //terminate this client thread
-                stop();
                 break;
             default:
                 result = "ERROR";
@@ -191,7 +196,7 @@ public class SXnetClient implements Runnable {
 
     }
 
-    // used by SX-Loconet Bridge and Andropanel
+    // still used by SX-Loconet Bridge and Andropanel !!
     private String readSXByteMessage(String[] par) {
         if (par.length < 2) {
             return "ERROR";
@@ -359,6 +364,28 @@ public class SXnetClient implements Runnable {
         return "ERROR";
     }
 
+    private String setLanbahnTrainMessage(String[] par) {
+
+        info("setLanbahnTrainMessage");
+
+        if (par.length < 3) {
+            return "ERROR";
+        }
+        int addr = getNumberFromString(par[1]);
+        int data = getDataFromString(par[2]);
+        if ((addr == INVALID_INT) || (data == INVALID_INT)) {
+            return "ERROR";
+        }
+        // update train number info
+        int res = TrainNumberData.update(addr, data);
+        if (res != INVALID_INT) {
+            // address was in correct address 0..9999
+            return "OK";
+        }
+
+        return "ERROR";
+    }
+
     private String createLanbahnFeedbackMessage(String[] par) {
 
         debug("createLanbahnFeedbackMessage");
@@ -391,6 +418,26 @@ public class SXnetClient implements Runnable {
 
     }
 
+    private String createLanbahnTrainMessage(String[] par) {
+
+        debug("createLanbahnTrainMessage");
+
+        if (par.length < 2) {
+            return "ERROR";
+        }
+        int addr = getNumberFromString(par[1]);
+        if (addr == INVALID_INT) {
+            return "ERROR";
+        }
+        int d = TrainNumberData.get(addr);
+        if (d != INVALID_INT) {
+            return "XTRAIN " + addr + " " + d;
+        }
+
+        return "ERROR";
+
+    }
+
     private int getByteFromString(String s) {
         // converts String to integer between 0 and 255 
         //    (= range of SX Data and of Lanbahn data values)
@@ -419,6 +466,22 @@ public class SXnetClient implements Runnable {
         }
         return INVALID_INT;
     }
+    
+     private int getDataFromString(String s) {
+        // converts String to integer between 0 and 9999
+        //    (= range train numbers)
+        Integer data;
+        try {
+            data = Integer.parseInt(s);
+            if ((data >= 0) && (data <= 9999)) {
+                return data;
+            }
+        } catch (Exception e) {
+            //
+        }
+        return INVALID_INT;
+    }
+
 
     /**
      * extract the selectrix address from a string, only valid addresses 0...111
@@ -459,6 +522,30 @@ public class SXnetClient implements Runnable {
                 // OK, valid lanbahn channel - either SX-mapped or PURE lanbahn
             } else {
                 error("lbAddr=" + lbAddr + " not valid");
+                return INVALID_INT;
+            }
+        } catch (Exception e) {
+            error("number conversion error input=" + s);
+            return INVALID_INT;
+        }
+    }
+
+    /**
+     * parse String to extract a number between 0 and LBMAX
+     *
+     * @param s
+     * @return lbaddr (or INVALID_INT)
+     */
+    int getNumberFromString(String s) {
+
+        Integer addr;
+        try {
+            addr = Integer.parseInt(s);
+            if ((addr >= 0) && (addr <= LBMAX)) {
+                return addr;
+                // OK, valid lanbahn channel - either SX-mapped or PURE lanbahn
+            } else {
+                error("addr=" + addr + " not valid");
                 return INVALID_INT;
             }
         } catch (Exception e) {
@@ -585,6 +672,49 @@ public class SXnetClient implements Runnable {
                     msg.append(";");
                 }
                 msg.append("XL ").append(key).append(" ").append(value);
+                if (msg.length() > 60) {
+                    sendMessage(msg.toString());
+                    msg.setLength(0);  // =delete content
+                }
+
+            }
+        }
+        if (msg.length() > 0) {
+            sendMessage(msg.toString());
+        }
+    }
+    
+    /**
+     * check for changed train number data and send update in case of
+     * change
+     *
+     */
+    private void checkForTrainNumberChangesAndSendUpdates() {
+        StringBuilder msg = new StringBuilder();
+        for (Map.Entry e : TrainNumberData.getAll().entrySet()) {
+            Integer key = (Integer) e.getKey();
+            Integer value = (Integer) e.getValue();
+            if (oldTrainNumberData.containsKey(key)) {
+                // key (channel) is known, but data have changed
+                if (!Objects.equals(oldTrainNumberData.get(key), value)) {
+                    // value has changed
+                    oldTrainNumberData.put(key, value);
+                    if (msg.length() != 0) {
+                        msg.append(";");
+                    }
+                    msg.append("XTRAIN ").append(key).append(" ").append(value);
+                    if (msg.length() > 60) {
+                        sendMessage(msg.toString());
+                        msg.setLength(0);  // =delete content
+                    }
+                }
+            } else {
+                // new key
+                oldTrainNumberData.put(key, value);
+                if (msg.length() != 0) {
+                    msg.append(";");
+                }
+                msg.append("XTRAIN ").append(key).append(" ").append(value);
                 if (msg.length() > 60) {
                     sendMessage(msg.toString());
                     msg.setLength(0);  // =delete content

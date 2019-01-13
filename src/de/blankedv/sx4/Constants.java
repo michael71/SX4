@@ -14,12 +14,13 @@ public class Constants {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "SX4 - rev1.11 - 29 Dec 2018";
+    public static final String VERSION = "SX4 - rev1.13 - 12 Jan 2019";
 
     public static final int STATUS_CONNECTED = 1;
     public static final int STATUS_NOT_CONNECTED = 0;
 
     public static int INVALID_INT = -1;
+    public static int INVALID_TRAIN = 0;
     /**
      * {@value #SX_MIN} = minimale SX adresse angezeigt im Monitor
      */
