@@ -69,8 +69,11 @@ public class CompRoute extends PanelElement {
         setState(RT_ACTIVE);
         // check if all routes can be set successfully
         boolean res = true;
+        // get current train number from first sensor of first route
+        Route start = myroutes.get(0);
+        int trainNumber = start.getStartTrainNumber();
         for (Route rt : myroutes) {
-            res = rt.set();
+            res = rt.set(trainNumber);
             if (res == false) {
                 error("cannot set comproute id=" + getAdr() + " because route=" + rt.getAdr() + " cannot be set.");
                 return false;  // cannot set comproute.

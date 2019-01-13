@@ -17,9 +17,11 @@ import java.text.SimpleDateFormat;
 import static de.blankedv.sx4.Constants.*;
 import static com.esotericsoftware.minlog.Log.*;
 import de.blankedv.sx4.timetable.CompRoute;
+import de.blankedv.sx4.timetable.PanelElement;
 
 import de.blankedv.sx4.timetable.ReadConfig;
 import de.blankedv.sx4.timetable.Route;
+import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
@@ -95,12 +97,14 @@ public class SX4 {
         }
         configFilename = SXUtils.getConfigFilename();
 
-        loadTrainNumbers();
+
         
         if (configFilename.isEmpty()) {
             error("no panel...xml file found, NOT starting config server");
         } else {
             ReadConfig.readXML(configFilename);
+            loadTrainNumbers();  // sensors must be know when setting train numbers
+            
             try {
                 new ConfigWebserver(configFilename);
             } catch (Exception ex) {
@@ -164,15 +168,16 @@ public class SX4 {
         });
     }
 
+    /** save current train numbers for all sensors
+     * 
+     */
     private void saveTrainNumbers() {
-        StringBuilder state = new StringBuilder();
-        for (Map.Entry e : TrainNumberData.getAll().entrySet()) {
-            Integer key = (Integer) e.getKey();
-            Integer value = (Integer) e.getValue();
-            if (value != 0) {
-                state.append(key);
+       StringBuilder state = new StringBuilder();
+       for (PanelElement pe : panelElements) {
+           if (pe.isSensor() ) {
+                state.append(pe.getAdr());
                 state.append(" ");
-                state.append(value);
+                state.append(pe.getTrain());
                 state.append(";");
             }
         }
@@ -193,7 +198,7 @@ public class SX4 {
                 try {
                 int addr = Integer.parseInt(keyValue[0]);
                 int data = Integer.parseInt(keyValue[1]);              
-                TrainNumberData.update(addr,data);
+                PanelElement.setTrain(addr,data);
                 } catch (NumberFormatException e) {
                     // invalid data
                 }

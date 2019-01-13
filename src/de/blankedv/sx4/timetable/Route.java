@@ -137,6 +137,10 @@ public class Route extends PanelElement {
         // deactivate sensors
         for (PanelElement se : rtSensors) {
             se.setInRoute(false);
+            // reset trainNumber data for all but last sensor
+            if (se != rtSensors.get(rtSensors.size()-1)) {
+                se.setTrain(0);
+            }
             LanbahnData.update(se.getSecondaryAdr(), 0);
         }
         
@@ -200,7 +204,27 @@ public class Route extends PanelElement {
         return false;
     }
 
+    /** default set for single route 
+     * 
+     * @return 
+     */
     public boolean set() {
+        return set(INVALID_INT);
+    }
+    
+    /** set function if the route is part of a compound route
+     * 
+     * @param startTrain
+     * @return 
+     */
+    public boolean set(int startTrain) {
+        
+        if (startTrain == 0) {
+            error("invalid startTrain parameter in set route id=" + this.getAdr());
+        } else if (startTrain == INVALID_INT) {
+            // get from occupation of first sensor
+            startTrain = getStartTrainNumber();
+        }
 
         lastUpdateTime = System.currentTimeMillis(); // store for resetting
 
@@ -219,8 +243,10 @@ public class Route extends PanelElement {
         
         // activate sensors, set "IN_ROUTE" (this is stored in as "LanbahnData"
         // in secondary address of the sensor
+
         for (PanelElement se : rtSensors) {
             se.setInRoute(true);
+            se.setTrain(startTrain);
             LanbahnData.update(se.getSecondaryAdr(), 1);
             // only virtual, no matching real SX address
         }
@@ -264,6 +290,10 @@ public class Route extends PanelElement {
 
     public boolean isActive() {
         return (this.getState() == RT_ACTIVE);
+    }
+    
+    public int getStartTrainNumber() {
+        return rtSensors.get(0).getTrain();   // train occupation of starting sensor
     }
 
     protected class RouteSignal {

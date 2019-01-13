@@ -7,6 +7,7 @@ package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
+import static com.esotericsoftware.minlog.Log.info;
 import static de.blankedv.sx4.Constants.*;
 import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.SXUtils;
@@ -35,6 +36,9 @@ public class PanelElement {
     private String typeString = "AC";
     // with 2 addresses (adr1=occ/free, 2=in-route)
     protected String route = "";
+    private int train = INVALID_INT;   // train number, if train is occupying this panel element
+
+    
 
     // these constants are defined just for easier understanding of the
     // methods of the classes derived from this class
@@ -84,12 +88,14 @@ public class PanelElement {
         this.adr = adr;
         this.secondaryAdr = INVALID_INT;
         typeString = t;
+        if (isSensor()) train = 0;
         this.state = 0;  // initialized to CLOSED / RED / FREE
         lastUpdateTime = System.currentTimeMillis();
     }
 
     public PanelElement(String t, int adr, int adr2) {
         typeString = t;
+        if (isSensor()) train = 0;
         this.adr = adr;
         this.secondaryAdr = adr2;
         this.state = 0;  // initialized to CLOSED / RED / FREE
@@ -126,7 +132,14 @@ public class PanelElement {
         this.inRoute = inRoute;
     }
     
-    
+    public int getTrain() {
+        return train;
+    }
+
+    public void setTrain(int train) {
+        //info("settrain ="+train);
+        this.train = train;
+    }
 
     public boolean hasAdrX(int address) {
         if (adr == address) {
@@ -338,5 +351,27 @@ public class PanelElement {
         return null;
     }
 
+    // set "train" for all panel elements with a given address
+    public static boolean setTrain(int address, int trainNumber) {
+        //info("PE.setTrain("+address+","+trainNumber);
+        boolean result = false;
+        for (PanelElement pe : panelElements) {
+            if (pe.isSensor() && (pe.getAdr() == address)) {
+                pe.setTrain(trainNumber);
+                // info("PE found");
+                result = true;
+            }
+        }
+        return result;
+    }
     
+    // get "train" for panel element with a given address
+    public static int getTrain(int address) {
+         for (PanelElement pe : panelElements) {
+            if (pe.isSensor() && (pe.getAdr() == address)) {
+                return pe.getTrain();
+            }
+        }
+        return INVALID_INT;
+    }
 }

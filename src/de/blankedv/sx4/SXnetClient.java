@@ -38,7 +38,7 @@ public class SXnetClient implements Runnable {
     private final int[] sxDataCopy = new int[SXMAX_USED + 1];
     private int lastClientConnect = INVALID_INT;
     private final ConcurrentHashMap<Integer, Integer> oldLanbahnData = new ConcurrentHashMap<>(500);
-    private final ConcurrentHashMap<Integer, Integer> oldTrainNumberData = new ConcurrentHashMap<>(500);
+    private final ConcurrentHashMap<PanelElement, Integer> oldTrainNumberData = new ConcurrentHashMap<>(500);
 
     private int powerCopy = INVALID_INT;
     private int lastRouting = INVALID_INT;
@@ -377,9 +377,7 @@ public class SXnetClient implements Runnable {
             return "ERROR";
         }
         // update train number info
-        int res = TrainNumberData.update(addr, data);
-        if (res != INVALID_INT) {
-            // address was in correct address 0..9999
+        if (PanelElement.setTrain(addr, data)) {
             return "OK";
         }
 
@@ -429,7 +427,7 @@ public class SXnetClient implements Runnable {
         if (addr == INVALID_INT) {
             return "ERROR";
         }
-        int d = TrainNumberData.get(addr);
+        int d = PanelElement.getTrain(addr);
         if (d != INVALID_INT) {
             return "XTRAIN " + addr + " " + d;
         }
@@ -687,22 +685,25 @@ public class SXnetClient implements Runnable {
     /**
      * check for changed train number data and send update in case of
      * change
+     *  this is only done for sensors - because these are the only 
+     * panel elements which can have valid train numbers 
      *
      */
     private void checkForTrainNumberChangesAndSendUpdates() {
         StringBuilder msg = new StringBuilder();
-        for (Map.Entry e : TrainNumberData.getAll().entrySet()) {
-            Integer key = (Integer) e.getKey();
-            Integer value = (Integer) e.getValue();
-            if (oldTrainNumberData.containsKey(key)) {
+        for (PanelElement pe : panelElements) {
+            if (pe.isSensor()) {
+            Integer data = (Integer) pe.getTrain();
+            
+            if (oldTrainNumberData.containsKey(pe)) {
                 // key (channel) is known, but data have changed
-                if (!Objects.equals(oldTrainNumberData.get(key), value)) {
+                if (!Objects.equals(oldTrainNumberData.get(pe), data)) {
                     // value has changed
-                    oldTrainNumberData.put(key, value);
+                    oldTrainNumberData.put(pe, data);
                     if (msg.length() != 0) {
                         msg.append(";");
                     }
-                    msg.append("XTRAIN ").append(key).append(" ").append(value);
+                    msg.append("XTRAIN ").append(pe.getAdr()).append(" ").append(data);
                     if (msg.length() > 60) {
                         sendMessage(msg.toString());
                         msg.setLength(0);  // =delete content
@@ -710,16 +711,17 @@ public class SXnetClient implements Runnable {
                 }
             } else {
                 // new key
-                oldTrainNumberData.put(key, value);
+                oldTrainNumberData.put(pe, data);
                 if (msg.length() != 0) {
                     msg.append(";");
                 }
-                msg.append("XTRAIN ").append(key).append(" ").append(value);
+                msg.append("XTRAIN ").append(pe.getAdr()).append(" ").append(data);
                 if (msg.length() > 60) {
                     sendMessage(msg.toString());
                     msg.setLength(0);  // =delete content
                 }
 
+            }
             }
         }
         if (msg.length() > 0) {
@@ -727,24 +729,5 @@ public class SXnetClient implements Runnable {
         }
     }
 
-    /* not using the PanelElement data here BUT THE REAL LANBAHNDATA hashmap
-    private TreeMap<Integer, Integer> peStateCopy() {
-        TreeMap<Integer, Integer> hm = new TreeMap<>();
-        for (PanelElement pe : panelElements) {
-            if (pe.isLanbahnAddress()) {
-                hm.put(pe.getAdr(), pe.getState());
-            } else {
-                // the first address is an SX address, but the secondary is a lanbahn address (sensor switch panel lighting, for example)
-                if (pe.isSecondaryLanbahnAddress()) {
-                    if (pe.isBit1()) {
-                        hm.put(pe.getSecondaryAdr(), 1);
-                    } else {
-                        hm.put(pe.getSecondaryAdr(), 0);
-                    }
-                }
-            }
-        }
-        return hm;
-
-    } */
+    
 }
