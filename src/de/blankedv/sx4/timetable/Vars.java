@@ -11,6 +11,8 @@ public class Vars {
 
     public static final boolean DEBUG = true;
     public static boolean timetableRunning = false;
+    
+    public static final int AUTO_CLEAR_ROUTE_TIME_SECONDS = 90;  // time after which routes are cleared automatically
 
     // signals
     static final int STATE_RED = 0;
@@ -30,6 +32,5 @@ public class Vars {
     public static ArrayList<Route> allRoutes = new ArrayList<>();   // TODO eleminate
     public static ArrayList<CompRoute> allCompRoutes = new ArrayList<>();  // TODO eleminate
 
-    public static final int autoClearRouteTimeSec = 20;  // time after which routes are cleared automatically
 
 }

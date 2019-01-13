@@ -88,7 +88,7 @@ public class CompRoute extends PanelElement {
         // this function is only needed for the lanbahn-value display, because the individual single routes,
         // which are set by a compound route, are autocleared by the "Route.auto()" function
         for (CompRoute rt : allCompRoutes) {
-            if (((System.currentTimeMillis() - rt.lastUpdateTime) > autoClearRouteTimeSec * 1000L)
+            if (((System.currentTimeMillis() - rt.lastUpdateTime) > AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L)
                     && (rt.getState() == RT_ACTIVE)) {
                 rt.setState(RT_INACTIVE);
              }

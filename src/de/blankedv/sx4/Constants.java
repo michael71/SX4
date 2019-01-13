@@ -53,4 +53,6 @@ public class Constants {
      * {@value #LBDATAMAX} =maximum lanbahn data value (== 2 bits in SX world)
      */
     public static final int LBDATAMAX = 3;  // 
+    
+    
 }

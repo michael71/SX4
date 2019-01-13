@@ -218,7 +218,7 @@ public class Route extends PanelElement {
      * @return 
      */
     public boolean set(int startTrain) {
-        
+
         if (startTrain == 0) {
             error("invalid startTrain parameter in set route id=" + this.getAdr());
         } else if (startTrain == INVALID_INT) {
@@ -233,9 +233,9 @@ public class Route extends PanelElement {
             return false;
         }
 
-        debug(" setting route id=" + this.getAdr());
+        debug(" setting route id=" + this.getAdr()+" startTrain="+startTrain);
 
-        lastUpdateTime = System.currentTimeMillis(); // store for resetting
+
         // automatically
 
         clearOffendingRoutes();
@@ -362,7 +362,7 @@ public class Route extends PanelElement {
         // check for auto reset of allRoutes
         // debug("checking route auto clear");
         for (Route rt : allRoutes) {
-            if (((System.currentTimeMillis() - rt.lastUpdateTime) > autoClearRouteTimeSec * 1000L)
+            if (((System.currentTimeMillis() - rt.lastUpdateTime) > AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L)
                     && (rt.getState() == RT_ACTIVE)) {
                 rt.clear();
             }
