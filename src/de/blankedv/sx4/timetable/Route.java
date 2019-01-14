@@ -41,6 +41,8 @@ public class Route extends PanelElement {
 
     // offending allRoutes
     private ArrayList<Route> rtOffending = new ArrayList<>();
+    
+    private long clearRouteTime = Long.MAX_VALUE;  // i.e. => never, if not set
 
     /**
      * constructs a route
@@ -59,12 +61,6 @@ public class Route extends PanelElement {
         this.routeString = route;
         this.sensorsString = allSensors;
         this.offendingString = offending;
-
-        boolean DEBUG_RT = false;
-
-        lastUpdateTime = System.currentTimeMillis(); // store for resetting
-
-        
 
         // route = "750,1;751,2" => set 750 turnout 1 and 751 turnout value 2
         String[] routeElements = route.split(";");
@@ -130,9 +126,9 @@ public class Route extends PanelElement {
     }
 
     public void clear() {
-        lastUpdateTime = System.currentTimeMillis(); // store for resetting
+        clearRouteTime = Long.MAX_VALUE;  // i.e. => never, if not set
         // automatically
-        debug(" clearing route id=" + this.getAdr());
+        debug("clearing route id=" + this.getAdr());
 
         // deactivate sensors
         for (PanelElement se : rtSensors) {
@@ -226,7 +222,7 @@ public class Route extends PanelElement {
             startTrain = getStartTrainNumber();
         }
 
-        lastUpdateTime = System.currentTimeMillis(); // store for resetting
+        clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
 
         if (offendingRouteActive()) {
             debug(" offending route active");
@@ -358,11 +354,14 @@ public class Route extends PanelElement {
         }
     }
 
+    /**  check for auto reset of allRoutes
+     * 
+     */
     public static void auto() {
-        // check for auto reset of allRoutes
+        
         // debug("checking route auto clear");
         for (Route rt : allRoutes) {
-            if (((System.currentTimeMillis() - rt.lastUpdateTime) > AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L)
+             if ( (( System.currentTimeMillis() - rt.clearRouteTime) > 0 ) 
                     && (rt.getState() == RT_ACTIVE)) {
                 rt.clear();
             }

@@ -23,6 +23,8 @@ public class CompRoute extends PanelElement {
     
     private final boolean DEBUG_COMPROUTE = false;
 
+    private long clearRouteTime = Long.MAX_VALUE;  // i.e. => never, if not set
+     
     /**
      * constructs a composite route
      *
@@ -33,7 +35,7 @@ public class CompRoute extends PanelElement {
         setState(RT_INACTIVE);
         // this string written back to config file.
         this.routesString = sRoutes;
-        lastUpdateTime = System.currentTimeMillis(); // store for resetting 
+
         // allRoutes = "12,13": these allRoutes need to be activated.
         String[] iID = routesString.split(",");
         //noinspection ForLoopReplaceableByForEach
@@ -65,7 +67,8 @@ public class CompRoute extends PanelElement {
 
         if (DEBUG_COMPROUTE) debug(" setting comproute id=" + getAdr());
   
-        lastUpdateTime = System.currentTimeMillis();
+        clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
+        
         setState(RT_ACTIVE);
         // check if all routes can be set successfully
         boolean res = true;
@@ -88,8 +91,8 @@ public class CompRoute extends PanelElement {
         // this function is only needed for the lanbahn-value display, because the individual single routes,
         // which are set by a compound route, are autocleared by the "Route.auto()" function
         for (CompRoute rt : allCompRoutes) {
-            if (((System.currentTimeMillis() - rt.lastUpdateTime) > AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L)
-                    && (rt.getState() == RT_ACTIVE)) {
+            if ( (( System.currentTimeMillis() - rt.clearRouteTime) > 0 ) 
+                    && (rt.getState() == RT_ACTIVE) ) {
                 rt.setState(RT_INACTIVE);
              }
 
