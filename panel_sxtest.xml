@@ -48,7 +48,7 @@
 <route id="2203" btn1="1202" btn2="1203" route="853,1;852,1;765,0;767,0;761,2;781,0" sensors="922,928" offending="" />
 <route id="2204" btn1="1202" btn2="1206" route="853,0;852,0;765,0;767,0;761,2" sensors="927,922" offending="" />
 <route id="2206" btn1="1203" btn2="1204" route="851,0;771,0;783,1" sensors="928,926,902" offending="" />
-<route id="2207" btn1="1203" btn2="1205" route="851,1;772,1;783,1" sensors="928,926,903" offending="" />
+<route id="2207" btn1="1203" btn2="1205" route="851,1;771,0;773,0;783,1" sensors="928,926,903" offending="" />
 
 <comproute id="2300" btn1="1200" btn2="1204" routes="2201,2206" />
 <comproute id="2301" btn1="1200" btn2="1205" routes="2201,2207" />
@@ -57,19 +57,19 @@
 <comproute id="2304" btn1="1202" btn2="1204" routes="2203,2206" />
 <comproute id="2305" btn1="1202" btn2="1205" routes="2203,2207" />
 
-<route id="2211" btn1="1203" btn2="1200" route="854,1;853,0;852,0;765,0;767,0;761,0;781,1" sensors="928,924" offending="" />
-<route id="2212" btn1="1203" btn2="1201" route="854,0;853,0;852,0;765,0;767,0;761,0;781,1" sensors="928,923" offending="" />
-<route id="2213" btn1="1203" btn2="1202" route="853,1;852,1;765,0;767,0;761,0;781,1" sensors="928,922" offending="" />
-<route id="2215" btn1="1206" btn2="1202" route="853,0;852,0;765,0;767,0;761,0;783,1" sensors="922,927" offending="" />
-<route id="2216" btn1="1204" btn2="1202" route="851,0;771,0;771,1;773,0;783,0" sensors="902,926,908" offending="" />
-<route id="2217" btn1="1205" btn2="1203" route="851,1;772,1;773,1;771,0;783,0" sensors="903,926,928" offending="" />
+<route id="2211" btn1="1203" btn2="1200" route="854,1;853,0;852,0;765,0;767,0;761,0;781,1" sensors="926,928,924" offending="" />
+<route id="2212" btn1="1203" btn2="1201" route="854,0;853,0;852,0;765,0;767,0;761,0;781,1" sensors="926,928,923" offending="" />
+<route id="2213" btn1="1203" btn2="1202" route="853,1;852,1;765,0;767,0;761,0;781,1" sensors="926,928,922" offending="" />
+<route id="2215" btn1="1206" btn2="1202" route="853,0;852,0;761,0;783,0" sensors="922,927" offending="" />
+<route id="2216" btn1="1204" btn2="1203" route="851,0;771,1;773,0;783,0" sensors="902,926" offending="" />
+<route id="2217" btn1="1205" btn2="1203" route="851,1;773,1;771,0;783,0" sensors="903,926" offending="" />
 
-<comproute id="2310" btn1="1204" btn2="1200" routes="2211,2216" />
-<comproute id="2311" btn1="1205" btn2="1200" routes="2211,2217" />
-<comproute id="2312" btn1="1204" btn2="1201" routes="2212,2216" />
-<comproute id="2313" btn1="1205" btn2="1201" routes="2212,2217" />
-<comproute id="2314" btn1="1204" btn2="1202" routes="2213,2216" />
-<comproute id="2315" btn1="1205" btn2="1202" routes="2213,2217" />
+<comproute id="2310" btn1="1204" btn2="1200" routes="2216,2211" />
+<comproute id="2311" btn1="1205" btn2="1200" routes="2217,2211" />
+<comproute id="2312" btn1="1204" btn2="1201" routes="2216,2212" />
+<comproute id="2313" btn1="1205" btn2="1201" routes="2217,2212" />
+<comproute id="2314" btn1="1204" btn2="1202" routes="2216,2213" />
+<comproute id="2315" btn1="1205" btn2="1202" routes="2217,2213" />
 
 <trip id="3100" route="2300" sens1="924" sens2="902" loco="29,1,126" stopdelay="1500" />
 <trip id="3101" route="2310" sens1="902" sens2="924" loco="29,0,126" stopdelay="1500" />

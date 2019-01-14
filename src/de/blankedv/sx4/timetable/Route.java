@@ -32,6 +32,8 @@ public class Route extends PanelElement {
 
     // sensors turnout activate for the display of this route
     private ArrayList<PanelElement> rtSensors = new ArrayList<>();
+    public PanelElement endSensor = null;   // used for auto- "route completed" detection
+                           // NOT used in compound routes.
 
     // signals of this route
     private ArrayList<RouteSignal> rtSignals = new ArrayList<>();
@@ -41,7 +43,7 @@ public class Route extends PanelElement {
 
     // offending allRoutes
     private ArrayList<Route> rtOffending = new ArrayList<>();
-    
+
     private long clearRouteTime = Long.MAX_VALUE;  // i.e. => never, if not set
 
     /**
@@ -81,17 +83,16 @@ public class Route extends PanelElement {
                         rtSignals.add(new RouteSignal(pe, Integer
                                 .parseInt(reInfo[1])));
                         //  debug("RT, add sig  " + pe.getAdr());
-                                           }
+                    }
 
                 } else if (pe.isTurnout()) {
                     rtTurnouts.add(new RouteTurnout(pe,
                             Integer.parseInt(reInfo[1])));
-                   //  debug("RT, add turnout " + pe.getAdr());
-                 }
+                    //  debug("RT, add turnout " + pe.getAdr());
+                }
             }
         }
-        
-  
+
         // format for sensors: just a list of addresses, seperated by comma ","
         String[] sensorAddresses = allSensors.split(",");
         for (int i = 0; i < sensorAddresses.length; i++) {
@@ -99,13 +100,17 @@ public class Route extends PanelElement {
             for (PanelElement pe : panelElements) {
                 if (pe.isSensor()) {
                     if (pe.getAdr() == Integer.parseInt(sensorAddresses[i])) {
-                        rtSensors.add(pe);                      
-                         if (CFG_DEBUG) debug("RT, add sensor " + pe.getAdr());
+                        rtSensors.add(pe);
+                        if (CFG_DEBUG) {
+                            debug("RT, add sensor " + pe.getAdr());
+                        }
                     }
                 }
             }
         }
-        if (CFG_DEBUG) debug("creating route id/adr=" + this.getAdr() + " - " + rtSignals.size() + " signals/" + rtTurnouts.size() + " turnouts/" + rtSensors.size() + " sensors");
+        if (CFG_DEBUG) {
+            debug("creating route id/adr=" + this.getAdr() + " - " + rtSignals.size() + " signals/" + rtTurnouts.size() + " turnouts/" + rtSensors.size() + " sensors");
+        }
 
         String[] offRoutes = offendingString.split(",");
         for (int i = 0; i < offRoutes.length; i++) {
@@ -134,12 +139,12 @@ public class Route extends PanelElement {
         for (PanelElement se : rtSensors) {
             se.setInRoute(false);
             // reset trainNumber data for all but last sensor
-            if (se != rtSensors.get(rtSensors.size()-1)) {
+            if (se != rtSensors.get(rtSensors.size() - 1)) {
                 se.setTrain(0);
             }
             LanbahnData.update(se.getSecondaryAdr(), 0);
         }
-        
+
         Set<Integer> sxAddressesToUpdate = new HashSet<>();
         // set signals turnout red
         for (RouteSignal rs : rtSignals) {
@@ -200,26 +205,37 @@ public class Route extends PanelElement {
         return false;
     }
 
-    /** default set for single route 
-     * 
-     * @return 
+    public void clearIn10Seconds() {
+        debug("rt# "+ getAdr()+" will be cleared in 10 sec");
+        clearRouteTime = System.currentTimeMillis() + 10 * 1000;
+    }
+    /**
+     * default set for single route
+     *
+     * @return
      */
     public boolean set() {
-        return set(INVALID_INT);
+        return set(INVALID_INT,false);
     }
-    
-    /** set function if the route is part of a compound route
-     * 
+
+    /**
+     * set function if the route is part of a compound route
+     *
      * @param startTrain
-     * @return 
+     * @return
      */
-    public boolean set(int startTrain) {
+    public boolean set(int startTrain, boolean partOfCompRoute) {
 
         if (startTrain == 0) {
             error("invalid startTrain parameter in set route id=" + this.getAdr());
+            return false;
         } else if (startTrain == INVALID_INT) {
             // get from occupation of first sensor
             startTrain = getStartTrainNumber();
+            if (startTrain == 0) {
+                error("cannot set route id=" + getAdr() + " because no train on start sensor=" + getStartSensor().getAdr());
+                return false;  // cannot set route.
+            }
         }
 
         clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
@@ -229,17 +245,13 @@ public class Route extends PanelElement {
             return false;
         }
 
-        debug(" setting route id=" + this.getAdr()+" startTrain="+startTrain);
-
+        debug(" setting route id=" + this.getAdr() + " startTrain=" + startTrain);
 
         // automatically
-
         clearOffendingRoutes();
 
-        
         // activate sensors, set "IN_ROUTE" (this is stored in as "LanbahnData"
         // in secondary address of the sensor
-
         for (PanelElement se : rtSensors) {
             se.setInRoute(true);
             se.setTrain(startTrain);
@@ -280,6 +292,20 @@ public class Route extends PanelElement {
                 SXData.update(sxaddr, SXData.get(sxaddr), true);  // true => write to Interface
             }
         }
+        if (!partOfCompRoute) {  // does not need to be done in compRoute, because checking for a 
+            // compound route needs to be done on compRoute level
+            PanelElement startSensor = getStartSensor();
+            if (startSensor.getState() == STATE_FREE) {
+                error("cannot set route id=" + getAdr() + " because train is missing on start sensor=" + startSensor.getAdr());
+                return false;  // cannot set comproute.
+            }
+            endSensor = getEndSensor();
+            if (endSensor.getState() != STATE_FREE) {
+                error("cannot set route id=" + getAdr() + " because train is already on END sensor=" + endSensor.getAdr());
+                return false;  // cannot set comproute.
+            }
+            
+        }
         this.setState(RT_ACTIVE);
         return true;
     }
@@ -287,9 +313,22 @@ public class Route extends PanelElement {
     public boolean isActive() {
         return (this.getState() == RT_ACTIVE);
     }
-    
+
     public int getStartTrainNumber() {
         return rtSensors.get(0).getTrain();   // train occupation of starting sensor
+    }    
+
+    public PanelElement getStartSensor() {
+        return rtSensors.get(0);   // start (first) sensor
+    }
+    
+    public PanelElement getEndSensor() {
+        int si = rtSensors.size();
+        if (si > 1) {
+            return rtSensors.get(si -1);  // last sensor
+        } else {
+        return rtSensors.get(0); 
+        }
     }
 
     protected class RouteSignal {
@@ -354,21 +393,26 @@ public class Route extends PanelElement {
         }
     }
 
-    /**  check for auto reset of allRoutes
-     * 
+    /**
+     * check for auto reset of allRoutes
+     *
      */
     public static void auto() {
-        
+
         // debug("checking route auto clear");
         for (Route rt : allRoutes) {
-             if ( (( System.currentTimeMillis() - rt.clearRouteTime) > 0 ) 
-                    && (rt.getState() == RT_ACTIVE)) {
+             if (rt.getState() == RT_ACTIVE) {  // check only active routes
+            if ((System.currentTimeMillis() - rt.clearRouteTime) > 0) {
                 rt.clear();
             }
             // update dependencies
-            if (rt.getState() == RT_ACTIVE) {
-                rt.updateDependencies();
-            }
+            rt.updateDependencies();
+             // check for route end sensor - if it gets occupied (train reached end of route), rt will be cleared
+            if ((rt.endSensor != null) && (rt.endSensor.getState() == STATE_OCCUPIED)) {
+                    debug("end sensor" + rt.endSensor.getAdr() + " occupied =>  route#" + rt.getAdr() + " cleared");
+                    rt.clear();
+                }
+             }
         }
 
     }

@@ -17,6 +17,7 @@ build.xml
 .classpath
 log.*.txt
 lanbahnpanel.apk
+startFCC.sh
 
 archiv/
 *.backup

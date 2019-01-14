@@ -5,33 +5,35 @@ import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.timetable.Vars.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * composite route, i.e. a list of allRoutes which build a new "compound" route
- * is only a helper for ease of use, no more functionality than the "simple" 
+ * is only a helper for ease of use, no more functionality than the "simple"
  * Route (i.e. a CompRoute contains a "list of Routes")
- * 
+ *
  * @author mblank
  *
  */
 public class CompRoute extends PanelElement {
-    
+
     String routesString = ""; // identical to config string
 
     // route is comprised of a list of allRoutes
     private ArrayList<Route> myroutes = new ArrayList<>();
-    
+    public PanelElement endSensor = null;
+
     private final boolean DEBUG_COMPROUTE = false;
 
     private long clearRouteTime = Long.MAX_VALUE;  // i.e. => never, if not set
-     
+
     /**
      * constructs a composite route
      *
      *
      */
     public CompRoute(int routeAddr, String sRoutes) {
-        super("CR",routeAddr);
+        super("CR", routeAddr);
         setState(RT_INACTIVE);
         // this string written back to config file.
         this.routesString = sRoutes;
@@ -50,12 +52,16 @@ public class CompRoute extends PanelElement {
                 }
             }
         }
-        if (DEBUG_COMPROUTE) debug("creating comproute id=" + routeAddr + " - " + myroutes.size() + " routes in this route.");
+        if (DEBUG_COMPROUTE) {
+            debug("creating comproute id=" + routeAddr + " - " + myroutes.size() + " routes in this route.");
+        }
 
     }
 
     public void clearOffendingRoutes() {
-        if (DEBUG_COMPROUTE) debug(" clearing (active) offending Routes");
+        if (DEBUG_COMPROUTE) {
+            debug(" clearing (active) offending Routes");
+        }
 
         for (Route rt : myroutes) {
             rt.clearOffendingRoutes();
@@ -65,44 +71,72 @@ public class CompRoute extends PanelElement {
 
     public boolean set() {
 
-        if (DEBUG_COMPROUTE) debug(" setting comproute id=" + getAdr());
-  
+        if (DEBUG_COMPROUTE) {
+            debug(" setting comproute id=" + getAdr());
+        }
+
         clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
+
         
-        setState(RT_ACTIVE);
         // check if all routes can be set successfully
         boolean res = true;
         // get current train number from first sensor of first route
         Route start = myroutes.get(0);
         int trainNumber = start.getStartTrainNumber();
+
+        if (trainNumber == 0) {
+            error("cannot set comproute id=" + getAdr() + " because no train on start sensor=" + start.getStartSensor().getAdr());
+            return false;  // cannot set comproute.
+        }
         for (Route rt : myroutes) {
-            res = rt.set(trainNumber);
+            res = rt.set(trainNumber,true);
+            endSensor = rt.getEndSensor();
             if (res == false) {
                 error("cannot set comproute id=" + getAdr() + " because route=" + rt.getAdr() + " cannot be set.");
                 return false;  // cannot set comproute.
             }
             // else continue with next route
         }
+        debug("comp.rt# " + getAdr() + " endsensor=" + endSensor.getAdr());
+        if (endSensor.getState() != STATE_FREE) {
+            error("cannot set comproute id=" + getAdr() + " because train already on END sensor=" + start.getStartSensor().getAdr());
+            return false;  // cannot set comproute.
+        }
+        if (res == true) {
+            // set active only if the comprising routes could be set with success
+            setState(RT_ACTIVE);
+        }
         return res;
     }
 
-     public static void auto() {
+    public static void auto() {
         // check for auto reset of allCompRoutes
         // this function is only needed for the lanbahn-value display, because the individual single routes,
         // which are set by a compound route, are autocleared by the "Route.auto()" function
-        for (CompRoute rt : allCompRoutes) {
-            if ( (( System.currentTimeMillis() - rt.clearRouteTime) > 0 ) 
-                    && (rt.getState() == RT_ACTIVE) ) {
-                rt.setState(RT_INACTIVE);
-             }
-
+        for (CompRoute comp : allCompRoutes) {
+            if (comp.getState() == RT_ACTIVE) {
+                debug("comp auto id="+comp.getAdr());
+                if ((System.currentTimeMillis() - comp.clearRouteTime) > 0) {
+                    comp.setState(RT_INACTIVE);
+                }
+                // check for route end sensor - if it gets occupied (train reached end of route), rt will be cleared
+                if ((comp.endSensor != null) && (comp.endSensor.getState() == STATE_OCCUPIED)) {
+                    debug("end sensor" + comp.endSensor.getAdr() + " occupied => comp,route#" + comp.getAdr() + " cleared");
+                    comp.setState(RT_INACTIVE);
+                    for (Route rt : comp.myroutes) {
+                        rt.clearIn10Seconds();
+                    }
+                }
+            }
         }
 
     }
-     
-     public static CompRoute getFromAddress(int a) {
+
+    public static CompRoute getFromAddress(int a) {
         for (CompRoute cr : allCompRoutes) {
-            if (cr.getAdr() == a) return cr;
+            if (cr.getAdr() == a) {
+                return cr;
+            }
         }
         return null;
     }

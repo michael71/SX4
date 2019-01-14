@@ -173,6 +173,7 @@ public class SX4 {
      */
     private void saveTrainNumbers() {
        StringBuilder state = new StringBuilder();
+       Collections.sort(panelElements);
        for (PanelElement pe : panelElements) {
            if (pe.isSensor() ) {
                 state.append(pe.getAdr());

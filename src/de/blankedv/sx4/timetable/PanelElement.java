@@ -13,6 +13,7 @@ import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.SXUtils;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 /**
  * all active panel elements, like turnouts, signals, trackindicators (=sensors)
@@ -25,9 +26,8 @@ import java.util.ArrayList;
  * @author mblank
  *
  */
-public class PanelElement {
+public class PanelElement implements Comparator<PanelElement>, Comparable<PanelElement> {
 
-   
     private int state = 0;
     private int adr = INVALID_INT;
     private int secondaryAdr = INVALID_INT;  // needed for DCC sensors/signals 
@@ -37,8 +37,6 @@ public class PanelElement {
     // with 2 addresses (adr1=occ/free, 2=in-route)
     protected String route = "";
     private int train = INVALID_INT;   // train number, if train is occupying this panel element
-
-    
 
     // these constants are defined just for easier understanding of the
     // methods of the classes derived from this class
@@ -60,9 +58,9 @@ public class PanelElement {
     protected static final int STATE_PRESSED = 1;
 
     // sensors
-    protected static final int STATE_FREE = 0;
-    protected static final int STATE_OCCUPIED = 1;
-   
+    public static final int STATE_FREE = 0;
+    public static final int STATE_OCCUPIED = 1;
+
     protected long lastToggle = 0L;
     protected long lastUpdateTime = 0L;
 
@@ -80,7 +78,7 @@ public class PanelElement {
         typeString = "AC";
         this.state = 0;  // initialized to CLOSED / RED / FREE
         lastUpdateTime = System.currentTimeMillis();
-        
+
     }
 
     public PanelElement(String t, int adr) {
@@ -88,16 +86,24 @@ public class PanelElement {
         this.adr = adr;
         this.secondaryAdr = INVALID_INT;
         typeString = t;
-        if (isSensor()) train = 0;
+        if (isSensor()) {
+            train = 0;
+        }
         this.state = 0;  // initialized to CLOSED / RED / FREE
         lastUpdateTime = System.currentTimeMillis();
     }
 
     public PanelElement(String t, int adr, int adr2) {
         typeString = t;
-        if (isSensor()) train = 0;
+        if (isSensor()) {
+            train = 0;
+        }
         this.adr = adr;
         this.secondaryAdr = adr2;
+        if ((adr + 1) == adr2) {
+            // multibit signal - two consequtive bits per sx-address
+            nbit = 2;
+        }
         this.state = 0;  // initialized to CLOSED / RED / FREE
     }
 
@@ -117,7 +123,7 @@ public class PanelElement {
         state = val;
         return state;
     }
-    
+
     public int setStateAndUpdateSXData(int val) {
         state = val;
         updateSXData();
@@ -131,7 +137,7 @@ public class PanelElement {
     public void setInRoute(boolean inRoute) {
         this.inRoute = inRoute;
     }
-    
+
     public int getTrain() {
         return train;
     }
@@ -248,14 +254,16 @@ public class PanelElement {
 
     // TODO move sx address calculations to constructor
     public void updateSXData() {
-        if (adr == INVALID_INT) return;  
-        
-        int sxadr = adr / 10;   
+        if (adr == INVALID_INT) {
+            return;
+        }
+
+        int sxadr = adr / 10;
         int sxbit = adr % 10;
         if (!SXUtils.isValidSXAddress(sxadr) || !SXUtils.isValidSXBit(sxbit)) {
             return;  // no SX Element, must be virtual
         }
-        
+
         // set low bit
         switch (state) {
             case 0:
@@ -267,9 +275,9 @@ public class PanelElement {
                 SXUtils.setBitSxData(sxadr, sxbit, true);  // true => write to SXInterface
                 break;
             default:
-                System.out.println("invalid state in sx addr a=" + sxadr+ "."+sxbit + " d=" + state);
+                System.out.println("invalid state in sx addr a=" + sxadr + "." + sxbit + " d=" + state);
         }
-        
+
         // set high bit (if there is any)
         if (secondaryAdr != INVALID_INT) {
             int secSxadr = secondaryAdr / 10;
@@ -296,10 +304,9 @@ public class PanelElement {
                 }
             }
         }
-        
-       
+
     }
-    
+
     /* public void sendUpdateToSXBus() {
          SXAddrAndBits sx = SXUtils.lbAddr2SX(adr);
          debug("sendUpd->SXBus lbaddr="+adr+" sxaddr="+sx.sxAddr+" d="+SXData.get(sx.sxAddr));
@@ -307,16 +314,15 @@ public class PanelElement {
                sxi.sendChannel2SX(sx.sxAddr);
          }
      } */
-     
     public boolean isLanbahnAddress() {
-        return (adr >=LBPURE);
-    }
-    
-    public boolean isSecondaryLanbahnAddress() {
-        return (secondaryAdr >=LBPURE);
+        return (adr >= LBPURE);
     }
 
-    // STATIC METHODS
+    public boolean isSecondaryLanbahnAddress() {
+        return (secondaryAdr >= LBPURE);
+    }
+
+    // STATIC METHODS ---------------------------------------------------------------------------
     /**
      * search for a panel element when only the address is known
      *
@@ -364,14 +370,62 @@ public class PanelElement {
         }
         return result;
     }
-    
+
     // get "train" for panel element with a given address
     public static int getTrain(int address) {
-         for (PanelElement pe : panelElements) {
+        for (PanelElement pe : panelElements) {
             if (pe.isSensor() && (pe.getAdr() == address)) {
                 return pe.getTrain();
             }
         }
         return INVALID_INT;
+    }
+
+    public static void updateFromSXData(int sxAddr, int d) {
+        // check for all of the 8 SX-bits if we have a matching panel element
+        // which needs to be updated
+        ArrayList<PanelElement> peList;
+        for (int bit = 1; bit <= 8; bit++) {
+            int addr = sxAddr * 10 + bit;
+            peList = PanelElement.getByAddress(addr);
+            for (PanelElement pe : peList) {
+                switch (pe.nbit) {
+                    case 1:
+                        // set a single bit
+                        pe.setState((d >> (bit - 1)) & (0x01));
+                        break;
+                    case 2:
+                        // set two state bits
+                        if (bit >= 2) {
+                            pe.setState((d >> (bit - 2)) & (0x03));
+                        }
+                        break;
+                    // TODO for nbit>2
+                }
+            }
+
+        }
+    }
+
+    @Override
+    public int compare(PanelElement o1, PanelElement o2) {
+        if (o1.getAdr() < o2.getAdr()) {
+            return -1;
+        } else if (o1.getAdr() > o2.getAdr()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
+    public int compareTo(PanelElement o) {
+        if (adr < o.getAdr()) {
+            return -1;
+        } else if (adr > o.getAdr()) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 }

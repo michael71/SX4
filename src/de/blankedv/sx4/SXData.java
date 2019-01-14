@@ -8,6 +8,7 @@ package de.blankedv.sx4;
 import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
 import static com.esotericsoftware.minlog.Log.*;
+import de.blankedv.sx4.timetable.PanelElement;
 
 /**
  *
@@ -37,6 +38,7 @@ public class SXData {
             }
         }
         debug("set: SX[" + addr + "]=" + d[addr] + " ");
+        PanelElement.updateFromSXData(addr, d[addr]);
 
         return d[addr];
     }
