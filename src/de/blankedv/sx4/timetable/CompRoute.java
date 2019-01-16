@@ -5,7 +5,6 @@ import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.timetable.Vars.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * composite route, i.e. a list of allRoutes which build a new "compound" route
@@ -23,7 +22,6 @@ public class CompRoute extends PanelElement {
     private ArrayList<Route> myroutes = new ArrayList<>();
     public PanelElement endSensor = null;
 
-    private final boolean DEBUG_COMPROUTE = false;
 
     private long clearRouteTime = Long.MAX_VALUE;  // i.e. => never, if not set
 
@@ -35,7 +33,7 @@ public class CompRoute extends PanelElement {
     public CompRoute(int routeAddr, String sRoutes) {
         super("CR", routeAddr);
         setState(RT_INACTIVE);
-        // this string written back to config file.
+        // this string is written back to config file.
         this.routesString = sRoutes;
 
         // allRoutes = "12,13": these allRoutes need to be activated.
@@ -77,7 +75,6 @@ public class CompRoute extends PanelElement {
 
         clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
 
-        
         // check if all routes can be set successfully
         boolean res = true;
         // get current train number from first sensor of first route
@@ -88,8 +85,26 @@ public class CompRoute extends PanelElement {
             error("cannot set comproute id=" + getAdr() + " because no train on start sensor=" + start.getStartSensor().getAdr());
             return false;  // cannot set comproute.
         }
+
+        // FIRST check, if all routes of this compound route are free
         for (Route rt : myroutes) {
-            res = rt.set(trainNumber,true);
+            // check if all routes are free
+            if (rt == start) {
+                if (!rt.isFreeExceptStart()) {
+                    error("cannot set comproute id=" + getAdr() + " because route=" + rt.getAdr() + " is not free");
+                    return false;
+                }
+            } else {
+                if (!rt.isFree()) {
+                    error("cannot set comproute id=" + getAdr() + " because route=" + rt.getAdr() + " is not free");
+                    return false;
+                }
+            }
+        }
+
+        // SECOND: add train number info - and get last sensor last route (=endSensor)
+        for (Route rt : myroutes) {
+            res = rt.set(trainNumber, true);
             endSensor = rt.getEndSensor();
             if (res == false) {
                 error("cannot set comproute id=" + getAdr() + " because route=" + rt.getAdr() + " cannot be set.");
@@ -97,13 +112,16 @@ public class CompRoute extends PanelElement {
             }
             // else continue with next route
         }
-        debug("comp.rt# " + getAdr() + " endsensor=" + endSensor.getAdr());
+
         if (endSensor.getState() != STATE_FREE) {
-            error("cannot set comproute id=" + getAdr() + " because train already on END sensor=" + start.getStartSensor().getAdr());
+            error("SHOULD NOT HAPPEN: cannot set comproute id=" + getAdr() + " because train already on END sensor=" + start.getStartSensor().getAdr());
             return false;  // cannot set comproute.
         }
         if (res == true) {
             // set active only if the comprising routes could be set with success
+            if (DEBUG_COMPROUTE) {
+                debug(" setting comproute id=" + getAdr() + " successful, endSensor="+ endSensor.getAdr());
+            }
             setState(RT_ACTIVE);
         }
         return res;
@@ -115,7 +133,7 @@ public class CompRoute extends PanelElement {
         // which are set by a compound route, are autocleared by the "Route.auto()" function
         for (CompRoute comp : allCompRoutes) {
             if (comp.getState() == RT_ACTIVE) {
-                debug("comp auto id="+comp.getAdr());
+                //debug("comp auto id=" + comp.getAdr());
                 if ((System.currentTimeMillis() - comp.clearRouteTime) > 0) {
                     comp.setState(RT_INACTIVE);
                 }

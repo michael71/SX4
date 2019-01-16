@@ -41,7 +41,7 @@ import org.w3c.dom.NodeList;
  */
 public class ReadConfig {
 
-    static final boolean CFG_DEBUG = false;
+    
 
     // code template taken from lanbahnPanel
     public static String readXML(String fname) {

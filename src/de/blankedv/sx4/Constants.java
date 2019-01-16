@@ -14,7 +14,12 @@ public class Constants {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "SX4 - rev1.13 - 12 Jan 2019";
+    public static final String VERSION = "SX4 - rev1.14 - 16 Jan 2019";
+    
+    // switch one more debugging?
+    public static final boolean DEBUG = false;
+    public static final boolean CFG_DEBUG = false;   
+    public static final boolean DEBUG_COMPROUTE = false;
 
     public static final int STATUS_CONNECTED = 1;
     public static final int STATUS_NOT_CONNECTED = 0;
