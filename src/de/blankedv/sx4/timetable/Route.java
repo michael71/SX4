@@ -5,7 +5,6 @@ import static de.blankedv.sx4.Constants.*;
 import de.blankedv.sx4.LanbahnData;
 import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.SXUtils;
-import static de.blankedv.sx4.timetable.ReadConfig.CFG_DEBUG;
 import static de.blankedv.sx4.timetable.Vars.*;
 import java.util.ArrayList;
 import java.util.HashSet;

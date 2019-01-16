@@ -2,6 +2,7 @@ package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
+import static de.blankedv.sx4.Constants.DEBUG_COMPROUTE;
 import static de.blankedv.sx4.timetable.Vars.*;
 
 import java.util.ArrayList;

@@ -17,7 +17,7 @@ public class Constants {
     public static final String VERSION = "SX4 - rev1.14 - 16 Jan 2019";
     
     // switch one more debugging?
-    public static final boolean DEBUG = false;
+    // DEBUG can be set via args - and hence is variable
     public static final boolean CFG_DEBUG = false;   
     public static final boolean DEBUG_COMPROUTE = false;
 
