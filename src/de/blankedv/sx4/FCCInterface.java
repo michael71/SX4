@@ -38,7 +38,8 @@ public class FCCInterface extends GenericSXInterface {
 
     private static int fccErrorCount = 0;
 
-    private int lastPowerState = INVALID_INT;
+    private boolean lastPowerState = false;
+    private long startTime = System.currentTimeMillis();
 
     FCCInterface(String port) {
         this.portName = port;
@@ -114,7 +115,6 @@ public class FCCInterface extends GenericSXInterface {
         connected = false;
     }
 
-    
     /*
     send update (if necessary) for power and sx-channels to FCC
     then read all channels from FCC
@@ -122,7 +122,7 @@ public class FCCInterface extends GenericSXInterface {
      */
     @Override
     public String doUpdate() {
-
+        //System.out.print(".");
         if (fccErrorCount > 10) {
             error("ERROR: Keine Response von der FCC, SerialPort Settings überprüfen");
             return ("ERROR: Keine Response von der FCC, SerialPort Settings überprüfen");
@@ -138,10 +138,13 @@ public class FCCInterface extends GenericSXInterface {
             } catch (IOException ex) {
                 ;
             }
-            if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != lastPowerState)) {
-                //error("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
-                sendPower();
+            // do not set power during startup time
+            if (((System.currentTimeMillis() - startTime) > 5 * 1000) &&
+                    (powerToBe.get() != lastPowerState)  ) {
+                debug("setting power = "+ powerToBe.get());
+                sendSetPower();
             }
+
             while (!dataToSend.isEmpty()) {
                 IntegerPair sxd = dataToSend.poll();
                 if (sxd != null) {
@@ -184,13 +187,13 @@ public class FCCInterface extends GenericSXInterface {
                     } else if (count == 112) {
                         //error("power="+buf[count]);
                         if (buf[count] == 0) {
-                            SXData.setPower(0, false);
-                            lastPowerState = 0;
-                            //error("FCC power is off");
+                            SXData.setActualPower(false);
+                            lastPowerState = false;
+                            //info("FCC power is off");
                         } else {
-                            SXData.setPower(1, false);
-                            lastPowerState = 1;
-                            //error("FCC power is on");
+                            SXData.setActualPower(true);
+                            lastPowerState = true;
+                            //info("FCC power is on");
                         }
                     } // ignore SX1 data
 
@@ -261,9 +264,9 @@ public class FCCInterface extends GenericSXInterface {
     //Vom PC: 0x00 0xFF Ungleich 0x00 Zum PC: 0x00
     //Gleisspannung aus (SX1/2-Bus 0):
     //Vom PC: 0x00 0xFF Gleich 0x00 Zum PC: 0x00
-    private void sendPower() {
+    private void sendSetPower() {
         Byte[] b = {(byte) 0x00, (byte) 0xFF, (byte) 0x00};
-        if (powerToBe.get() != 0) {
+        if (powerToBe.get() == true) {
             debug("FCC: switchPowerOn");
             b[2] = (byte) 0x01;
         } else {

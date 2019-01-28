@@ -19,8 +19,9 @@ import de.blankedv.sx4.timetable.PanelElement;
  */
 public class SXData {
 
-    static private int[] d = new int[SXMAX + 1];
-    static private int power = INVALID_INT;
+    private static final int[] d = new int[SXMAX + 1];
+    static private boolean actualPower = true;
+
 
     public static synchronized int update(int addr, int data, boolean writeFlag) {
         if (!SXUtils.isValidSXAddress(addr)) {
@@ -99,26 +100,15 @@ public class SXData {
         }
     }
 
-    public static int getPower() {
-        return power;
+    public static boolean getActualPower() {
+        return actualPower;
     }
 
-    public static void setPower(int onState, boolean writeFlag) {
-        //error("SetPower to " + onState);
-
-        if ((writeFlag) && (!simulation)) {
-            // sending power command to interface
-            powerToBe.set(onState);
-            debug("powerToBe=" + power);
-        } else {
-            //received power feedback from interface
-            if (onState != 0) {
-                power = 1;
-            } else {
-                power = 0;
-            }
-        }
-
+    
+    
+    public static void setActualPower(boolean onOff) {
+        actualPower = onOff;
     }
+
 
 }

@@ -45,8 +45,8 @@ public class SLX825Interface extends GenericSXInterface {
     int regFeedbackAdr = 0;
     private int interfaceActiveCount = 0;
     private final int POWER_CHAN = 127;
-    private boolean firstPowerFlag = true;
-    private int lastPowerState = INVALID_INT;
+    private boolean firstDoUpdateCall = true;
+    private boolean lastPowerState = false;
 
     public SLX825Interface(String portName, int baud) {
 
@@ -237,8 +237,8 @@ public class SLX825Interface extends GenericSXInterface {
     }
 
     private void sendPower() {
-        if (serialPortGeoeffnet && (powerToBe.get() != INVALID_INT)) {
-            if (powerToBe.get() != 0) {
+        if (serialPortGeoeffnet) {
+            if (powerToBe.get()) {
                 debug("SLX825: switchPowerOn");
                 //sendToInterface(POWER_CHAN, 1);
                 switchPowerOn();
@@ -304,10 +304,10 @@ public class SLX825Interface extends GenericSXInterface {
     public String doUpdate() {
         if (serialPortGeoeffnet) {
             readSerialPortAndUpdateSXData();
-            if ((powerToBe.get() != INVALID_INT) && (powerToBe.get() != lastPowerState) || (firstPowerFlag)) {
+            if ((powerToBe.get() != lastPowerState) || (firstDoUpdateCall)) {
                 //error("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
                 sendPower();
-                firstPowerFlag = false;
+                firstDoUpdateCall = false;
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException ex) {
@@ -367,11 +367,11 @@ public class SLX825Interface extends GenericSXInterface {
                             // ignore, this seems to be a bug in purejavacomm
                         } else if (adr == POWER_CHAN) {  // power channel
                             if (data != 0) {
-                                SXData.setPower(1, false);
-                                lastPowerState = 1;
+                                SXData.setActualPower(true);
+                                lastPowerState = true;
                             } else {
-                                SXData.setPower(0, false);
-                                lastPowerState = 0;
+                                SXData.setActualPower(false);
+                                lastPowerState = false;
                             }
                             debug("rec. power=" + data);
                         } else {

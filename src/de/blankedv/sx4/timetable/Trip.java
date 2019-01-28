@@ -19,18 +19,26 @@ package de.blankedv.sx4.timetable;
 import static com.esotericsoftware.minlog.Log.debug;
 import static de.blankedv.sx4.Constants.*;
 import de.blankedv.sx4.SXData;
+import static de.blankedv.sx4.timetable.PanelElement.STATE_OCCUPIED;
+import static de.blankedv.sx4.timetable.Vars.RT_INACTIVE;
 import static de.blankedv.sx4.timetable.Vars.allCompRoutes;
 import static de.blankedv.sx4.timetable.Vars.allRoutes;
 import static de.blankedv.sx4.timetable.Vars.allTrips;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.event.ActionEvent;
+import javafx.util.Duration;
 
 /**
+ *
+ * <trip id="3100" routeid="2300" sens1="924" sens2="902" loco="29,1,126" stopdelay="1500" />
  *
  * @author mblank
  */
 public class Trip implements Comparable<Trip> {
 
     int id = INVALID_INT;
-    String route = "";  // all allRoutes to activate, separated by comma
+    int routeid = INVALID_INT;
     int sens1 = INVALID_INT;     // startSensor
     int sens2 = INVALID_INT;     // stopSensor
     String locoString = "";    // adr,dir,speed
@@ -41,6 +49,99 @@ public class Trip implements Comparable<Trip> {
     boolean active = false;
     Loco loco = null;
 
+    Trip() {
+        
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getRouteid() {
+        return routeid;
+    }
+
+    public void setRouteid(int routeid) {
+        this.routeid = routeid;
+    }
+
+    public int getSens1() {
+        return sens1;
+    }
+
+    public void setSens1(int sens1) {
+        this.sens1 = sens1;
+    }
+
+    public int getSens2() {
+        return sens2;
+    }
+
+    public void setSens2(int sens2) {
+        this.sens2 = sens2;
+    }
+
+    public String getLocoString() {
+        return locoString;
+    }
+
+    public void setLocoString(String locoString) {
+        this.locoString = locoString;
+    }
+
+    public int getLocoAddr() {
+        return locoAddr;
+    }
+
+    public void setLocoAddr(int locoAddr) {
+        this.locoAddr = locoAddr;
+    }
+
+    public int getLocoDir() {
+        return locoDir;
+    }
+
+    public void setLocoDir(int locoDir) {
+        this.locoDir = locoDir;
+    }
+
+    public int getLocoSpeed() {
+        return locoSpeed;
+    }
+
+    public void setLocoSpeed(int locoSpeed) {
+        this.locoSpeed = locoSpeed;
+    }
+
+    public int getStopDelay() {
+        return stopDelay;
+    }
+
+    public void setStopDelay(int stopDelay) {
+        this.stopDelay = stopDelay;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public Loco getLoco() {
+        return loco;
+    }
+
+    public void setLoco(Loco loco) {
+        this.loco = loco;
+    }
+    
+    
     public boolean convertLocoData() {
         // convert locoString string to int values for address, direction and speed
         String[] lData = locoString.split(",");
@@ -74,43 +175,60 @@ public class Trip implements Comparable<Trip> {
         // aquire locoString and start 'full' speed
         startLoco();
         active = true;
-
-    }
+        
+           }
 
     private void startLoco() {
 
-        loco.setSpeed(25); 
-        loco.setForward( locoDir== 0 );
-       //sxi.sendLoco(loco.getLok_adr(), loco.getSpeed(), true, loco.isForward(),  false);  // light = true, horn = false
-        SXData.update(loco.getLok_adr(), loco.getSX(), true); // ture => send to SXinterface
+        loco.setSpeed(locoSpeed);
+        loco.setForward(locoDir == 0);
+        loco.setLicht(true);
+        //sxi.sendLoco(loco.getLok_adr(), loco.getSpeed(), true, loco.isForward(),  false);  // light = true, horn = false
+        SXData.update(loco.getLok_adr(), loco.getSX(), true); // true => send to SXinterface
+    }
+    
+    public void stopLoco() {
+
+        loco.setSpeed(0);
+        loco.setForward(locoDir == 0);
+        //sxi.sendLoco(loco.getLok_adr(), loco.getSpeed(), true, loco.isForward(),  false);  // light = true, horn = false
+        SXData.update(loco.getLok_adr(), loco.getSX(), true); // true => send to SXinterface
+    }
+    
+    private void stopLocoDelayed() {
+        if (stopDelay == INVALID_INT) stopLoco();
+        Timeline timeline = new Timeline(new KeyFrame(
+               Duration.millis(stopDelay),
+                      ae -> stopLoco() ));
+        timeline.play();
     }
 
     private void setRoutes() {
-        debug("trip: setRoutes ="+route);
-        String[] routeIds = route.split(",");
-        for (String sRouteId : routeIds) {
-            Integer rid = Integer.parseInt(sRouteId);
-            for (Route r : allRoutes) {
-                if (r.getAdr() == rid) {
-                    r.set();
-                }
-            }
-            for (CompRoute cr : allCompRoutes) {
-                if (cr.getAdr() == rid) {
-                    cr.set();
-                }
+        debug("trip: setRoute =" + routeid);
+
+        for (Route r : allRoutes) {
+            if (r.getAdr() == routeid) {
+                r.set();
             }
         }
+        for (CompRoute cr : allCompRoutes) {
+            if (cr.getAdr() == routeid) {
+                cr.set();
+            }
+        }
+
     }
 
     public boolean checkEndSensor() {
-        PanelElement seEnd = PanelElement.getSingleByAddress(sens2) ;
-        if (seEnd == null) return false;
-        if (seEnd.isBit0()) {
+        PanelElement seEnd = PanelElement.getSingleByAddress(sens2);
+        if ((active == false) || (seEnd == null)) {
+            return false;
+        }
+        
+        if (seEnd.getState() == STATE_OCCUPIED) {
             // this trip ends
-            loco.setSpeed(0);  // stop loco
-            // TODO free loco
-            return true;
+           
+              return true;
         } else {
             return false;
         }
@@ -133,5 +251,18 @@ public class Trip implements Comparable<Trip> {
             }
         }
         return null;  // not found
+    }
+    
+    public static void auto() {
+        for (Trip tr : allTrips) {
+            if (tr.active) {
+                boolean end = tr.checkEndSensor();
+                if (end) {
+                    tr.stopLocoDelayed();
+                    tr.active = false;
+                    debug("trip "+tr.id+" ends");
+                }
+            }
+        }
     }
 }

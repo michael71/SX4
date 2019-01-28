@@ -5,11 +5,8 @@
  */
 package de.blankedv.sx4.timetable;
 
-import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
-import static com.esotericsoftware.minlog.Log.info;
 import static de.blankedv.sx4.Constants.*;
-import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.SXUtils;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.util.ArrayList;
@@ -40,6 +37,7 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
 
     // these constants are defined just for easier understanding of the
     // methods of the classes derived from this class
+    
     // turnouts
     protected static final int STATE_CLOSED = 0;
     protected static final int STATE_THROWN = 1;

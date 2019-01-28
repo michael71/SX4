@@ -22,7 +22,6 @@ public class SimulationInterface extends GenericSXInterface {
     public boolean open() {
         serialPortGeoeffnet = true;
         connected = true;
-        SXData.setPower(1, false);  // starting with "on" in simulation
         return true;
     }
 

@@ -16,6 +16,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import static com.esotericsoftware.minlog.Log.*;
+
 /**
  *
  * @author mblank
@@ -70,7 +71,14 @@ public class EvalOptions {
                 .hasArg(false)
                 .longOpt("routing")
                 .build();
-        
+
+        Option option_g = Option.builder("g")
+                .required(false)
+                .desc("enable timetable gui")
+                .hasArg(false)
+                .longOpt("gui")
+                .build();
+
         Options options = new Options();
         CommandLineParser parser = new DefaultParser();
 
@@ -81,6 +89,7 @@ public class EvalOptions {
         options.addOption(option_b);
         options.addOption(option_v);
         options.addOption(option_r);
+        options.addOption(option_g);
 
         HelpFormatter formatter = new HelpFormatter();
 
@@ -97,10 +106,14 @@ public class EvalOptions {
                 info("use option '-h' to get possible program options");
                 System.exit(0);
             }
-            
+
             if (commandLine.hasOption("r")) {
                 info("routing is enabled");
                 routingEnabled = true;
+                if (commandLine.hasOption("g")) {
+                    info("gui will be started.");
+                    guiEnabled = true;
+                }
             }
 
             simulation = false;

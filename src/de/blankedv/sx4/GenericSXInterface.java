@@ -49,12 +49,16 @@ abstract public class GenericSXInterface {
         return "";
     }
   
+    public void setPower(boolean onOff) {
+        powerToBe.set(onOff);
+
+    }
     
     public void setPower(int onState) {
-       if (onState != 0) {
-           powerToBe.set(1);
+       if (onState == 0) {
+           powerToBe.set(false);
        } else {
-           powerToBe.set(0);
+           powerToBe.set(true);
        }
     }
    

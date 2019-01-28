@@ -140,7 +140,7 @@ public class CompRoute extends PanelElement {
                 }
                 // check for route end sensor - if it gets occupied (train reached end of route), rt will be cleared
                 if ((comp.endSensor != null) && (comp.endSensor.getState() == STATE_OCCUPIED)) {
-                    debug("end sensor" + comp.endSensor.getAdr() + " occupied => comp,route#" + comp.getAdr() + " cleared");
+                    debug("end sensor " + comp.endSensor.getAdr() + " occupied => comp,route#" + comp.getAdr() + " cleared");
                     comp.setState(RT_INACTIVE);
                     for (Route rt : comp.myroutes) {
                         rt.clearIn10Seconds();

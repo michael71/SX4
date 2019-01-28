@@ -14,7 +14,7 @@ public class Constants {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "SX4 - rev1.14 - 16 Jan 2019";
+    public static final String VERSION = "SX4 - rev1.15 - 28 Jan 2019";
     
     // switch one more debugging?
     // DEBUG can be set via args - and hence is variable
@@ -26,6 +26,7 @@ public class Constants {
 
     public static int INVALID_INT = -1;
     public static int INVALID_TRAIN = 0;
+
     /**
      * {@value #SX_MIN} = minimale SX adresse angezeigt im Monitor
      */

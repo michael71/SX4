@@ -97,10 +97,10 @@ public class ReadConfig {
             return;
         }
 
-        String panelProtocol = parsePanelAttribute(items.item(0), "protocol");
+        panelName = parsePanelAttribute(items.item(0), "name");
 
         if (CFG_DEBUG) {
-            debug("panelProtocol =" + panelProtocol);
+            debug("panelname =" + panelName);
         }
 
         // NamedNodeMap attributes = item.getAttributes();
@@ -140,6 +140,9 @@ public class ReadConfig {
         }
 
         items = root.getElementsByTagName("trip");
+        if (CFG_DEBUG) {
+            debug("config: " + items.getLength() + " trips");
+        }
         for (int i = 0; i < items.getLength(); i++) {
             Trip tr = parseTrip(items.item(i));
             if (tr != null) {
@@ -149,6 +152,9 @@ public class ReadConfig {
         }
 
         items = root.getElementsByTagName("timetable");
+        if (CFG_DEBUG) {
+            debug("config: " + items.getLength() + " timetables");
+        }
         for (int i = 0; i < items.getLength(); i++) {
             Timetable ti = parseTimetable(items.item(i));
             if (ti != null) {
@@ -284,8 +290,9 @@ public class ReadConfig {
             Node theAttribute = attributes.item(i);
             if (theAttribute.getNodeName().equals("id")) {
                 t.id = getIntValueOfNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("route")) {
-                t.route = theAttribute.getNodeValue();
+            } else if ((theAttribute.getNodeName().equals("route")) ||
+                    (theAttribute.getNodeName().equals("routeid")) ) {
+                t.routeid = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("sens1")) {
                 t.sens1 = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("sens2")) {
@@ -299,7 +306,7 @@ public class ReadConfig {
 
         // check if Trip information is complete
         if ((t.id != INVALID_INT)
-                && (!t.route.isEmpty())
+                && (t.routeid != INVALID_INT)
                 && (t.sens1 != INVALID_INT)
                 && (t.sens2 != INVALID_INT)
                 && (t.convertLocoData())) {

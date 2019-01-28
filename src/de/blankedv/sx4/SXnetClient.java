@@ -38,7 +38,7 @@ public class SXnetClient implements Runnable {
     private final ConcurrentHashMap<Integer, Integer> oldLanbahnData = new ConcurrentHashMap<>(500);
     private final ConcurrentHashMap<PanelElement, Integer> oldTrainNumberData = new ConcurrentHashMap<>(500);
 
-    private int powerCopy = INVALID_INT;
+    private boolean powerCopy = false;
     private int lastRouting = INVALID_INT;
 
     private Thread worker;
@@ -305,15 +305,24 @@ public class SXnetClient implements Runnable {
             return "ERROR";
         }
         int value = getByteFromString(par[1]);
-        SXData.setPower(value, true);
-        powerCopy = SXData.getPower();
+        if (value == 0) {
+            powerToBe.set(false);
+        } else {
+            powerToBe.set(true);
+        }
+
         return "OK";
 
     }
 
     private String readPower() {
-        return "XPOWER " + SXData.getPower();
-    }
+        powerCopy = SXData.getActualPower();
+            if (powerCopy) {
+                return ("XPOWER 1");
+            } else {
+                return ("XPOWER 0");
+            }
+     }
 
     /**
      * when setting the data for a lanbahn address, there are 3 possible
@@ -577,9 +586,13 @@ public class SXnetClient implements Runnable {
 
         // report change in power channel (but only if "stable")
         // send also as "connected" tick
-        if (((tick % 20) == 0) || (SXData.getPower() != powerCopy)) {
-            powerCopy = SXData.getPower();
-            msg.append("XPOWER " + SXData.getPower());
+        if (((tick % 20) == 0) || (SXData.getActualPower() != powerCopy)) {
+            powerCopy = SXData.getActualPower();
+            if (powerCopy) {
+                msg.append("XPOWER 1");
+            } else {
+                msg.append("XPOWER 0");
+            }
             first = false;
         }
 

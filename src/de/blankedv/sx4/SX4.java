@@ -21,12 +21,22 @@ import de.blankedv.sx4.timetable.PanelElement;
 
 import de.blankedv.sx4.timetable.ReadConfig;
 import de.blankedv.sx4.timetable.Route;
+import de.blankedv.sx4.timetable.Trip;
+import de.blankedv.sx4.timetable.TripsTable;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.prefs.Preferences;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.util.Duration;
 
 /**
  *
@@ -38,9 +48,10 @@ public class SX4 {
 
     public static volatile boolean running = true;
     public static boolean routingEnabled = false;
-    
+    public static boolean guiEnabled = false;
+
     public static ArrayBlockingQueue<IntegerPair> dataToSend = new ArrayBlockingQueue<>(400);
-    public static AtomicInteger powerToBe = new AtomicInteger(INVALID_INT);
+    public static AtomicBoolean powerToBe = new AtomicBoolean(true);  // start and set POWER = ON
 
     public static ArrayList<Integer> locoAddresses = new ArrayList<Integer>();
 
@@ -62,13 +73,14 @@ public class SX4 {
 
     private static int updateCount = 0;
     private static Timer timer = new Timer();
+    private static long lastSavedTrainNumbersTime = 0;
     public static volatile long lastConnected = System.currentTimeMillis();
-    
-   
-   @SuppressWarnings("SleepWhileInLoop")
+
+    @SuppressWarnings("SleepWhileInLoop")
     public static void main(String[] args) {
         SX4 app = new SX4();
         app.runSX4(args);
+
     }
 
     @SuppressWarnings("SleepWhileInLoop")
@@ -83,7 +95,6 @@ public class SX4 {
 
         startLogging();  // start simple logging
 
-
         EvalOptions.sx4options(args);
 
         boolean result = false;
@@ -97,14 +108,12 @@ public class SX4 {
         }
         configFilename = SXUtils.getConfigFilename();
 
-
-        
         if (configFilename.isEmpty()) {
             error("no panel...xml file found, NOT starting config server");
         } else {
             ReadConfig.readXML(configFilename);
             loadTrainNumbers();  // sensors must be know when setting train numbers
-            
+
             try {
                 new ConfigWebserver(configFilename);
             } catch (Exception ex) {
@@ -113,40 +122,64 @@ public class SX4 {
         }
 
         myips = NIC.getmyip();
-        if (!myips.isEmpty()) {
 
-            final SXnetServer serv = new SXnetServer();
-
-            wifiThrottle = new WifiThrottle();
-
-            shutdownHook(serv);
-            int count = 0;
-            while (running) {
-                try {
-
-                    Thread.sleep(300);
-                    sxi.doUpdate();     // includes reading all SX data 
-
-                    if (routingEnabled) {
-                        Route.auto();
-                        CompRoute.auto();
-                    }
-                    // TrainNumberData.auto();  will be actively reset by fahrstrassensteurung
-                    count++;
-                    if (count > 10) {  // save current state every few seconds
-                        count = 0;
-                        saveTrainNumbers();
-                    }
-                } catch (InterruptedException ex) {
-                    error("ERROR" + ex.getMessage());
-                    error(ex.getMessage());
-                }
-            }
-        } else {
+        if (myips.isEmpty()) {
             error("no network - SX4 program ends.");
             System.exit(1);
         }
 
+        final SXnetServer serv = new SXnetServer();
+
+        wifiThrottle = new WifiThrottle();
+        com.sun.javafx.application.PlatformImpl.startup(() -> {  });  // TODO may have to be changed in Java9
+        
+        Timer timer = new java.util.Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Platform.runLater(new Runnable() {
+                    public void run() {
+                        //System.out.println("m400");
+                        sxi.doUpdate();     // includes reading all SX data 
+                        if (routingEnabled) {
+                            Trip.auto();
+                            Route.auto();
+                            CompRoute.auto();                           
+                        }
+                        saveTrainNumbers();
+                    }
+                });
+            }
+        }, 400, 400);
+
+        /*  DOES NOT ALWAY WORK ....
+        ?????
+        Timeline millis400 = new Timeline(new KeyFrame(Duration.millis(400), (ActionEvent event) -> {
+                System.out.println("m400");
+                sxi.doUpdate();     // includes reading all SX data 
+                if (routingEnabled) {
+                    Route.auto();
+                    CompRoute.auto();
+                }
+                // TrainNumberData.auto();  will be actively reset by fahrstrassensteurung
+                saveTrainNumbers();
+
+        }));
+
+        millis400.setCycleCount(Animation.INDEFINITE);
+        millis400.play(); */
+  
+        if (guiEnabled) {
+            new Thread() {
+                @Override
+                public void run() {
+                    Application.launch(TripsTable.class, args);
+                }
+            }.start();
+
+        }
+        
+        shutdownHook(serv);  
     }
 
     private void shutdownHook(SXnetServer server) {
@@ -154,13 +187,11 @@ public class SX4 {
             @Override
             public void run() {
                 try {
+
                     running = false;  // shutdown all threads
                     server.stopClients();
                     Thread.sleep(200);
-                    
                     error("SX4 ends.");
-                    //some cleaning up code...
-
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                 }
@@ -168,14 +199,19 @@ public class SX4 {
         });
     }
 
-    /** save current train numbers for all sensors
-     * 
+    /**
+     * save current train numbers for all sensors
+     *
      */
     private void saveTrainNumbers() {
-       StringBuilder state = new StringBuilder();
-       Collections.sort(panelElements);
-       for (PanelElement pe : panelElements) {
-           if (pe.isSensor() ) {
+        if ((System.currentTimeMillis() - lastSavedTrainNumbersTime) < 30 * 1000) {
+            return; // save only every 30 seconds (or less)
+        }
+        lastSavedTrainNumbersTime = System.currentTimeMillis();
+        StringBuilder state = new StringBuilder();
+        Collections.sort(panelElements);
+        for (PanelElement pe : panelElements) {
+            if (pe.isSensor()) {
                 state.append(pe.getAdr());
                 state.append(" ");
                 state.append(pe.getTrain());
@@ -185,28 +221,30 @@ public class SX4 {
         final Preferences prefs = Preferences.userNodeForPackage(this.getClass());
         prefs.put("trainNumbers", state.toString());
     }
-    
+
     private void loadTrainNumbers() {
         final Preferences prefs = Preferences.userNodeForPackage(this.getClass());
         String trainState = prefs.get("trainNumbers", "");
-        if (trainState.isEmpty()) return;
-        
-        info("read previous state="+trainState);     
+        if (trainState.isEmpty()) {
+            return;
+        }
+
+        info("read previous state=" + trainState);
         String[] states = trainState.split(";");
         for (String s : states) {
             String[] keyValue = s.split(" ");
             if (keyValue.length == 2) {
                 try {
-                int addr = Integer.parseInt(keyValue[0]);
-                int data = Integer.parseInt(keyValue[1]);              
-                PanelElement.setTrain(addr,data);
+                    int addr = Integer.parseInt(keyValue[0]);
+                    int data = Integer.parseInt(keyValue[1]);
+                    PanelElement.setTrain(addr, data);
                 } catch (NumberFormatException e) {
                     // invalid data
                 }
             }
         }
     }
-    
+
     private static void initConnectivityCheck() {
         // init timer for connectivity check (if not in simulation)
         // this program is shutdown, if there is no connection for 10 seconds
@@ -237,7 +275,7 @@ public class SX4 {
             sxInterface = new SimulationInterface();
             info("simulation");
             // switch on power for simulation
-            SXData.setPower(1, false);
+            SXData.setActualPower(true);
             // no connectivityCheck for simulation
         } else if (ifType.contains("FCC")) { // fcc has different interface handling ! 
             sxInterface = new FCCInterface(port);

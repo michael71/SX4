@@ -6,11 +6,14 @@
 package de.blankedv.sx4.timetable;
 
 import java.util.ArrayList;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 public class Vars {
 
     public static final boolean DEBUG = true;
     public static boolean timetableRunning = false;
+    public static String panelName = "?";
     
     public static final int AUTO_CLEAR_ROUTE_TIME_SECONDS = 90;  // time after which routes are cleared automatically
 
@@ -26,11 +29,11 @@ public class Vars {
 
     public static ArrayList<PanelElement> panelElements = new ArrayList<>();
 
-    public static ArrayList<Trip> allTrips = new ArrayList<>();   // all Locos we have heard of (via sxnet)
-    public static ArrayList<Timetable> allTimetables = new ArrayList<>();
+    public static final ObservableList<Trip> allTrips = FXCollections.observableArrayList();
+    public static final ObservableList<Timetable> allTimetables  = FXCollections.observableArrayList();
 
-    public static ArrayList<Route> allRoutes = new ArrayList<>();   // TODO eleminate
-    public static ArrayList<CompRoute> allCompRoutes = new ArrayList<>();  // TODO eleminate
+    public static final ObservableList<Route> allRoutes  = FXCollections.observableArrayList();
+    public static final ObservableList<CompRoute> allCompRoutes = FXCollections.observableArrayList();
 
 
 }
