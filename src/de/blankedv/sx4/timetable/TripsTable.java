@@ -5,14 +5,18 @@
  */
 package de.blankedv.sx4.timetable;
 
+import static de.blankedv.sx4.Constants.INVALID_INT;
+import static de.blankedv.sx4.SX4.configFilename;
 import static de.blankedv.sx4.SX4.powerToBe;
 import static de.blankedv.sx4.SX4.routingEnabled;
 import static de.blankedv.sx4.SX4.running;
 import static de.blankedv.sx4.SX4.sxi;
 import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.timetable.Trip;
+import static de.blankedv.sx4.timetable.Vars.allTimetables;
 import static de.blankedv.sx4.timetable.Vars.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelName;
+import java.util.Collections;
 
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -30,9 +34,12 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
@@ -60,6 +67,7 @@ public class TripsTable extends Application {
     private final Image refresh = new Image("/de/blankedv/sx4/res/refresh.png");
     private final ImageView ivPowerState = new ImageView();
     private final ImageView ivRefresh = new ImageView(refresh);
+    private final Button btnRefresh = new Button();
 
     @Override
     public void start(Stage primaryStage) {
@@ -87,12 +95,25 @@ public class TripsTable extends Application {
 
         primaryStage.show();
 
-        // load the image
         final Timeline second = new Timeline(new KeyFrame(Duration.seconds(1), (ActionEvent event) -> {
+            // update power control icon
             if (SXData.getActualPower() == true) {
                 ivPowerState.setImage(green);
             } else {
                 ivPowerState.setImage(red);
+            }
+
+            // look for active trip and enable/disable refresh button
+            int tripsActive = INVALID_INT;
+            for (Trip tr : allTrips) {
+                if (tr.active == true) {
+                    tripsActive = tr.id;
+                }
+            }
+            if (tripsActive != INVALID_INT) {
+                btnRefresh.setDisable(true);
+            } else {
+                btnRefresh.setDisable(false);
             }
         }));
 
@@ -180,8 +201,8 @@ public class TripsTable extends Application {
                 startMenuItem.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent event) {
-                        final Trip tStart = row.getItem();
-                        tStart.start();
+                        final Trip tr = row.getItem();
+                        startTrip(tr);
                     }
                 });
                 final MenuItem stopMenuItem = new MenuItem("Stop diese Fahrt");
@@ -244,12 +265,36 @@ public class TripsTable extends Application {
 
     }
 
+    private void startTrip(int number) {
+        Trip tr = allTrips.get(number);
+        if (tr != null) {
+            startTrip(tr);
+        }
+    }
+        
+    private void startTrip(Trip trip) {
+
+        if (trip != null) {
+            if (SXData.getActualPower() == true) {
+                trip.start();
+            } else {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error alert");
+                alert.setHeaderText(null);
+                alert.setContentText("Start der Fahrt nicht möglich, da keine Gleisspannung!");
+                alert.showAndWait();
+            }
+        }
+    }
+
     private HBox createButtonBar() {
 
         final HBox hb = new HBox(15);
         final Button btnStart = new Button("Start");
         final Button btnStop = new Button("Stop");
-        final Button btnRefresh = new Button();
+
+        // final ProgressIndicator pi = new ProgressIndicator();
+        // pi.setVisible(false);
         btnRefresh.setGraphic(ivRefresh);
         btnStop.setDisable(true);
 
@@ -257,13 +302,31 @@ public class TripsTable extends Application {
             btnStop.setDisable(false);
             btnStart.setDisable(true);
 
-            Trip startTrip = allTrips.get(0);
-            if (startTrip != null) {
-                startTrip.start();
-            }
-
+            startTrip(0);
         }
         );
+        btnRefresh.setOnAction(e -> {
+            // doublecheck that no trip is active
+            int tripsActive = INVALID_INT;
+            for (Trip tr : allTrips) {
+                if (tr.active == true) {
+                    tripsActive = tr.id;
+                }
+            }
+            if (tripsActive != INVALID_INT) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error alert");
+                alert.setHeaderText(null);
+                alert.setContentText("Refresh nicht möglich, da Trip " + tripsActive + "gerade läuft!");
+                alert.showAndWait();
+            } else {
+                //  pi.setVisible(true);  TIME TOO SHORT, cannot be seen
+
+                ReadConfig.refreshXMLTrips(configFilename);
+                Collections.sort(allTrips, (a, b) -> b.compareTo(a));
+                //  pi.setVisible(false);
+            }
+        });
 
         ivPowerState.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             // toggle global power
@@ -284,7 +347,7 @@ public class TripsTable extends Application {
                 ivPowerState.setImage(red);
             }
         }); */
-        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnRefresh);
+        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnRefresh); // , pi);
         return hb;
     }
 

@@ -41,7 +41,37 @@ import org.w3c.dom.NodeList;
  */
 public class ReadConfig {
 
-    
+    public static String refreshXMLTrips(String fname)   {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder;
+
+        try {
+            builder = factory.newDocumentBuilder();
+        } catch (ParserConfigurationException e1) {
+            error("ParserConfigException Exception - " + e1.getMessage());
+            return "ParserConfigException";
+        }
+        Document doc;
+        try {
+            doc = builder.parse(new File(fname));
+            parseTripsAndTimetable(doc);
+              // sort the trips by ID
+            Collections.sort(allTrips, (a, b) -> b.compareTo(a));
+
+        } catch (SAXException e) {
+            error("SAX Exception - " + e.getMessage());
+            return "SAX Exception - " + e.getMessage();
+        } catch (IOException e) {
+            error("IO Exception - " + e.getMessage());
+            return "IO Exception - " + e.getMessage();
+        } catch (Exception e) {
+            error("other Exception - " + e.getMessage());
+            return "other Exception - " + e.getMessage();
+        }
+
+        return "OK";
+    }
+   
 
     // code template taken from lanbahnPanel
     public static String readXML(String fname) {
@@ -57,7 +87,8 @@ public class ReadConfig {
         Document doc;
         try {
             doc = builder.parse(new File(fname));
-            parsePEsAndTimetable(doc);
+            parsePanelElements(doc);
+            parseTripsAndTimetable(doc);
             // sort the trips by ID
             Collections.sort(allTrips, (a, b) -> b.compareTo(a));
 
@@ -82,12 +113,9 @@ public class ReadConfig {
     }
 
     // code template from lanbahnPanel
-    private static void parsePEsAndTimetable(Document doc) {
-        // assemble new ArrayList of tickets.
-        //<layout-config>
-//<panel name="Lonstoke West 2">
-//<signal x="290" y="100" x2="298" y2="100" adr="76s3" nbit="2" />   
-//     ==> map lanbahn value at address 763 to 2 dcc addresses: 763 (low) and 764 (high bit)
+    private static void parsePanelElements(Document doc) {
+        
+        panelElements.clear();
 
         NodeList items;
         Element root = doc.getDocumentElement();
@@ -138,6 +166,17 @@ public class ReadConfig {
         for (int i = 0; i < items.getLength(); i++) {
             addPanelElement("DS", items.item(i));
         }
+
+    }
+    
+     // code template from lanbahnPanel
+    private static void parseTripsAndTimetable(Document doc) {
+ 
+        allTrips.clear();
+        allTimetables.clear();
+
+        NodeList items;
+        Element root = doc.getDocumentElement();
 
         items = root.getElementsByTagName("trip");
         if (CFG_DEBUG) {

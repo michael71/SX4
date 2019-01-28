@@ -71,10 +71,12 @@
 <comproute id="2314" btn1="1204" btn2="1202" routes="2216,2213" />
 <comproute id="2315" btn1="1205" btn2="1202" routes="2217,2213" />
 
-<trip id="3100" routeid="2300" sens1="924" sens2="902" loco="29,0,20" stopdelay="1600" />
-<trip id="3101" routeid="2310" sens1="902" sens2="924" loco="29,1,20" stopdelay="1400" />
+<trip id="3100" routeid="2300" sens1="924" sens2="902" loco="29,0,22" stopdelay="1700" />
+<trip id="3101" routeid="2310" sens1="902" sens2="924" loco="29,1,22" stopdelay="1400" />
 <trip id="3102" routeid="2303" sens1="923" sens2="903" loco="42,0,18" stopdelay="1400" />
 <trip id="3103" routeid="2313" sens1="903" sens2="923" loco="42,1,18" stopdelay="1200" />
+<trip id="3104" routeid="2304" sens1="922" sens2="902" loco="25,0,22" stopdelay="1700" />
+<trip id="3105" routeid="2314" sens1="902" sens2="922" loco="25,1,22" stopdelay="1400" />
 
 <timetable id="3300" time="0,20,40" trip="3100,3101,0" next=""/> 
 

@@ -169,13 +169,16 @@ public class Trip implements Comparable<Trip> {
         return true;
     }
 
-    public void start() {
+    public String start() {
+        if (SXData.getActualPower() == false) {
+            return "ERROR: keine Gleisspannung, kann Fahrt nicht starten!";
+        }
         setRoutes();
 
         // aquire locoString and start 'full' speed
         startLoco();
         active = true;
-        
+        return "OK";
            }
 
     private void startLoco() {
