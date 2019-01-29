@@ -306,9 +306,9 @@ public class SXnetClient implements Runnable {
         }
         int value = getByteFromString(par[1]);
         if (value == 0) {
-            powerToBe.set(false);
+            SXData.setPowerToBe(false);
         } else {
-            powerToBe.set(true);
+            SXData.setPowerToBe(true);
         }
 
         return "OK";

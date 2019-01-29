@@ -26,7 +26,7 @@ abstract public class GenericSXInterface {
     abstract public void request(int addr);   // send request to update a channel to command station
     
     abstract public void requestPower();  // trigger power read from command station
-    
+      
     public boolean isConnected() {
         return connected;
     }
@@ -49,18 +49,8 @@ abstract public class GenericSXInterface {
         return "";
     }
   
-    public void setPower(boolean onOff) {
-        powerToBe.set(onOff);
-
-    }
-    
-    public void setPower(int onState) {
-       if (onState == 0) {
-           powerToBe.set(false);
-       } else {
-           powerToBe.set(true);
-       }
-    }
+ 
+  
    
     
   

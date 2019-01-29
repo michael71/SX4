@@ -237,8 +237,9 @@ public class SLX825Interface extends GenericSXInterface {
     }
 
     private void sendPower() {
-        if (serialPortGeoeffnet) {
-            if (powerToBe.get()) {
+        if (serialPortGeoeffnet && SXData.isPowerControlEnabled()) {
+
+            if (SXData.isPowerToBe()) {
                 debug("SLX825: switchPowerOn");
                 //sendToInterface(POWER_CHAN, 1);
                 switchPowerOn();
@@ -304,10 +305,9 @@ public class SLX825Interface extends GenericSXInterface {
     public String doUpdate() {
         if (serialPortGeoeffnet) {
             readSerialPortAndUpdateSXData();
-            if ((powerToBe.get() != lastPowerState) || (firstDoUpdateCall)) {
+            if (SXData.isPowerToBe() != lastPowerState) {
                 //error("powertoBe="+powerToBe.get()+" SXD.getPower()="+SXData.getPower());
                 sendPower();
-                firstDoUpdateCall = false;
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException ex) {

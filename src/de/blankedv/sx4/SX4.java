@@ -51,7 +51,6 @@ public class SX4 {
     public static boolean guiEnabled = false;
 
     public static ArrayBlockingQueue<IntegerPair> dataToSend = new ArrayBlockingQueue<>(400);
-    public static AtomicBoolean powerToBe = new AtomicBoolean(true);  // start and set POWER = ON
 
     public static ArrayList<Integer> locoAddresses = new ArrayList<Integer>();
 
@@ -150,7 +149,7 @@ public class SX4 {
                     }
                 });
             }
-        }, 400, 400);
+        }, 300, 300);
 
         /*  DOES NOT ALWAY WORK ....
         ?????

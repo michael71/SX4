@@ -21,6 +21,8 @@ public class SXData {
 
     private static final int[] d = new int[SXMAX + 1];
     static private boolean actualPower = true;
+    static private boolean powerToBe = false;
+    static private boolean powerControlEnabled = false;
 
 
     public static synchronized int update(int addr, int data, boolean writeFlag) {
@@ -104,11 +106,27 @@ public class SXData {
         return actualPower;
     }
 
-    
-    
+    /** feedback from interface received about the actual power state */    
     public static void setActualPower(boolean onOff) {
         actualPower = onOff;
     }
 
+    public static boolean isPowerToBe() {
+        return powerToBe;
+    }
 
+    /** request to set power to ON or Off, will be asyncroniously used by
+     *  controlling interface.
+     *  power control is only started after this function is called at least once
+     */    
+    public static synchronized void setPowerToBe(boolean onOff) {
+        powerToBe = onOff;
+        powerControlEnabled = true;   
+    }
+
+    public static boolean isPowerControlEnabled() {
+        return powerControlEnabled;
+    }
+    
+    
 }

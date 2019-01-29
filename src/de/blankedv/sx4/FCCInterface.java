@@ -139,10 +139,10 @@ public class FCCInterface extends GenericSXInterface {
                 ;
             }
             // do not set power during startup time
-            if (((System.currentTimeMillis() - startTime) > 5 * 1000) &&
-                    (powerToBe.get() != lastPowerState)  ) {
-                debug("setting power = "+ powerToBe.get());
-                sendSetPower();
+            if ( (SXData.isPowerToBe() != lastPowerState) 
+                    && (SXData.isPowerControlEnabled())) {
+                debug("setting power = "+SXData.isPowerToBe());
+                sendSetPower(SXData.isPowerToBe());
             }
 
             while (!dataToSend.isEmpty()) {
@@ -264,9 +264,9 @@ public class FCCInterface extends GenericSXInterface {
     //Vom PC: 0x00 0xFF Ungleich 0x00 Zum PC: 0x00
     //Gleisspannung aus (SX1/2-Bus 0):
     //Vom PC: 0x00 0xFF Gleich 0x00 Zum PC: 0x00
-    private void sendSetPower() {
+    private void sendSetPower(boolean on) {
         Byte[] b = {(byte) 0x00, (byte) 0xFF, (byte) 0x00};
-        if (powerToBe.get() == true) {
+        if (on) {
             debug("FCC: switchPowerOn");
             b[2] = (byte) 0x01;
         } else {

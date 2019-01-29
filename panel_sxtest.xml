@@ -75,8 +75,8 @@
 <trip id="3101" routeid="2310" sens1="902" sens2="924" loco="29,1,22" stopdelay="1400" />
 <trip id="3102" routeid="2303" sens1="923" sens2="903" loco="42,0,18" stopdelay="1400" />
 <trip id="3103" routeid="2313" sens1="903" sens2="923" loco="42,1,18" stopdelay="1200" />
-<trip id="3104" routeid="2304" sens1="922" sens2="902" loco="25,0,22" stopdelay="1700" />
-<trip id="3105" routeid="2314" sens1="902" sens2="922" loco="25,1,22" stopdelay="1400" />
+<trip id="3104" routeid="2304" sens1="922" sens2="902" loco="40,1,28" stopdelay="2300" />
+<trip id="3105" routeid="2314" sens1="902" sens2="922" loco="40,0,28" stopdelay="1700" />
 
 <timetable id="3300" time="0,20,40" trip="3100,3101,0" next=""/> 
 

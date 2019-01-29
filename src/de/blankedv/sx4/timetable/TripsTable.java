@@ -7,7 +7,6 @@ package de.blankedv.sx4.timetable;
 
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.SX4.configFilename;
-import static de.blankedv.sx4.SX4.powerToBe;
 import static de.blankedv.sx4.SX4.routingEnabled;
 import static de.blankedv.sx4.SX4.running;
 import static de.blankedv.sx4.SX4.sxi;
@@ -211,6 +210,7 @@ public class TripsTable extends Application {
                     public void handle(ActionEvent event) {
                         final Trip rtShown = row.getItem();
                         rtShown.stopLoco();
+                        rtShown.active = false;
                         //rtShown.setMarked(true);
                         //Timeline timeline = new Timeline(new KeyFrame(
                         //       Duration.millis(3500),
@@ -331,10 +331,10 @@ public class TripsTable extends Application {
         ivPowerState.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             // toggle global power
             if (SXData.getActualPower()) {
-                powerToBe.set(false);
+                SXData.setPowerToBe(false);
                 ivPowerState.setImage(red);
             } else {
-                powerToBe.set(true);
+                SXData.setPowerToBe(true);
                 ivPowerState.setImage(green);
             }
             event.consume();
