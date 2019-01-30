@@ -60,5 +60,7 @@ public class Constants {
      */
     public static final int LBDATAMAX = 3;  // 
     
-    
+    public static enum TT_State {
+        INACTIVE, ACTIVE, WAITING
+    };
 }

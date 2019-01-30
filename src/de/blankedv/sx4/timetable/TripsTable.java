@@ -37,6 +37,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableRow;
@@ -55,7 +56,7 @@ import javafx.util.StringConverter;
  */
 public class TripsTable extends Application {
 
-    private final TableView<Trip> tableView = new TableView<>();
+    public static final TableView<Trip> tableView = new TableView<>();
 
     Scene tripTableScene;
     // New window (Stage)
@@ -67,11 +68,15 @@ public class TripsTable extends Application {
     private final ImageView ivPowerState = new ImageView();
     private final ImageView ivRefresh = new ImageView(refresh);
     private final Button btnRefresh = new Button();
+    final Button btnStart = new Button("Start");
+    final Button btnStop = new Button("Stop");
+    private Timetable t0;
 
     @Override
     public void start(Stage primaryStage) {
 
         BorderPane bp = new BorderPane();
+        Label status = new Label();
 
         HBox hb = createButtonBar();
 
@@ -80,6 +85,14 @@ public class TripsTable extends Application {
         BorderPane.setMargin(hb, new Insets(8, 8, 8, 8));
         tripTableScene = new Scene(bp, 700, 300);
         bp.setCenter(tableView);
+        bp.setBottom(status);
+
+        t0 = allTimetables.get(0);
+        if (t0 != null) {
+            status.setText(t0.toString());
+        } else {
+            status.setText("kein Fahrplan vorhanden");
+        }
 
         // New window (Stage)
 
@@ -102,17 +115,24 @@ public class TripsTable extends Application {
                 ivPowerState.setImage(red);
             }
 
-            // look for active trip and enable/disable refresh button
+            // look for active trip and enable/disable refresh button and start/stop buttons
             int tripsActive = INVALID_INT;
             for (Trip tr : allTrips) {
                 if (tr.active == true) {
                     tripsActive = tr.id;
+                    tableView.getSelectionModel().select(tr);
                 }
             }
             if (tripsActive != INVALID_INT) {
                 btnRefresh.setDisable(true);
+                status.setText(t0.toString() + " läuft.");
+                btnStop.setDisable(false);
+                btnStart.setDisable(true);
             } else {
                 btnRefresh.setDisable(false);
+                status.setText(t0.toString());
+                btnStop.setDisable(true);
+                btnStart.setDisable(false);
             }
         }));
 
@@ -123,6 +143,10 @@ public class TripsTable extends Application {
 
     public void show() {
         tripWindow.show();
+    }
+
+    public void selectTrip(Trip tr) {
+
     }
 
     private void createDataTables() {
@@ -226,6 +250,7 @@ public class TripsTable extends Application {
                                 .then((ContextMenu) null)
                                 .otherwise(contextMenu)
                 );
+
                 return row;
             }
         });
@@ -265,13 +290,6 @@ public class TripsTable extends Application {
 
     }
 
-    private void startTrip(int number) {
-        Trip tr = allTrips.get(number);
-        if (tr != null) {
-            startTrip(tr);
-        }
-    }
-        
     private void startTrip(Trip trip) {
 
         if (trip != null) {
@@ -290,8 +308,6 @@ public class TripsTable extends Application {
     private HBox createButtonBar() {
 
         final HBox hb = new HBox(15);
-        final Button btnStart = new Button("Start");
-        final Button btnStop = new Button("Stop");
 
         // final ProgressIndicator pi = new ProgressIndicator();
         // pi.setVisible(false);
@@ -302,9 +318,12 @@ public class TripsTable extends Application {
             btnStop.setDisable(false);
             btnStart.setDisable(true);
 
-            startTrip(0);
+            Timetable tt = allTimetables.get(0);
+            tt.start();
+            //tableView.getSelectionModel().clearAndSelect(0);
         }
         );
+
         btnRefresh.setOnAction(e -> {
             // doublecheck that no trip is active
             int tripsActive = INVALID_INT;

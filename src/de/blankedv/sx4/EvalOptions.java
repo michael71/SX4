@@ -111,7 +111,7 @@ public class EvalOptions {
                 info("routing is enabled");
                 routingEnabled = true;
                 if (commandLine.hasOption("g")) {
-                    info("gui will be started.");
+                    info("timetable gui will be started.");
                     guiEnabled = true;
                 }
             }

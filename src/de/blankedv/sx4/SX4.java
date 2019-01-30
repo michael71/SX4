@@ -21,6 +21,7 @@ import de.blankedv.sx4.timetable.PanelElement;
 
 import de.blankedv.sx4.timetable.ReadConfig;
 import de.blankedv.sx4.timetable.Route;
+import de.blankedv.sx4.timetable.Timetable;
 import de.blankedv.sx4.timetable.Trip;
 import de.blankedv.sx4.timetable.TripsTable;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
@@ -141,6 +142,7 @@ public class SX4 {
                         //System.out.println("m400");
                         sxi.doUpdate();     // includes reading all SX data 
                         if (routingEnabled) {
+                            Timetable.auto();
                             Trip.auto();
                             Route.auto();
                             CompRoute.auto();                           
