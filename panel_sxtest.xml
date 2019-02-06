@@ -77,6 +77,7 @@
 <trip id="3103" routeid="2313" sens1="903" sens2="923" loco="42,1,18" stopdelay="1200" />
 <trip id="3104" routeid="2304" sens1="922" sens2="902" loco="40,1,28" stopdelay="2300" />
 <trip id="3105" routeid="2314" sens1="902" sens2="922" loco="40,0,28" stopdelay="1700" />
+<trip id="3106" routeid="2300" sens1="924" sens2="902" loco="25,0,10" stopdelay="700" />
 
 <timetable id="3300" time="3,3,3,3,3,3" trip="3102,3101,3104,3103,3105,3100" next=""/> 
 

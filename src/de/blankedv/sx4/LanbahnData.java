@@ -37,7 +37,7 @@ public class LanbahnData {
     }
     
     public static HashMap<Integer, Integer> getAll() {
-        return new HashMap(d);
+        return new HashMap<Integer, Integer>(d);
     }
     
 }

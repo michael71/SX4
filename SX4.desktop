@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=SX4
+Comment=SX4 (core) Programm zum Steuern von SX-Modellbahnen
+Keywords=java;SX4;model railroad;sx;railroad
+Exec=/home/mblank/NetBeansProjects/SX4/start.sh
+Terminal=true
+Type=Application
+Icon=/home/mblank/NetBeansProjects/SX4/sx4_loco2_ico64.png
+Categories=Game;
+Name[de_DE]=SX4.desktop

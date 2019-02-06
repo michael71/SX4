@@ -1,14 +1,17 @@
 #!/bin/bash
 
+#change to directory with panel-xml file
+cd /home/mblank/NetBeansProjects/SX4
+
 # FCC an USB0, debugging on
 sleep 5
-/usr/bin/java -jar /home/pi/NetBeansProjects/SX4/store/SX4.jar -s ttyUSB0 -t FCC -d
+#/usr/bin/java -jar /home/pi/NetBeansProjects/SX4/store/SX4.jar -s ttyUSB0 -t FCC -d
 
 # SLX825 an USB0, debugging on
 #/usr/bin/java -jar /home/pi/NetBeansProjects/SX4/store/SX4.jar -s ttyUSB0 -t SLX825 -b 9600 -d
 
 # Simulation only, debugging on
-#/usr/bin/javajava -jar /home/pi/NetBeansProjects/SX4/store/SX4.jar -t SIM -d
+/usr/bin/java -jar /home/mblank/NetBeansProjects/SX4/store/SX4.jar -t SIM -d
 
 # usage:
 
