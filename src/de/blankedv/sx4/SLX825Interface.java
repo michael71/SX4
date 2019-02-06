@@ -363,7 +363,7 @@ public class SLX825Interface extends GenericSXInterface {
                     adr = (int) (readBuffer[0 + i] & 0xFF);
                     if ((i + 1) < numBytes) {
                         data = (int) (readBuffer[1 + i] & 0xFF);
-                        if ((adr == 0) && (data == 0)) {
+                        if ((adr == 0) && (data == 0) ) {
                             // ignore, this seems to be a bug in purejavacomm
                         } else if (adr == POWER_CHAN) {  // power channel
                             if (data != 0) {
@@ -375,8 +375,10 @@ public class SLX825Interface extends GenericSXInterface {
                             }
                             debug("rec. power=" + data);
                         } else {
+                            if (adr <= SXMAX_USED) {  // ignore >106 channel numbers
                             SXData.update(adr, data, false); // DO NOT SEND BACK TO SXI (loop !)
                             debug("read a=" + adr + " d=" + data);
+                            }
                         }
                         leftoverFlag = false;
 
