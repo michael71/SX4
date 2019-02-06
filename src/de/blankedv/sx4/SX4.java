@@ -46,6 +46,8 @@ import javafx.util.Duration;
  * @author mblank
  */
 public class SX4 {
+    
+    // TODO mix Betrieb Fahrstrasse und Stellen per Hand einführen
 
     public static volatile boolean running = true;
     public static boolean routingEnabled = false;
