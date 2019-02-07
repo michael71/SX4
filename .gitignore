@@ -18,6 +18,7 @@ build.xml
 log.*.txt
 lanbahnpanel.apk
 startFCC.sh
+sim.sh
 
 archiv/
 *.backup
