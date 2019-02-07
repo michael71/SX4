@@ -201,6 +201,10 @@ public class Trip implements Comparable<Trip> {
     
     private void startLocoDelayed() {
         final int startDelay = 5000; 
+        loco.setSpeed(0);  // licht an, richtige direction, aber noch nicht losfahren
+        loco.setForward(locoDir == 0);
+        loco.setLicht(true);
+        SXData.update(loco.getLok_adr(), loco.getSX(), true); // true => send to SXinterface
         Timeline timeline = new Timeline(new KeyFrame(
                Duration.millis(startDelay),
                       ae -> startLoco() ));
