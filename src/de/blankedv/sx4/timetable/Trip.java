@@ -48,6 +48,8 @@ public class Trip implements Comparable<Trip> {
     int stopDelay = INVALID_INT;  // milliseconds
     boolean active = false;
     Loco loco = null;
+    
+    int currSpeedPercent = 0;
 
     Trip() {
         
@@ -160,7 +162,7 @@ public class Trip implements Comparable<Trip> {
             } else {
                 locoSpeed = 28;
             }
-            loco = new Loco(locoAddr, locoDir, locoSpeed);
+            loco = new Loco(locoAddr, locoDir, 0);   // INITIAL SPEED = 0
 
         } catch (NumberFormatException e) {
             return false;
@@ -189,9 +191,22 @@ public class Trip implements Comparable<Trip> {
         clearRoutes();
 
     }
+    
+    private void incrLocoSpeed() {
+        currSpeedPercent += 10;
+        if (currSpeedPercent < 0)  currSpeedPercent = 0;
+        if (currSpeedPercent > 100 ) currSpeedPercent = 100;
+        
+        int speed = (locoSpeed*currSpeedPercent)/100;
+        debug("loco-speed="+speed);
+        loco.setSpeed(speed);
+        loco.setForward(locoDir == 0);
+        loco.setLicht(true);
+         //sxi.sendLoco(loco.getLok_adr(), loco.getSpeed(), true, loco.isForward(),  false);  // light = true, horn = false
+        SXData.update(loco.getLok_adr(), loco.getSX(), true); // true => send to SXinterface
+    }
 
     private void startLoco() {
-
         loco.setSpeed(locoSpeed);
         loco.setForward(locoDir == 0);
         loco.setLicht(true);
@@ -200,14 +215,17 @@ public class Trip implements Comparable<Trip> {
     }
     
     private void startLocoDelayed() {
-        final int startDelay = 5000; 
         loco.setSpeed(0);  // licht an, richtige direction, aber noch nicht losfahren
         loco.setForward(locoDir == 0);
         loco.setLicht(true);
+        currSpeedPercent = 0;
         SXData.update(loco.getLok_adr(), loco.getSX(), true); // true => send to SXinterface
         Timeline timeline = new Timeline(new KeyFrame(
-               Duration.millis(startDelay),
-                      ae -> startLoco() ));
+               Duration.millis(1000),
+                      ae -> incrLocoSpeed() 
+        ));
+        timeline.setCycleCount(10); // for slow start of loco, increase speed in steps
+        timeline.setDelay(Duration.seconds(5)); // then increase speed every second
         timeline.play();
     }
     
