@@ -59,6 +59,15 @@ public class SXData {
         }
         return d[addr];
     }
+    
+    public static int get(int addr, int bit) {
+        int data = d[addr];
+        if ( (data & (1 << (bit - 1))) != 0 ) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 
     synchronized static public void setBit(int addr, int bit, boolean writeFlag) {
         if (!SXUtils.isValidSXAddress(addr) || (!SXUtils.isValidSXBit(bit))) {

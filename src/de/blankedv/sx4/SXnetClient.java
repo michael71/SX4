@@ -148,6 +148,11 @@ public class SXnetClient implements Runnable {
             String res = readPower();  // no parameters
             sendMessage(res);
             return;
+        } else if (param[0].equals("UNLOCK")) {
+          // used in case of unfinished (i.e. not cleared) routes
+            int n = PanelElement.unlockAll(); 
+            sendMessage("XUNLOCKED "+n);
+            return;
         }
 
         String result = "";
@@ -176,6 +181,7 @@ public class SXnetClient implements Runnable {
                 }
                 break;
             case "SET": // for addresses > 1200 (lanbahn sim./routes)
+                // will check for "locked" PanelElements
                 result = setLanbahnMessage(param);
                 break;
             case "SETTRAIN": // for addresses > 1200 (lanbahn sim./routes)
@@ -187,6 +193,7 @@ public class SXnetClient implements Runnable {
             case "READ": // for addresses > 1200 (lanbahn sim./routes)
                 result = createLanbahnFeedbackMessage(param);
                 break;
+            
             default:
                 result = "ERROR";
         }
@@ -344,9 +351,26 @@ public class SXnetClient implements Runnable {
         }
         int lbaddr = getLanbahnAddrFromString(par[1]);
         int lbdata = getLanbahnDataFromString(par[2]);
-        if ((lbaddr == INVALID_INT) || (lbdata == INVALID_INT)) {
+        
+        if ((lbaddr == INVALID_INT) || (lbdata == INVALID_INT)  ) {
             return "ERROR";
         }
+        
+        if (PanelElement.isAddressLocked(lbaddr)) {
+            // cannot set because panel element locked, return current state 
+            debug("address "+lbaddr+" is locked.");
+            int d;
+            if (lbaddr >= LBPURE) {
+                d= LanbahnData.get(lbaddr);
+            } else {
+                d = SXData.get((lbaddr / 10), lbaddr % 10);
+            }
+            if (d != INVALID_INT) {
+                return "XL " + lbaddr + " " + d;
+            } 
+        }
+        
+        // not locked, we can set the corresponding data/bit
         if (lbaddr >= LBPURE) {
             // pure lanbahn virtual address
             int res = LanbahnData.update(lbaddr, lbdata);

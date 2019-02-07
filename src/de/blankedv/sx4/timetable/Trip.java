@@ -176,10 +176,19 @@ public class Trip implements Comparable<Trip> {
         setRoutes();
 
         // aquire locoString and start 'full' speed
-        startLoco();
+        startLocoDelayed();
         active = true;
         return "OK";
-           }
+    }
+    
+    public void stop() {
+    
+        // stop current loco
+        stopLoco();
+        active = false;
+        clearRoutes();
+
+    }
 
     private void startLoco() {
 
@@ -188,6 +197,14 @@ public class Trip implements Comparable<Trip> {
         loco.setLicht(true);
         //sxi.sendLoco(loco.getLok_adr(), loco.getSpeed(), true, loco.isForward(),  false);  // light = true, horn = false
         SXData.update(loco.getLok_adr(), loco.getSX(), true); // true => send to SXinterface
+    }
+    
+    private void startLocoDelayed() {
+        final int startDelay = 5000; 
+        Timeline timeline = new Timeline(new KeyFrame(
+               Duration.millis(startDelay),
+                      ae -> startLoco() ));
+        timeline.play();
     }
     
     public void stopLoco() {
@@ -217,6 +234,21 @@ public class Trip implements Comparable<Trip> {
         for (CompRoute cr : allCompRoutes) {
             if (cr.getAdr() == routeid) {
                 cr.set();
+            }
+        }
+
+    }
+    
+    private void clearRoutes() {
+        debug("trip: clearRoute =" + routeid);
+        for (Route r : allRoutes) {
+            if (r.getAdr() == routeid) {
+                r.clear();
+            }
+        }
+        for (CompRoute cr : allCompRoutes) {
+            if (cr.getAdr() == routeid) {
+                cr.clear();
             }
         }
 

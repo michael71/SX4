@@ -148,7 +148,13 @@ public class Route extends PanelElement {
         // set signals turnout red
         for (RouteSignal rs : rtSignals) {
             rs.signal.setStateAndUpdateSXData(STATE_RED);
+            rs.signal.setLocked(false);
             sxAddressesToUpdate.add(rs.signal.getAdr() / 10);
+        }
+
+        // unlock turnouts
+        for (RouteTurnout rtt : rtTurnouts) {
+            rtt.turnout.setLocked(false);
         }
 
         for (int sxaddr : sxAddressesToUpdate) {
@@ -238,6 +244,13 @@ public class Route extends PanelElement {
             }
         }
 
+        // check if any of the PanelElements in this route are locked
+        String pesLocked = panelElementsLocked();
+        if (!pesLocked.isEmpty()) {
+            error("cannot set route id=" + getAdr() + " because some PanelElements are locked: " + pesLocked);
+            return false;  // cannot set route.
+        }
+
         clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
 
         if (offendingRouteActive()) {
@@ -277,25 +290,15 @@ public class Route extends PanelElement {
         // set signals
         for (RouteSignal rs : rtSignals) {
             int d = rs.dynamicValueToSetForRoute();
-            /* UNNECESSARY ??? SXAddrAndBits sxab = SXUtils.lbAddr2SX(rs.signal.getAdr());
-            if (d == 0) {   // TODO multi-aspect - only red and green are used at the moment
-                SXUtils.clearBitSxData(sxab.sxAddr, sxab.sxBit);
-            } else {
-                SXUtils.clearBitSxData(sxab.sxAddr, sxab.sxBit);
-            } */
             rs.signal.setStateAndUpdateSXData(d);
+            rs.signal.setLocked(true);
             sxAddressesToUpdate.add(rs.signal.getAdr() / 10);
         }
-        // set and // TODO lock turnouts
+        // set and lock turnouts
         for (RouteTurnout rtt : rtTurnouts) {
             int d = rtt.valueToSetForRoute;   // can be only 1 or 0
-            /* UNNECESSARY ??? SXAddrAndBits sxab = SXUtils.lbAddr2SX(rtt.turnout.getAdr());
-             if (d == 0) {  
-                SXUtils.clearBitSxData(sxab.sxAddr, sxab.sxBit);
-            } else {
-                SXUtils.clearBitSxData(sxab.sxAddr, sxab.sxBit);
-            } */
             rtt.turnout.setStateAndUpdateSXData(d);
+            rtt.turnout.setLocked(true);
             // debug("RT, set turn= " + rtt.turnout.getAdr() + " state=" + d);
             sxAddressesToUpdate.add(rtt.turnout.getAdr() / 10);
 
@@ -322,6 +325,24 @@ public class Route extends PanelElement {
 
         this.setState(RT_ACTIVE);
         return true;
+    }
+
+    private String panelElementsLocked() {
+        StringBuilder sb = new StringBuilder();
+        for (RouteSignal rs : rtSignals) {
+            if (rs.signal.isLocked()) {
+                sb.append(rs.signal.getAdr());
+                sb.append(";");
+            }
+        }
+        // set and lock turnouts
+        for (RouteTurnout rtt : rtTurnouts) {
+            if (rtt.turnout.isLocked()) {
+                sb.append(rtt.turnout.getAdr());
+                sb.append(";");
+            }
+        }
+        return sb.toString();
     }
 
     public boolean isActive() {

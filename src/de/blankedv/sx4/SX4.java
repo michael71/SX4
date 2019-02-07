@@ -46,9 +46,8 @@ import javafx.util.Duration;
  * @author mblank
  */
 public class SX4 {
-    
-    // TODO mix Betrieb Fahrstrasse und Stellen per Hand einführen
 
+    // TODO mix Betrieb Fahrstrasse und Stellen per Hand einführen
     public static volatile boolean running = true;
     public static boolean routingEnabled = false;
     public static boolean guiEnabled = false;
@@ -112,8 +111,18 @@ public class SX4 {
 
         if (configFilename.isEmpty()) {
             error("no panel...xml file found, NOT starting config server");
+            if (routingEnabled) {
+                routingEnabled = false;  // override setting
+                debug("routing disabled - because there is no config file");
+            }
         } else {
-            ReadConfig.readXML(configFilename);
+            if (!ReadConfig.readXML(configFilename).equals("OK")) {
+                // config has to be read successfully - a requirement for enabling routing
+                if (routingEnabled) {
+                    routingEnabled = false;  // override setting
+                    debug("routing disabled - because config file could not be read");
+                }
+            }
             loadTrainNumbers();  // sensors must be know when setting train numbers
 
             try {
@@ -133,8 +142,9 @@ public class SX4 {
         final SXnetServer serv = new SXnetServer();
 
         wifiThrottle = new WifiThrottle();
-        com.sun.javafx.application.PlatformImpl.startup(() -> {  });  // TODO may have to be changed in Java9
-        
+        com.sun.javafx.application.PlatformImpl.startup(() -> {
+        });  // TODO may have to be changed in Java9
+
         Timer timer = new java.util.Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -147,7 +157,7 @@ public class SX4 {
                             Timetable.auto();
                             Trip.auto();
                             Route.auto();
-                            CompRoute.auto();                           
+                            CompRoute.auto();
                         }
                         saveTrainNumbers();
                     }
@@ -155,8 +165,7 @@ public class SX4 {
             }
         }, 300, 300);
 
-        /*  DOES NOT ALWAY WORK ....
-        ?????
+        /*  DOES NOT WORK SOMETIMES => switched back to "plain old java timer"
         Timeline millis400 = new Timeline(new KeyFrame(Duration.millis(400), (ActionEvent event) -> {
                 System.out.println("m400");
                 sxi.doUpdate();     // includes reading all SX data 
@@ -166,12 +175,10 @@ public class SX4 {
                 }
                 // TrainNumberData.auto();  will be actively reset by fahrstrassensteurung
                 saveTrainNumbers();
-
         }));
-
         millis400.setCycleCount(Animation.INDEFINITE);
         millis400.play(); */
-  
+        
         if (guiEnabled) {
             new Thread() {
                 @Override
@@ -179,10 +186,9 @@ public class SX4 {
                     Application.launch(TripsTable.class, args);
                 }
             }.start();
-
         }
-        
-        shutdownHook(serv);  
+
+        shutdownHook(serv);
     }
 
     private void shutdownHook(SXnetServer server) {

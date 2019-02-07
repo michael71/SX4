@@ -7,11 +7,10 @@ package de.blankedv.sx4.timetable;
 
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.SX4.configFilename;
-import static de.blankedv.sx4.SX4.routingEnabled;
-import static de.blankedv.sx4.SX4.running;
-import static de.blankedv.sx4.SX4.sxi;
 import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.timetable.Trip;
+import static de.blankedv.sx4.timetable.Vars.allCompRoutes;
+import static de.blankedv.sx4.timetable.Vars.allRoutes;
 import static de.blankedv.sx4.timetable.Vars.allTimetables;
 import static de.blankedv.sx4.timetable.Vars.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelName;
@@ -20,17 +19,14 @@ import java.util.Collections;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
@@ -39,13 +35,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableRow;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
@@ -68,13 +63,17 @@ public class TripsTable extends Application {
     private final ImageView ivPowerState = new ImageView();
     private final ImageView ivRefresh = new ImageView(refresh);
     private final Button btnRefresh = new Button();
+    private final Button btnSetTrain = new Button("SetTrain");
+    private final Button btnReset = new Button("Reset");
     final Button btnStart = new Button("Start");
     final Button btnStop = new Button("Stop");
     private Timetable t0;
+    private Stage primaryStage;
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage stage) {
 
+        primaryStage = stage;
         BorderPane bp = new BorderPane();
         Label status = new Label();
 
@@ -324,6 +323,15 @@ public class TripsTable extends Application {
         }
         );
 
+        btnStop.setOnAction(e -> {
+            btnStop.setDisable(true);
+            btnStart.setDisable(false);
+            Timetable tt = allTimetables.get(0);
+            tt.stop();
+            //tableView.getSelectionModel().clearAndSelect(0);
+        }
+        );
+
         btnRefresh.setOnAction(e -> {
             // doublecheck that no trip is active
             int tripsActive = INVALID_INT;
@@ -347,6 +355,25 @@ public class TripsTable extends Application {
             }
         });
 
+        btnReset.setOnAction(e -> {
+            PanelElement.unlockAll();
+            for (Route rt : allRoutes) rt.clear();
+            for (CompRoute cr : allCompRoutes) cr.clear();
+            btnStop.setDisable(true);
+            btnStart.setDisable(false);
+            Timetable tt = allTimetables.get(0);
+            tt.stop();
+        }
+        );
+
+        btnSetTrain.setOnAction(e -> {
+            SensorLocoPair res = SetTrainDialog.open(primaryStage);
+            if (res.sensor != INVALID_INT) {
+                PanelElement.setTrain(res.sensor, res.loco);
+            };
+        }
+        );
+
         ivPowerState.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             // toggle global power
             if (SXData.getActualPower()) {
@@ -366,7 +393,10 @@ public class TripsTable extends Application {
                 ivPowerState.setImage(red);
             }
         }); */
-        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnRefresh); // , pi);
+        Label lblNothing = new Label("  ");
+        HBox.setHgrow(lblNothing, Priority.ALWAYS);
+        lblNothing.setMaxWidth(Double.MAX_VALUE);
+        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnRefresh, lblNothing, btnSetTrain, btnReset); // , pi);
         return hb;
     }
 

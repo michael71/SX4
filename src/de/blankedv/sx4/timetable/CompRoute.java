@@ -68,6 +68,10 @@ public class CompRoute extends PanelElement {
         }
     }
 
+    public void clear() {
+        setState(RT_INACTIVE);
+    }
+    
     public boolean set() {
 
         if (DEBUG_COMPROUTE) {

@@ -58,6 +58,8 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
     // sensors
     public static final int STATE_FREE = 0;
     public static final int STATE_OCCUPIED = 1;
+    
+    protected boolean locked = false;
 
     protected long lastToggle = 0L;
     protected long lastUpdateTime = 0L;
@@ -206,6 +208,15 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
         }
     }
 
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    
     public String getType() {
         return typeString;
     }
@@ -403,6 +414,33 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
             }
 
         }
+    }
+    
+    /** check if a panel element with given address is locked
+     * 
+     * @param addr
+     * @return 
+     */
+    public static boolean isAddressLocked(int addr) {
+        ArrayList<PanelElement> peList = PanelElement.getByAddress(addr);
+        for (PanelElement pe : peList) {
+            if (pe.isLocked()) return true;
+        }
+        return false;
+    }
+    
+    /** used in case of unfinished (i.e. not cleared) routes
+     * 
+     */
+    public static int unlockAll() {
+        int count = 0;
+        for (PanelElement pe : panelElements) {
+            if (pe.isLocked()) {
+                count++;
+                pe.setLocked(false);
+            }          
+        }
+        return count;
     }
 
     @Override

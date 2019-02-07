@@ -86,6 +86,23 @@ public class Timetable {
 
         return startNewTrip(cTrip);
     }
+    
+    public boolean stop() {
+        // stop current timetable
+        // TODO Fixed = timetable0 !!
+        state = INACTIVE;   // stops also "auto() function
+       
+        active = false;
+        cTrip = Trip.get(tripIds.get(currentTripIndex));
+
+        if (cTrip == null) {
+             return false;
+        } else {
+            cTrip.stop();
+            return true;
+        }
+
+    }
 
     public boolean startNewTrip(Trip t) {
         // check if start sensor is occupied and endsensor is free
@@ -114,6 +131,9 @@ public class Timetable {
     }
 
     public boolean advanceToNextTrip() {
+        if (state == INACTIVE) {
+            error("cannot advance to next Trip because TimeTable is INACTIVE");
+        }
         currentTripIndex++;
         // is there a next trip??
         if (currentTripIndex >= tripIds.size()) {
