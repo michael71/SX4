@@ -14,7 +14,7 @@ public class Constants {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "SX4 - rev1.18 - 07 Feb 2019";
+    public static final String VERSION = "SX4 - rev1.19 - 08 Feb 2019";
     
     // switch one more debugging?
     // DEBUG can be set via args - and hence is variable

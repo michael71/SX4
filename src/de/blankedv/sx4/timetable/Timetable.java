@@ -9,6 +9,9 @@ import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.Constants.TT_State.*;
+import static de.blankedv.sx4.timetable.PanelElement.STATE_FREE;
+import static de.blankedv.sx4.timetable.PanelElement.STATE_OCCUPIED;
+import de.blankedv.sx4.timetable.Trip.TripState;
 import static de.blankedv.sx4.timetable.Vars.allTimetables;
 import static de.blankedv.sx4.timetable.Vars.allTrips;
 import static de.blankedv.sx4.timetable.TripsTable.tableView;
@@ -83,22 +86,21 @@ public class Timetable {
             return false;
         }
 
-
         return startNewTrip(cTrip);
     }
-    
+
     public boolean stop() {
-        // stop current timetable
+        // finish current timetable
         // TODO Fixed = timetable0 !!
         state = INACTIVE;   // stops also "auto() function
-       
+
         active = false;
         cTrip = Trip.get(tripIds.get(currentTripIndex));
 
         if (cTrip == null) {
-             return false;
+            return false;
         } else {
-            cTrip.stop();
+            cTrip.finish();
             return true;
         }
 
@@ -106,24 +108,30 @@ public class Timetable {
 
     public boolean startNewTrip(Trip t) {
         // check if start sensor is occupied and endsensor is free
-        // TODO check if complete route is free and set route
+        debug("try starting new trip id=" + t.id);
 
         // set route(s)
-        int start = PanelElement.getSingleByAddress(t.sens1).getState() & 0x01;   // get "occupied" bit
-        int end = PanelElement.getSingleByAddress(t.sens2).getState() & 0x01;   // get "occupied" bit
+        int start = PanelElement.getSingleByAddress(t.sens1).getState();
+        int end = PanelElement.getSingleByAddress(t.sens2).getState();
 
-        if ((start != 0) && (end == 0)) {
-            System.out.println("start sensor (" + t.sens1 + ") occ and end sensor(" + t.sens2 + ") free, we can start the trip");
+        if ((start == STATE_OCCUPIED) && (end == STATE_FREE)) {
+            debug("start sensor (" + t.sens1 + ") occupied and end sensor(" + t.sens2 + ") free, we can start the trip");
             state = ACTIVE;
-            t.start();
-            return true;
+            boolean result = t.start();
+            if (result) {
+                state = ACTIVE;
+                return true;
+            } else {
+                state = INACTIVE;
+                return false;
+            }
 
         } else {
-            if (start == 0) {
-                System.out.println("start sensor (" + t.sens1 + ") free, we CANNOT start the trip");
+            if (start != STATE_OCCUPIED) {
+                debug("start sensor (" + t.sens1 + ") free, we CANNOT start the trip");
             }
-            if (end != 0) {
-                System.out.println("end sensor (" + t.sens2 + ")is not free, we CANNOT start the trip");
+            if (end != STATE_FREE) {
+                debug("end sensor (" + t.sens2 + ")is not free, we CANNOT start the trip");
             }
             return false;
         }
@@ -149,7 +157,7 @@ public class Timetable {
             cTrip = null;
         }
         if (cTrip == null) {
-            System.out.println("ERROR in Timetable - no trip found for id=" + currentTripIndex);
+            error("ERROR in Timetable - no trip found for id=" + currentTripIndex);
             return false;
         }
 
@@ -171,18 +179,17 @@ public class Timetable {
             case ACTIVE:
                 for (Trip tr : allTrips) {
                     if (tr.id == tt.cTrip.id) {
-                        if (!tr.isActive()) {
+                        if (tr.state == TripState.INACTIVE) {   // current trip has been finished, start a new one (delayed)
                             tt.state = WAITING;   // wait for start of new trip
-                            debug("current trip " + tt.cTrip.id + " has ended. start new one 3 seconds after train stop.");
+                            debug("current trip " + tt.cTrip.id + " has ended. start new one 5 seconds after train stop.");
                             // currentTrip has ended, wait three seconds, then start next
                             Timeline timeline = new Timeline(new KeyFrame(
-                                    Duration.millis(3000 + tr.stopDelay),
+                                    Duration.millis(5000 + tr.stopDelay),
                                     ae -> {
                                         tt.advanceToNextTrip();
                                     }));
                             timeline.play();
                         }
-
                     }
                 }
                 break;

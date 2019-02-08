@@ -72,6 +72,33 @@ public class ReadConfig {
         return "OK";
     }
    
+    public static String readPanelName(String fname) {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder;
+
+        try {
+            builder = factory.newDocumentBuilder();
+        } catch (ParserConfigurationException e1) {
+            error("ParserConfigException Exception - " + e1.getMessage());
+            return "ERROR: ParserConfigException";
+        }
+        
+        Document doc;
+        try {
+            doc = builder.parse(new File(fname));
+            return parsePanelName(doc);
+        } catch (SAXException e) {
+            error("SAX Exception - " + e.getMessage());
+            return "ERROR: SAX Exception";
+        } catch (IOException e) {
+            error("IO Exception - " + e.getMessage());
+            return "ERROR: IO Exception";
+        } catch (Exception e) {
+            error("other Exception - " + e.getMessage());
+            return "ERROR: other Exception";
+        }
+
+    }
 
     // code template taken from lanbahnPanel
     public static String readXML(String fname) {
@@ -112,6 +139,15 @@ public class ReadConfig {
         return "OK";
     }
 
+   
+    private static String parsePanelName(Document doc) {
+    
+        NodeList items;
+        Element root = doc.getDocumentElement();
+
+        return parsePanelAttribute(root, "filename");
+
+    }
     // code template from lanbahnPanel
     private static void parsePanelElements(Document doc) {
         

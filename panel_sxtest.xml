@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
 <layout-config filename="panel_sxtest.xml">
-<locolist name="sxtest" version="2018-12-20">
+<locolist name="sxtest" version="2019-02-07">
 <loco adr="97" name="SchoenBB" mass="2" vmax="120" />
 <loco adr="40" name="ET440" mass="3" vmax="160" />
 <loco adr="29" name="ET423-1" mass="2" vmax="120" />

@@ -9,6 +9,7 @@ import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.SX4.configFilename;
 import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.timetable.Trip;
+import de.blankedv.sx4.timetable.Trip.TripState;
 import static de.blankedv.sx4.timetable.Vars.allCompRoutes;
 import static de.blankedv.sx4.timetable.Vars.allRoutes;
 import static de.blankedv.sx4.timetable.Vars.allTimetables;
@@ -117,7 +118,7 @@ public class TripsTable extends Application {
             // look for active trip and enable/disable refresh button and start/stop buttons
             int tripsActive = INVALID_INT;
             for (Trip tr : allTrips) {
-                if (tr.active == true) {
+                if (tr.state != TripState.INACTIVE) {
                     tripsActive = tr.id;
                     tableView.getSelectionModel().select(tr);
                 }
@@ -227,19 +228,12 @@ public class TripsTable extends Application {
                         startTrip(tr);
                     }
                 });
-                final MenuItem stopMenuItem = new MenuItem("Stop diese Fahrt");
+                final MenuItem stopMenuItem = new MenuItem("Stoppe diese Fahrt");
                 stopMenuItem.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent event) {
-                        final Trip rtShown = row.getItem();
-                        rtShown.stopLoco();
-                        rtShown.active = false;
-                        //rtShown.setMarked(true);
-                        //Timeline timeline = new Timeline(new KeyFrame(
-                        //       Duration.millis(3500),
-                        //       ae -> rtShown.setMarked(false)));
-                        //timeline.play();
-
+                        final Trip tripShown = row.getItem();
+                        tripShown.finish();
                     }
                 });
                 contextMenu.getItems().addAll(startMenuItem, stopMenuItem);
@@ -318,8 +312,12 @@ public class TripsTable extends Application {
             btnStart.setDisable(true);
 
             Timetable tt = allTimetables.get(0);
-            tt.start();
-            //tableView.getSelectionModel().clearAndSelect(0);
+            boolean result = tt.start();
+            if (result == false) {
+                // reset button states if start was not successful
+                btnStop.setDisable(true);
+                btnStart.setDisable(false);
+            }
         }
         );
 
@@ -336,7 +334,7 @@ public class TripsTable extends Application {
             // doublecheck that no trip is active
             int tripsActive = INVALID_INT;
             for (Trip tr : allTrips) {
-                if (tr.active == true) {
+                if ((tr.state == TripState.ACTIVE) || (tr.state == TripState.WAITING)) {
                     tripsActive = tr.id;
                 }
             }
@@ -357,8 +355,12 @@ public class TripsTable extends Application {
 
         btnReset.setOnAction(e -> {
             PanelElement.unlockAll();
-            for (Route rt : allRoutes) rt.clear();
-            for (CompRoute cr : allCompRoutes) cr.clear();
+            for (Route rt : allRoutes) {
+                rt.clear();
+            }
+            for (CompRoute cr : allCompRoutes) {
+                cr.clear();
+            }
             btnStop.setDisable(true);
             btnStart.setDisable(false);
             Timetable tt = allTimetables.get(0);

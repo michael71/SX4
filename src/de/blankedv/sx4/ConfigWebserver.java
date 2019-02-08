@@ -18,6 +18,7 @@ import java.net.InetSocketAddress;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import de.blankedv.sx4.timetable.ReadConfig;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -40,12 +41,19 @@ public class ConfigWebserver {
     private final int PORT = 8000;  // fixed port used by android software
 
     public ConfigWebserver(String fname) throws Exception {
-        fileName = fname;
-        if (fileName.isEmpty()) {
+
+        if (fname.isEmpty()) {
             return;
         }
+        fileName = fname;  // store locally for later use in http server
         
         info("starting config server on port " + PORT + ", serving: " + fileName);
+        
+        // double check name inside XML file
+        String pName = ReadConfig.readPanelName(fileName);
+         if (!pName.equals(fileName)) {
+            error("wrong 'filename' attribute="+pName+" in layout-config file="+fileName);
+        }
         server = HttpServer.create(new InetSocketAddress(PORT), 0);
         server.createContext("/", new MyHandler());
         server.setExecutor(null); // creates a default executor
@@ -74,7 +82,7 @@ public class ConfigWebserver {
                     os = t.getResponseBody();
                     os.write(response.getBytes());
                     os.close();
-                } else if (requestURI.getPath().contains("lanbahnpanel.apk")) {
+                } else if (requestURI.getPath().contains("apk")) {
                     h.add("Content-Type", "application/vnd.android.package-archive");
                     File file = new File("lanbahnpanel.apk");
                     byte[] bytearray = new byte[(int) file.length()];

@@ -265,7 +265,7 @@ public class SX4 {
                 // error("conn check");
                 if ((System.currentTimeMillis() - lastConnected) >= 10 * 1000) {
                     error("lost connection.");
-                    running = false;  // stop all threads
+                    running = false;  // finish all threads
                     try {
                         Thread.sleep(200);
                     } catch (InterruptedException ex) {

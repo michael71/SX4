@@ -253,7 +253,7 @@ public class SXnetClient implements Runnable {
         // check whether there is a route with this address(=adr)
         Route r = Route.getFromAddress(lbAddr);
         if (r != null) {
-            boolean res = r.set();
+            boolean res = r.set();  // manual route setting, do not check occupancy
             if (res) {
                 return "XL " + lbAddr + " " + r.getState();  // success
             } else {
@@ -267,7 +267,7 @@ public class SXnetClient implements Runnable {
         // check whether there is a compound route with this address(=adr)
         CompRoute cr = CompRoute.getFromAddress(lbAddr);
         if (cr != null) {
-            boolean res = cr.set();
+            boolean res = cr.set();  // manual route setting, do not check occupancy
             if (res) {
                 return "XL " + lbAddr + " " + cr.getState();  // success
             } else {

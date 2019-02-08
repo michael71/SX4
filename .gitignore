@@ -19,6 +19,9 @@ log.*.txt
 lanbahnpanel.apk
 startFCC.sh
 sim.sh
+archive/
+*.bkup
+
 
 archiv/
 *.backup
