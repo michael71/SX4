@@ -1,11 +1,30 @@
+/*
+SX4
+Copyright (C) 2019 Michael Blank
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package de.blankedv.sx4;
 
 import static com.esotericsoftware.minlog.Log.*;
 import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.SX4.*;
 import de.blankedv.sx4.timetable.CompRoute;
+import de.blankedv.sx4.timetable.Loco;
 import de.blankedv.sx4.timetable.PanelElement;
 import de.blankedv.sx4.timetable.Route;
+import static de.blankedv.sx4.timetable.Vars.allLocos;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.io.IOException;
 import java.io.InputStream;
@@ -149,9 +168,9 @@ public class SXnetClient implements Runnable {
             sendMessage(res);
             return;
         } else if (param[0].equals("UNLOCK")) {
-          // used in case of unfinished (i.e. not cleared) routes
-            int n = PanelElement.unlockAll(); 
-            sendMessage("XUNLOCKED "+n);
+            // used in case of unfinished (i.e. not cleared) routes
+            int n = PanelElement.unlockAll();
+            sendMessage("XUNLOCKED " + n);
             return;
         }
 
@@ -162,6 +181,8 @@ public class SXnetClient implements Runnable {
                 break;
 
             case "SETLOCO":   // complete byte set 
+                result = setSXLocoMessage(param);
+                break;
             case "S":    // SX Byte set, used by SX-Loconet Bridge and Andropanel
             case "SX":
                 result = setSXByteMessage(param);
@@ -173,7 +194,7 @@ public class SXnetClient implements Runnable {
             case "READLOCO":
                 result = readLocoMessage(param);
                 break;
-            case "REQ":
+            case "REQ":   // set or clear route
                 if (routingEnabled) {
                     result = requestRouteMessage(param);
                 } else {
@@ -193,7 +214,7 @@ public class SXnetClient implements Runnable {
             case "READ": // for addresses > 1200 (lanbahn sim./routes)
                 result = createLanbahnFeedbackMessage(param);
                 break;
-            
+
             default:
                 result = "ERROR";
         }
@@ -223,12 +244,18 @@ public class SXnetClient implements Runnable {
             error("addr in msg invalid");
             return "ERROR";
         }
-        if (!locoAddresses.contains(adr)) {
-            locoAddresses.add(adr);
+        if (Loco.getByAddress(adr) == null) {
+            allLocos.add(new Loco(adr));
         }
         return "XLOCO " + adr + " " + SXData.get(adr);
     }
 
+    /**
+     * setting (=1) or clearing (=0) routes
+     *
+     * @param par
+     * @return
+     */
     private String requestRouteMessage(String[] par) {
         if (DEBUG) {
             error("requestRouteMessage");
@@ -253,7 +280,12 @@ public class SXnetClient implements Runnable {
         // check whether there is a route with this address(=adr)
         Route r = Route.getFromAddress(lbAddr);
         if (r != null) {
-            boolean res = r.set();  // manual route setting, do not check occupancy
+            boolean res = true;
+            if (lbdata == 1) {
+                res = r.set();  // manual route setting, do not check occupancy
+            } else {
+                r.clear();  // manual route setting, do not check occupancy 
+            }
             if (res) {
                 return "XL " + lbAddr + " " + r.getState();  // success
             } else {
@@ -267,7 +299,12 @@ public class SXnetClient implements Runnable {
         // check whether there is a compound route with this address(=adr)
         CompRoute cr = CompRoute.getFromAddress(lbAddr);
         if (cr != null) {
-            boolean res = cr.set();  // manual route setting, do not check occupancy
+            boolean res = true;
+            if (lbdata == 1) {
+                res = cr.set();  // manual route setting, do not check occupancy
+            } else {
+                cr.clear();
+            }
             if (res) {
                 return "XL " + lbAddr + " " + cr.getState();  // success
             } else {
@@ -304,6 +341,30 @@ public class SXnetClient implements Runnable {
         return "OK";
     }
 
+    // used by SX-Loconet Bridge and Andropanel
+    private String setSXLocoMessage(String[] par) {
+        if (par.length < 3) {
+            return "ERROR";
+        }
+        debug("setSXLocoMessage");
+
+        int adr = getSXAddrFromString(par[1]);
+        int data = getByteFromString(par[2]);
+
+        if ((adr == INVALID_INT) || (data == INVALID_INT)) {
+            return "ERROR";
+        }
+
+        if (Loco.getByAddress(adr) == null) {
+            allLocos.add(new Loco(adr));
+        }
+
+        int dNew = SXData.update(adr, data, true);  // synchronized 
+        // TODO ?? sxDataCopy[adr] = dNew;  // + store locally (to not duplicate the feedback message)
+
+        return "OK";
+    }
+
     private String setPower(String[] par) {
 
         info("setPowerMessage");
@@ -324,12 +385,12 @@ public class SXnetClient implements Runnable {
 
     private String readPower() {
         powerCopy = SXData.getActualPower();
-            if (powerCopy) {
-                return ("XPOWER 1");
-            } else {
-                return ("XPOWER 0");
-            }
-     }
+        if (powerCopy) {
+            return ("XPOWER 1");
+        } else {
+            return ("XPOWER 0");
+        }
+    }
 
     /**
      * when setting the data for a lanbahn address, there are 3 possible
@@ -351,25 +412,25 @@ public class SXnetClient implements Runnable {
         }
         int lbaddr = getLanbahnAddrFromString(par[1]);
         int lbdata = getLanbahnDataFromString(par[2]);
-        
-        if ((lbaddr == INVALID_INT) || (lbdata == INVALID_INT)  ) {
+
+        if ((lbaddr == INVALID_INT) || (lbdata == INVALID_INT)) {
             return "ERROR";
         }
-        
+
         if (PanelElement.isAddressLocked(lbaddr)) {
             // cannot set because panel element locked, return current state 
-            debug("address "+lbaddr+" is locked.");
+            debug("address " + lbaddr + " is locked.");
             int d;
             if (lbaddr >= LBPURE) {
-                d= LanbahnData.get(lbaddr);
+                d = LanbahnData.get(lbaddr);
             } else {
                 d = SXData.get((lbaddr / 10), lbaddr % 10);
             }
             if (d != INVALID_INT) {
                 return "XL " + lbaddr + " " + d;
-            } 
+            }
         }
-        
+
         // not locked, we can set the corresponding data/bit
         if (lbaddr >= LBPURE) {
             // pure lanbahn virtual address
@@ -495,8 +556,8 @@ public class SXnetClient implements Runnable {
         }
         return INVALID_INT;
     }
-    
-     private int getDataFromString(String s) {
+
+    private int getDataFromString(String s) {
         // converts String to integer between 0 and 9999
         //    (= range train numbers)
         Integer data;
@@ -510,7 +571,6 @@ public class SXnetClient implements Runnable {
         }
         return INVALID_INT;
     }
-
 
     /**
      * extract the selectrix address from a string, only valid addresses 0...111
@@ -716,24 +776,35 @@ public class SXnetClient implements Runnable {
             sendMessage(msg.toString());
         }
     }
-    
+
     /**
-     * check for changed train number data and send update in case of
-     * change
-     *  this is only done for sensors - because these are the only 
-     * panel elements which can have valid train numbers 
+     * check for changed train number data and send update in case of change
+     * this is only done for sensors - because these are the only panel elements
+     * which can have valid train numbers
      *
      */
     private void checkForTrainNumberChangesAndSendUpdates() {
         StringBuilder msg = new StringBuilder();
         for (PanelElement pe : panelElements) {
             if (pe.isSensor()) {
-            Integer data = (Integer) pe.getTrain();
-            
-            if (oldTrainNumberData.containsKey(pe)) {
-                // key (channel) is known, but data have changed
-                if (!Objects.equals(oldTrainNumberData.get(pe), data)) {
-                    // value has changed
+                Integer data = (Integer) pe.getTrain();
+
+                if (oldTrainNumberData.containsKey(pe)) {
+                    // key (channel) is known, but data have changed
+                    if (!Objects.equals(oldTrainNumberData.get(pe), data)) {
+                        // value has changed
+                        oldTrainNumberData.put(pe, data);
+                        if (msg.length() != 0) {
+                            msg.append(";");
+                        }
+                        msg.append("XTRAIN ").append(pe.getAdr()).append(" ").append(data);
+                        if (msg.length() > 60) {
+                            sendMessage(msg.toString());
+                            msg.setLength(0);  // =delete content
+                        }
+                    }
+                } else {
+                    // new key
                     oldTrainNumberData.put(pe, data);
                     if (msg.length() != 0) {
                         msg.append(";");
@@ -743,20 +814,8 @@ public class SXnetClient implements Runnable {
                         sendMessage(msg.toString());
                         msg.setLength(0);  // =delete content
                     }
-                }
-            } else {
-                // new key
-                oldTrainNumberData.put(pe, data);
-                if (msg.length() != 0) {
-                    msg.append(";");
-                }
-                msg.append("XTRAIN ").append(pe.getAdr()).append(" ").append(data);
-                if (msg.length() > 60) {
-                    sendMessage(msg.toString());
-                    msg.setLength(0);  // =delete content
-                }
 
-            }
+                }
             }
         }
         if (msg.length() > 0) {
@@ -764,5 +823,4 @@ public class SXnetClient implements Runnable {
         }
     }
 
-    
 }

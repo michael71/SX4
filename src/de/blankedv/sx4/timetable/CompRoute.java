@@ -1,8 +1,26 @@
+/*
+SX4
+Copyright (C) 2019 Michael Blank
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.DEBUG_COMPROUTE;
+import de.blankedv.sx4.LanbahnData;
 import static de.blankedv.sx4.timetable.Vars.*;
 
 import java.util.ArrayList;
@@ -23,6 +41,7 @@ public class CompRoute extends PanelElement {
     private ArrayList<Route> myroutes = new ArrayList<>();
     public PanelElement endSensor = null;
 
+    private boolean automaticFlag = false;
 
     private long clearRouteTime = Long.MAX_VALUE;  // i.e. => never, if not set
 
@@ -69,58 +88,70 @@ public class CompRoute extends PanelElement {
     }
 
     public void clear() {
+        for (Route rt : myroutes) {
+            rt.clear();
+        }
         setState(RT_INACTIVE);
     }
-    
+
+    @Override
+    public int setState(int st) {
+        int result = super.setState(st);
+        LanbahnData.update(getAdr(), result);
+        return result;
+    }
+
     public boolean set() {
-         // get current train number from first sensor of first route
+        // get current train number from first sensor of first route
         Route start = myroutes.get(0);
         return set(false, start.getStartTrainNumber());
     }
-    
+
     public boolean set(boolean automatic, int tripTrainNumber) {
 
+        automaticFlag = automatic;
+
         if (DEBUG_COMPROUTE) {
-            debug(" setting comproute id=" + getAdr() + "auto-mode="+automatic);
+            debug(" setting comproute id=" + getAdr() + "auto-mode=" + automatic);
         }
 
         clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
 
         // check if all (sub-)routes can be set successfully
         boolean res = true;
-        
+
         // get current train number from first sensor of first route
         Route start = myroutes.get(0);
         int trainNumber = start.getStartTrainNumber();
         if (trainNumber != tripTrainNumber) {
             // can only happen in automatic (trip/timetable) mode
-            error("comproute id=" + getAdr() + " - wrong train="+trainNumber+" on start sensor=" + start.getStartSensor().getAdr()); 
+            error("comproute id=" + getAdr() + " - wrong train=" + trainNumber + " on start sensor=" + start.getStartSensor().getAdr());
             return false;
         }
 
         if (trainNumber == 0) {
-            debug("comproute id=" + getAdr() + " - no train on start sensor=" + start.getStartSensor().getAdr());          
+            debug("comproute id=" + getAdr() + " - no train on start sensor=" + start.getStartSensor().getAdr());
         } else {
-            debug("comproute id=" + getAdr() + " - train "+ trainNumber +" on start sensor=" + start.getStartSensor().getAdr());
+            debug("comproute id=" + getAdr() + " - train " + trainNumber + " on start sensor=" + start.getStartSensor().getAdr());
         }
 
         // if automatic: FIRST check, if all routes of this compound route are free
         if (automatic) {
-        for (Route rt : myroutes) {
-            // check if all routes are free
-            if (rt == start) {
-                if (!rt.isFreeExceptStart()) {
-                    error("cannot set comproute id=" + getAdr() + " because route=" + rt.getAdr() + " is not free");
-                    return false;
-                }
-            } else {
-                if (!rt.isFree()) {
-                    error("cannot set comproute id=" + getAdr() + " because route=" + rt.getAdr() + " is not free");
-                    return false;
+            for (Route rt : myroutes) {
+                // check if all routes are free
+                if (rt == start) {
+                    if (!rt.isFreeExceptStart()) {
+                        error("cannot set comproute id=" + getAdr() + " because route=" + rt.getAdr() + " is not free");
+                        return false;
+                    }
+                } else {
+                    if (!rt.isFree()) {
+                        error("cannot set comproute id=" + getAdr() + " because route=" + rt.getAdr() + " is not free");
+                        return false;
+                    }
                 }
             }
-        } }
-        
+        }
 
         // SECOND: add train number info - and get last sensor last route (=endSensor)
         for (Route rt : myroutes) {
@@ -138,11 +169,11 @@ public class CompRoute extends PanelElement {
             error("SHOULD NOT HAPPEN: cannot set comproute id=" + getAdr() + " because train already on END sensor=" + start.getStartSensor().getAdr());
             return false;  // cannot set comproute.
         }
-        
+
         if (res == true) {
             // set active only if the comprising routes could be set with success
             if (DEBUG_COMPROUTE) {
-                debug(" setting comproute id=" + getAdr() + " successful, endSensor="+ endSensor.getAdr());
+                debug(" setting comproute id=" + getAdr() + " successful, endSensor=" + endSensor.getAdr());
             }
             setState(RT_ACTIVE);
         }
@@ -150,18 +181,23 @@ public class CompRoute extends PanelElement {
     }
 
     public boolean isFreeExceptStart() {
-        if (myroutes.size() == 0) return true;  // should not happen
-        
+        if (myroutes.size() == 0) {
+            return true;  // should not happen
+        }
         // for first route, check if everything is free EXCEPT-start
-        if (!myroutes.get(0).isFreeExceptStart()) return false;
-        
-        for (int i = 1; i <myroutes.size(); i++) {
+        if (!myroutes.get(0).isFreeExceptStart()) {
+            return false;
+        }
+
+        for (int i = 1; i < myroutes.size(); i++) {
             // for other routes, check if all sensors are free
-            if (!myroutes.get(i).isFree()) return false;
+            if (!myroutes.get(i).isFree()) {
+                return false;
+            }
         }
         return true;
     }
-    
+
     public static void auto() {
         // check for auto reset of allCompRoutes
         // this function is only needed for the lanbahn-value display, because the individual single routes,
@@ -172,12 +208,14 @@ public class CompRoute extends PanelElement {
                 if ((System.currentTimeMillis() - comp.clearRouteTime) > 0) {
                     comp.setState(RT_INACTIVE);
                 }
-                // check for route end sensor - if it gets occupied (train reached end of route), rt will be cleared
-                if ((comp.endSensor != null) && (comp.endSensor.getState() == STATE_OCCUPIED)) {
-                    debug("end sensor " + comp.endSensor.getAdr() + " occupied => comp,route#" + comp.getAdr() + " cleared");
-                    comp.setState(RT_INACTIVE);
-                    for (Route rt : comp.myroutes) {
-                        rt.clearIn3Seconds();
+                if (comp.automaticFlag) {
+                    // check for route end sensor - if it gets occupied (train reached end of route), rt will be cleared
+                    if ((comp.endSensor != null) && (comp.endSensor.getState() == STATE_OCCUPIED)) {
+                        debug("end sensor " + comp.endSensor.getAdr() + " occupied => comp,route#" + comp.getAdr() + " cleared");
+                        comp.setState(RT_INACTIVE);
+                        for (Route rt : comp.myroutes) {
+                            rt.clearIn3Seconds();
+                        }
                     }
                 }
             }

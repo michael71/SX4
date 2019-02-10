@@ -1,17 +1,22 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+SX4
+Copyright (C) 2019 Michael Blank
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package de.blankedv.sx4.timetable;
-
-
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
@@ -114,6 +119,7 @@ public class ReadConfig {
         Document doc;
         try {
             doc = builder.parse(new File(fname));
+            parseLocoList(doc);
             parsePanelElements(doc);
             parseTripsAndTimetable(doc);
             // sort the trips by ID
@@ -146,6 +152,23 @@ public class ReadConfig {
         Element root = doc.getDocumentElement();
 
         return parsePanelAttribute(root, "filename");
+
+    }
+    
+    private static void parseLocoList(Document doc) {
+        // <loco adr="97" name="SchoenBB" mass="2" vmax="120" />
+        
+        allLocos.clear();
+
+        NodeList items;
+        Element root = doc.getDocumentElement();
+        
+        items = root.getElementsByTagName("loco");
+        for (int i = 0; i < items.getLength(); i++) {
+            Loco loco = parseLoco(items.item(i));
+            if (loco != null ) allLocos.add(loco);
+        }
+        debug("config: " + allLocos.size() + " locos");
 
     }
     // code template from lanbahnPanel
@@ -356,6 +379,41 @@ public class ReadConfig {
         return Integer.parseInt(a.getNodeValue());
     }
 
+    private static Loco parseLoco(Node item) {
+//<loco adr="97" name="SchoenBB" mass="2" vmax="120" />
+        Loco lo = new Loco();
+
+        NamedNodeMap attributes = item.getAttributes();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            Node theAttribute = attributes.item(i);
+            switch (theAttribute.getNodeName()) {
+                case "adr":
+                case "addr":
+                    lo.setAddr(getIntValueOfNode(theAttribute));
+                    break;
+                case "name":
+                    lo.setName(theAttribute.getNodeValue());
+                    break;
+                case "mass":
+                    lo.setMass(getIntValueOfNode(theAttribute));
+                    break;
+                case "sens2":
+                    lo.setVmax(getIntValueOfNode(theAttribute));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // check if Loco is valid
+        if (lo.getAddr() != INVALID_INT)  {
+            // we have the minimum info needed
+            return lo;
+        } else {
+            return null;
+        }
+    }
+    
     private static Trip parseTrip(Node item) {
 
         Trip t = new Trip();

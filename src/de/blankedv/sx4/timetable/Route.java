@@ -1,3 +1,20 @@
+/*
+SX4
+Copyright (C) 2019 Michael Blank
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.*;
@@ -44,6 +61,7 @@ public class Route extends PanelElement {
     private ArrayList<Route> rtOffending = new ArrayList<>();
 
     private long clearRouteTime = Long.MAX_VALUE;  // i.e. => never, if not set
+    private boolean automaticFlag = false;
 
     /**
      * constructs a route
@@ -130,8 +148,8 @@ public class Route extends PanelElement {
     }
 
     public void clear() {
-        clearRouteTime = Long.MAX_VALUE;  // i.e. => never, if not set
-        // automatically
+        clearRouteTime = Long.MAX_VALUE;
+        // i.e. => never, if not set automatically
         debug("clearing route id=" + this.getAdr());
 
         // deactivate sensors
@@ -172,6 +190,13 @@ public class Route extends PanelElement {
         // notify that route was cleared
         this.setState(RT_INACTIVE);
 
+    }
+
+    @Override
+    public int setState(int st) {
+        int result = super.setState(st);
+        LanbahnData.update(getAdr(), result);
+        return result;
     }
 
     public void clearOffendingRoutes() {
@@ -232,30 +257,32 @@ public class Route extends PanelElement {
      * @return
      */
     public boolean set(boolean automatic, int trainNumber) {
-
+        automaticFlag = automatic;
         // if not given from compound route, get from occupation of first sensor
         if (trainNumber == 0) {
             trainNumber = getStartTrainNumber();
         }
 
-        // check if any of the PanelElements in this route are locked
-        String pesLocked = panelElementsLocked();
-        if (!pesLocked.isEmpty()) {
-            error("cannot set route id=" + getAdr() + " because some PanelElements are locked: " + pesLocked);
-            return false;  // cannot set route.
+        if (automatic) {
+            // check if any of the PanelElements in this route are locked
+            String pesLocked = panelElementsLocked();
+            if (!pesLocked.isEmpty()) {
+                error("cannot set route id=" + getAdr() + " because some PanelElements are locked: " + pesLocked);
+                return false;  // cannot set route.
+            }
+
+            if (offendingRouteActive()) {
+                debug(" offending route active");
+                return false;
+            }
+
+            if (!isFreeExceptStart()) {
+                error("cannot set route id=" + getAdr() + " because there is a train on route!");
+                return false;
+            }
         }
 
         clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
-
-        if (offendingRouteActive()) {
-            debug(" offending route active");
-            return false;
-        }
-
-        if (!isFreeExceptStart()) {
-            error("cannot set route id=" + getAdr() + " because there is a train on route!");
-            return false;
-        }
 
         for (PanelElement se : rtSensors) {
             se.setInRoute(true);
@@ -302,8 +329,6 @@ public class Route extends PanelElement {
                 SXData.update(sxaddr, SXData.get(sxaddr), true);  // true => write to Interface
             }
         }
-
-
 
         this.setState(RT_ACTIVE);
         return true;
@@ -352,11 +377,11 @@ public class Route extends PanelElement {
         // check if route is FREE (except for startSensor)
         for (int i = 1; i < rtSensors.size(); i++) {
             if (rtSensors.get(i).getState() != STATE_FREE) {
-                debug("route id="+getAdr()+ " is not free");
+                debug("route id=" + getAdr() + " is not free");
                 return false;
             }
         }
-        debug("route id="+getAdr()+ " is free (except start)");
+        debug("route id=" + getAdr() + " is free (except start)");
         return true;
     }
 
@@ -364,11 +389,11 @@ public class Route extends PanelElement {
         //check if route is FREE
         for (int i = 0; i < rtSensors.size(); i++) {
             if (rtSensors.get(i).getState() != STATE_FREE) {
-                debug("route id="+getAdr()+ " is not free");
+                debug("route id=" + getAdr() + " is not free");
                 return false;
             }
         }
-        debug("route id="+getAdr()+ " is completely free (except start)");
+        debug("route id=" + getAdr() + " is completely free (except start)");
         return true;
     }
 
@@ -449,10 +474,13 @@ public class Route extends PanelElement {
                 }
                 // update dependencies
                 rt.updateDependencies();
-                // check for route end sensor - if it gets occupied (train reached end of route), rt will be cleared immediately
-                if ((rt.endSensor != null) && (rt.endSensor.getState() == STATE_OCCUPIED)) {
-                    debug("end sensor" + rt.endSensor.getAdr() + " occupied =>  route#" + rt.getAdr() + " cleared");
-                    rt.clear();
+
+                if (rt.automaticFlag) {  // only for automatic driven traines
+                    // check for route end sensor - if it gets occupied (train reached end of route), rt will be cleared immediately
+                    if ((rt.endSensor != null) && (rt.endSensor.getState() == STATE_OCCUPIED)) {
+                        debug("end sensor" + rt.endSensor.getAdr() + " occupied =>  route#" + rt.getAdr() + " cleared");
+                        rt.clear();
+                    }
                 }
             }
         }

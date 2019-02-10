@@ -1,19 +1,21 @@
 /*
- * Copyright (C) 2018 mblank
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+SX4
+Copyright (C) 2019 Michael Blank
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
@@ -24,6 +26,7 @@ import static de.blankedv.sx4.timetable.PanelElement.STATE_FREE;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_OCCUPIED;
 import static de.blankedv.sx4.timetable.Vars.RT_INACTIVE;
 import static de.blankedv.sx4.timetable.Vars.allCompRoutes;
+import static de.blankedv.sx4.timetable.Vars.allLocos;
 import static de.blankedv.sx4.timetable.Vars.allRoutes;
 import static de.blankedv.sx4.timetable.Vars.allTrips;
 import javafx.animation.KeyFrame;
@@ -160,6 +163,10 @@ public class Trip implements Comparable<Trip> {
                 locoSpeed = 28;
             }
             loco = new Loco(locoAddr, locoDir, 0);   // INITIAL SPEED = 0
+            if (Loco.getByAddress(locoAddr) == null) {
+                // not know, add to allLocos list
+                allLocos.add(loco);
+            }
 
         } catch (NumberFormatException e) {
             return false;
@@ -224,7 +231,7 @@ public class Trip implements Comparable<Trip> {
         loco.setForward(locoDir == 0);
         loco.setLicht(true);
         //sxi.sendLoco(loco.getLok_adr(), loco.getSpeed(), true, loco.isForward(),  false);  // light = true, horn = false
-        SXData.update(loco.getLok_adr(), loco.getSX(), true); // true => send to SXinterface
+        SXData.update(loco.getAddr(), loco.getSX(), true); // true => send to SXinterface
     }
 
     private void startLoco() {
@@ -232,7 +239,7 @@ public class Trip implements Comparable<Trip> {
         loco.setForward(locoDir == 0);
         loco.setLicht(true);
         //sxi.sendLoco(loco.getLok_adr(), loco.getSpeed(), true, loco.isForward(),  false);  // light = true, horn = false
-        SXData.update(loco.getLok_adr(), loco.getSX(), true); // true => send to SXinterface
+        SXData.update(loco.getAddr(), loco.getSX(), true); // true => send to SXinterface
     }
 
     private void startLocoDelayed() {
@@ -240,7 +247,7 @@ public class Trip implements Comparable<Trip> {
         loco.setForward(locoDir == 0);
         loco.setLicht(true);
         currSpeedPercent = 0;
-        SXData.update(loco.getLok_adr(), loco.getSX(), true); // true => send to SXinterface
+        SXData.update(loco.getAddr(), loco.getSX(), true); // true => send to SXinterface
         Timeline timeline = new Timeline(new KeyFrame(
                 Duration.millis(1000),
                 ae -> incrLocoSpeed()
@@ -255,7 +262,7 @@ public class Trip implements Comparable<Trip> {
         loco.setSpeed(0);
         loco.setForward(locoDir == 0);
         //sxi.sendLoco(loco.getLok_adr(), loco.getSpeed(), true, loco.isForward(),  false);  // light = true, horn = false
-        SXData.update(loco.getLok_adr(), loco.getSX(), true); // true => send to SXinterface
+        SXData.update(loco.getAddr(), loco.getSX(), true); // true => send to SXinterface
     }
 
     private void finishTripDelayed() {

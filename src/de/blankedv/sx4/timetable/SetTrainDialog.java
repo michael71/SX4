@@ -1,11 +1,25 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+SX4
+Copyright (C) 2019 Michael Blank
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package de.blankedv.sx4.timetable;
 
 import static de.blankedv.sx4.Constants.INVALID_INT;
+import static de.blankedv.sx4.timetable.Vars.allLocos;
 import static de.blankedv.sx4.timetable.Vars.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.util.ArrayList;
@@ -53,8 +67,8 @@ public class SetTrainDialog {
         ArrayList<Integer> locoAddresses = new ArrayList<>();
         // get all locos from all trips
         locoAddresses.add(0);  // 0 == no loco
-        for (Trip tr : allTrips) {
-            int a =  tr.getLocoAddr();
+        for (Loco lo : allLocos) {
+            int a =  lo.getAddr();
             if (!locoAddresses.contains(a)) {
             locoAddresses.add(a);
             }
@@ -117,7 +131,7 @@ public class SetTrainDialog {
             result.loco = locos.getSelectionModel().getSelectedItem();
             newWindow.close();
         });
-        newWindow.setTitle("Anfangszustand: Sensor / Lok Paar selektieren");
+        newWindow.setTitle("Sensor / Lok Zuordnung setzen");
         newWindow.setScene(secondScene);
 
         // Specifies the modality for new window.
