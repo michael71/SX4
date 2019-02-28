@@ -39,9 +39,9 @@ import javafx.util.Duration;
  */
 public class Timetable {
 
-    int id = INVALID_INT;
+    int adr = INVALID_INT;
     ArrayList<Integer> startTime = new ArrayList<>();
-    ArrayList<Integer> tripIds = new ArrayList<>();
+    ArrayList<Integer> tripAdrs = new ArrayList<>();
     int currentTripIndex = 0;
     Trip cTrip = null;
     TT_State state = INACTIVE;
@@ -51,7 +51,7 @@ public class Timetable {
 
     boolean active = false;
 
-    Timetable(int id, String time, String trip, String next) {
+    Timetable(int adr, String time, String trip, String next) {
         // parse "time" to "startTime" array
         tripsString = trip;
         String[] sTime = time.split(",");
@@ -60,9 +60,9 @@ public class Timetable {
 
         if (sTime.length != sTrip.length) {
             error("number of start times in timetable does not match number of trips!");
-            id = INVALID_INT;
+            adr = INVALID_INT;
         } else {
-            this.id = id;
+            this.adr = adr;
             for (String s2 : sTime) {
                 int t = INVALID_INT;
                 try {
@@ -79,7 +79,7 @@ public class Timetable {
                 } catch (NumberFormatException ex) {
                 }
                 //debug("tripIDs, added #" + t);
-                tripIds.add(t);
+                tripAdrs.add(t);
             }
         }
 
@@ -92,10 +92,10 @@ public class Timetable {
 
         currentTripIndex = 0;
         // start first trip (index 0)
-        cTrip = Trip.get(tripIds.get(currentTripIndex));
+        cTrip = Trip.get(tripAdrs.get(currentTripIndex));
 
         if (cTrip == null) {
-            error("in Timetable - no trip found for id=" + currentTripIndex);
+            error("in Timetable - no trip found for adr=" + currentTripIndex);
             return false;
         }
 
@@ -108,7 +108,7 @@ public class Timetable {
         state = INACTIVE;   // stops also "auto() function
 
         active = false;
-        cTrip = Trip.get(tripIds.get(currentTripIndex));
+        cTrip = Trip.get(tripAdrs.get(currentTripIndex));
 
         if (cTrip == null) {
             return false;
@@ -121,7 +121,7 @@ public class Timetable {
 
     public boolean startNewTrip(Trip t) {
         // check if start sensor is occupied and endsensor is free
-        debug("try starting new trip id=" + t.id);
+        debug("try starting new trip with adr=" + t.adr);
 
         // set route(s)
         int start = PanelElement.getSingleByAddress(t.sens1).getState();
@@ -157,7 +157,7 @@ public class Timetable {
         }
         currentTripIndex++;
         // is there a next trip??
-        if (currentTripIndex >= tripIds.size()) {
+        if (currentTripIndex >= tripAdrs.size()) {
             // the was the last trip.
             state = INACTIVE;
             debug("last trip of timetable was finished.");
@@ -165,12 +165,12 @@ public class Timetable {
         }
         // get trip 
         try {
-            cTrip = Trip.get(tripIds.get(currentTripIndex));
+            cTrip = Trip.get(tripAdrs.get(currentTripIndex));
         } catch (IndexOutOfBoundsException ex) {
             cTrip = null;
         }
         if (cTrip == null) {
-            error("ERROR in Timetable - no trip found for id=" + currentTripIndex);
+            error("ERROR in Timetable - no trip found for adr=" + currentTripIndex);
             return false;
         }
 
@@ -179,7 +179,7 @@ public class Timetable {
 
     @Override
     public String toString() {
-        return "Fahrplan(" + id + "): " + tripsString;
+        return "Fahrplan(" + adr + "): " + tripsString;
     }
 
     public static void auto() {
@@ -191,10 +191,10 @@ public class Timetable {
         switch (tt.state) {
             case ACTIVE:
                 for (Trip tr : allTrips) {
-                    if (tr.id == tt.cTrip.id) {
+                    if (tr.adr == tt.cTrip.adr) {
                         if (tr.state == TripState.INACTIVE) {   // current trip has been finished, start a new one (delayed)
                             tt.state = WAITING;   // wait for start of new trip
-                            debug("current trip " + tt.cTrip.id + " has ended. start new one 5 seconds after train stop.");
+                            debug("current trip " + tt.cTrip.adr + " has ended. start new one 5 seconds after train stop.");
                             // currentTrip has ended, wait three seconds, then start next
                             Timeline timeline = new Timeline(new KeyFrame(
                                     Duration.millis(5000 + tr.stopDelay),

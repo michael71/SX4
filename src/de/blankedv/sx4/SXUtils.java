@@ -139,7 +139,7 @@ public class SXUtils {
         File[] filesList = curDir.listFiles();
         for (File f : filesList) {
             if (f.getName().matches("panel(.*).xml")) {
-                trace("found panel file in cur dir: " + f.getName());
+                debug("found panel file in cur dir: " + f.getName());
                 fileName = f.getName();
             }
         }

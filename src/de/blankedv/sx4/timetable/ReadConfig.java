@@ -119,7 +119,7 @@ public class ReadConfig {
         Document doc;
         try {
             doc = builder.parse(new File(fname));
-            parseLocoList(doc);
+            parseLocos(doc);
             parsePanelElements(doc);
             parseTripsAndTimetable(doc);
             // sort the trips by ID
@@ -155,7 +155,7 @@ public class ReadConfig {
 
     }
     
-    private static void parseLocoList(Document doc) {
+    private static void parseLocos(Document doc) {
         // <loco adr="97" name="SchoenBB" mass="2" vmax="120" />
         
         allLocos.clear();
@@ -244,7 +244,7 @@ public class ReadConfig {
         for (int i = 0; i < items.getLength(); i++) {
             Trip tr = parseTrip(items.item(i));
             if (tr != null) {
-                if (CFG_DEBUG) debug("trip id=" + tr.id);
+                if (CFG_DEBUG) debug("trip adr=" + tr.adr);
                 allTrips.add(tr);
             }
         }
@@ -256,7 +256,7 @@ public class ReadConfig {
         for (int i = 0; i < items.getLength(); i++) {
             Timetable ti = parseTimetable(items.item(i));
             if (ti != null) {
-                if (CFG_DEBUG) debug("timetable id=" + ti.id);
+                if (CFG_DEBUG) debug("timetable adr=" + ti.adr);
                 allTimetables.add(ti);
             }
         }
@@ -421,11 +421,11 @@ public class ReadConfig {
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Node theAttribute = attributes.item(i);
-            if (theAttribute.getNodeName().equals("id")) {
-                t.id = getIntValueOfNode(theAttribute);
+            if (theAttribute.getNodeName().equals("adr") ) {
+                t.adr = getIntValueOfNode(theAttribute);
             } else if ((theAttribute.getNodeName().equals("route")) ||
                     (theAttribute.getNodeName().equals("routeid")) ) {
-                t.routeid = getIntValueOfNode(theAttribute);
+                t.route = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("sens1")) {
                 t.sens1 = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("sens2")) {
@@ -438,8 +438,8 @@ public class ReadConfig {
         }
 
         // check if Trip information is complete
-        if ((t.id != INVALID_INT)
-                && (t.routeid != INVALID_INT)
+        if ((t.adr != INVALID_INT)
+                && (t.route != INVALID_INT)
                 && (t.sens1 != INVALID_INT)
                 && (t.sens2 != INVALID_INT)
                 && (t.convertLocoData())) {
@@ -450,14 +450,14 @@ public class ReadConfig {
             }
             return t;
         } else {
-            error("invalid trip, id=" + t.id);
+            error("invalid trip, adr=" + t.adr);
             return null;
         }
     }
 
     private static Timetable parseTimetable(Node item) {
 
-        int id = INVALID_INT;
+        int adr = INVALID_INT;
         String sTime = "";
         String sTrip = "";
         String sNext = "";
@@ -465,8 +465,8 @@ public class ReadConfig {
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Node theAttribute = attributes.item(i);
-            if (theAttribute.getNodeName().equals("id")) {
-                id = getIntValueOfNode(theAttribute);
+            if (theAttribute.getNodeName().equals("adr")) {
+                adr = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("time")) {
                 sTime = theAttribute.getNodeValue();
             } else if (theAttribute.getNodeName().equals("trip")) {
@@ -477,14 +477,14 @@ public class ReadConfig {
         }
 
         // check if Trip information is complete
-        if ((id != INVALID_INT)
+        if ((adr != INVALID_INT)
                 && (!sTime.isEmpty())
                 && (!sTrip.isEmpty())) {
             // we have the minimum info needed
 
-            return new Timetable(id, sTime, sTrip, sNext);
+            return new Timetable(adr, sTime, sTrip, sNext);
         } else {
-            error("invalid Timetable, id=" + id);
+            error("invalid Timetable, adr=" + adr);
             return null;
         }
     }
@@ -505,7 +505,7 @@ public class ReadConfig {
     }
 
     private static void parseRoute(Node item) {
-        int id = INVALID_INT;
+        int adr = INVALID_INT;
         String route = null, sensors = null;
         String offending = ""; // not mandatory
 
@@ -514,8 +514,8 @@ public class ReadConfig {
             Node theAttribute = attributes.item(i);
             // if (DEBUG_PARSING) System.out.println(TAG+theAttribute.getNodeName() + "=" +
             // theAttribute.getNodeValue());
-            if (theAttribute.getNodeName().equals("id")) {
-                id = Integer.parseInt(theAttribute.getNodeValue());
+            if (theAttribute.getNodeName().equals("adr")) {
+                adr = Integer.parseInt(theAttribute.getNodeValue());
             } else if (theAttribute.getNodeName().equals("route")) {
                 route = theAttribute.getNodeValue();
             } else if (theAttribute.getNodeName().equals("sensors")) {
@@ -526,9 +526,9 @@ public class ReadConfig {
         }
 
         // check for mandatory and valid input data
-        if (id == INVALID_INT) {
+        if (adr == INVALID_INT) {
             // missing info, log error
-            error("missing id= info in route definition");
+            error("missing adr= info in route definition");
             return;
         } else if (route == null) {
             error("missing route= info in route definition");
@@ -538,7 +538,7 @@ public class ReadConfig {
             return;
         } else {
             // everything is o.k.
-            Route rt = new Route(id, route, sensors, offending);
+            Route rt = new Route(adr, route, sensors, offending);
            
             panelElements.add(rt);
             allRoutes.add(rt);
@@ -563,7 +563,7 @@ public class ReadConfig {
 
     private static void parseCompRoute(Node item) {
         //
-        int id = INVALID_INT;
+        int adr = INVALID_INT;
         int btn1 = INVALID_INT;
         int btn2 = INVALID_INT;
         String routes = null;
@@ -573,24 +573,24 @@ public class ReadConfig {
             Node theAttribute = attributes.item(i);
             // if (DEBUG_PARSING) System.out.println(TAG+theAttribute.getNodeName() + "=" +
             // theAttribute.getNodeValue());
-            if (theAttribute.getNodeName().equals("id")) {
-                id = Integer.parseInt(theAttribute.getNodeValue());
+            if (theAttribute.getNodeName().equals("adr")) {
+                adr = Integer.parseInt(theAttribute.getNodeValue());
             } else if (theAttribute.getNodeName().equals("routes")) {
                 routes = theAttribute.getNodeValue();
             }
         }
 
         // check for mandatory and valid input data
-        if (id == INVALID_INT) {
+        if (adr == INVALID_INT) {
             // missing info, log error
-            error("missing id= info in route definition");
+            error("missing adr= info in route definition");
             return;
         } else if (routes == null) {
             error("missing routes= info in route definition");
             return;
         } else {
             // everything is o.k.
-            CompRoute cr = new CompRoute(id, routes);
+            CompRoute cr = new CompRoute(adr, routes);
             panelElements.add(cr);
             allCompRoutes.add(cr);
         }

@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.text.SimpleDateFormat;
 
 import static de.blankedv.sx4.Constants.*;
@@ -41,16 +40,9 @@ import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.prefs.Preferences;
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.util.Duration;
 
 /**
  *

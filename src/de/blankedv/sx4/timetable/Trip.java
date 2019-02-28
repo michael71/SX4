@@ -42,8 +42,8 @@ import javafx.util.Duration;
  */
 public class Trip implements Comparable<Trip> {
 
-    int id = INVALID_INT;
-    int routeid = INVALID_INT;
+    int adr = INVALID_INT;
+    int route = INVALID_INT;
     int sens1 = INVALID_INT;     // startSensor
     int sens2 = INVALID_INT;     // stopSensor
     String locoString = "";    // adr,dir,speed
@@ -64,20 +64,20 @@ public class Trip implements Comparable<Trip> {
 
     }
 
-    public int getId() {
-        return id;
+    public int getAdr() {
+        return adr;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setAdr(int adr) {
+        this.adr = adr;
     }
 
-    public int getRouteid() {
-        return routeid;
+    public int getRoute() {
+        return route;
     }
 
-    public void setRouteid(int routeid) {
-        this.routeid = routeid;
+    public void setRoute(int route) {
+        this.route = route;
     }
 
     public int getSens1() {
@@ -183,19 +183,19 @@ public class Trip implements Comparable<Trip> {
         PanelElement startSensor = PanelElement.getSingleByAddress(sens1);
 
         if (startSensor.getState() == STATE_FREE) {
-            error("cannot start trip id=" + id + " because no train on start-sensor " + sens1);
+            error("cannot start trip id=" + adr + " because no train on start-sensor " + sens1);
                 return false;
         }
 
         int trainNumber = startSensor.getTrain();
         if (trainNumber != locoAddr) {
-            error("cannot start trip id=" + id + " because WRONG train=" + trainNumber + " on start-sensor " + sens1);
+            error("cannot start trip id=" + adr + " because WRONG train=" + trainNumber + " on start-sensor " + sens1);
             return false;
         }
 
-        boolean couldSetRoutes = setRoute(routeid);
+        boolean couldSetRoutes = setRouteID(route);
         if (!couldSetRoutes) {
-            error("cannot start trip id=" + id + " cannot set (comp)route id=" + routeid);
+            error("cannot start trip id=" + adr + " cannot set (comp)route id=" + route);
             return false;
         }
 
@@ -206,7 +206,7 @@ public class Trip implements Comparable<Trip> {
     }
 
     public void finish() {
-        debug("trip " + id + " ends");
+        debug("trip " + adr + " ends");
         // finish current loco
         stopLoco();
 
@@ -278,8 +278,8 @@ public class Trip implements Comparable<Trip> {
         timeline.play();
     }
 
-    private boolean setRoute(int rID) {
-        debug("trip: setRoute =" + rID);
+    private boolean setRouteID(int rID) {
+        debug("trip: setRoute  =" + rID);
 
         // todo check if route is free - except for "sens1" sensor
         for (Route r : allRoutes) {
@@ -304,14 +304,14 @@ public class Trip implements Comparable<Trip> {
     }
 
     private void clearRoutes() {
-        debug("trip: clearRoute =" + routeid);
+        debug("trip: clearRoute =" + route);
         for (Route r : allRoutes) {
-            if (r.getAdr() == routeid) {
+            if (r.getAdr() == route) {
                 r.clear();
             }
         }
         for (CompRoute cr : allCompRoutes) {
-            if (cr.getAdr() == routeid) {
+            if (cr.getAdr() == route) {
                 cr.clear();
             }
         }
@@ -336,7 +336,7 @@ public class Trip implements Comparable<Trip> {
     // to be able to sort the trips by their ID
     @Override
     public int compareTo(Trip o) {
-        if (this.id < o.id) {
+        if (this.adr < o.adr) {
             return 1;
         } else {
             return -1;
@@ -345,7 +345,7 @@ public class Trip implements Comparable<Trip> {
 
     static Trip get(int index) {
         for (Trip t : allTrips) {
-            if (t.id == index) {
+            if (t.adr == index) {
                 return t;
             }
         }

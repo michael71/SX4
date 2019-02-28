@@ -132,7 +132,7 @@ public class TripsTable extends Application {
             int tripsActive = INVALID_INT;
             for (Trip tr : allTrips) {
                 if (tr.state != TripState.INACTIVE) {
-                    tripsActive = tr.id;
+                    tripsActive = tr.adr;
                     tableView.getSelectionModel().select(tr);
                 }
             }
@@ -163,9 +163,9 @@ public class TripsTable extends Application {
     }
 
     private void createDataTables() {
-        // <trip id="3100" routeid="2300" sens1="924" sens2="902" loco="29,1,126" stopdelay="1500" />
-        TableColumn<Trip, Integer> idCol = new TableColumn<>("ID");
-        TableColumn<Trip, Integer> routeidCol = new TableColumn<>("Fahrstr.");
+        // <trip adr="3100" route="2300" sens1="924" sens2="902" loco="29,1,126" stopdelay="1500" />
+        TableColumn<Trip, Integer> adrCol = new TableColumn<>("Adr(ID)");
+        TableColumn<Trip, Integer> routeCol = new TableColumn<>("Fahrstr.");
         TableColumn<Trip, Integer> sens1Col = new TableColumn<>("Start");
         TableColumn<Trip, Integer> sens2Col = new TableColumn<>("Ende");
         TableColumn<Trip, String> locoCol = new TableColumn<>("Zug,Dir,Speed");
@@ -194,11 +194,11 @@ public class TripsTable extends Application {
             }
         };
 
-        tableView.getColumns().setAll(idCol, routeidCol, sens1Col, sens2Col, locoCol, stopDelayCol);
+        tableView.getColumns().setAll(adrCol, routeCol, sens1Col, sens2Col, locoCol, stopDelayCol);
         tableView.setEditable(true);
         //idCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        /*idCol.setCellFactory(TextFieldTableCell.forTableColumn(myStringIntConverter));
-        idCol.setOnEditCommit(new EventHandler<CellEditEvent<Route, Integer>>() {
+        /*adrCol.setCellFactory(TextFieldTableCell.forTableColumn(myStringIntConverter));
+        adrCol.setOnEditCommit(new EventHandler<CellEditEvent<Route, Integer>>() {
             @Override
             public void handle(CellEditEvent<Route, Integer> ev) {
                 ((Route) ev.getTableView().getItems().get(
@@ -282,8 +282,8 @@ public class TripsTable extends Application {
                 }
             }); */
 
-        idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
-        routeidCol.setCellValueFactory(new PropertyValueFactory<>("routeid"));
+        adrCol.setCellValueFactory(new PropertyValueFactory<>("adr"));
+        routeCol.setCellValueFactory(new PropertyValueFactory<>("route"));
         sens1Col.setCellValueFactory(new PropertyValueFactory<>("sens1"));
         sens2Col.setCellValueFactory(new PropertyValueFactory<>("sens2"));
         locoCol.setCellValueFactory(new PropertyValueFactory<>("locoString"));
@@ -348,7 +348,7 @@ public class TripsTable extends Application {
             int tripsActive = INVALID_INT;
             for (Trip tr : allTrips) {
                 if ((tr.state == TripState.ACTIVE) || (tr.state == TripState.WAITING)) {
-                    tripsActive = tr.id;
+                    tripsActive = tr.adr;
                 }
             }
             if (tripsActive != INVALID_INT) {
