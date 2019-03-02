@@ -77,7 +77,8 @@ public class TripsTable extends Application {
     private final ImageView ivPowerState = new ImageView();
     private final ImageView ivRefresh = new ImageView(refresh);
     private final Button btnRefresh = new Button();
-    private final Button btnSetTrain = new Button("SetTrain");
+    private final Button btnChangeTrain = new Button("Zug temp. ändern");
+    private final Button btnSetTrain = new Button("Zug setzen");
     private final Button btnReset = new Button("Reset");
     final Button btnStart = new Button("Start");
     final Button btnStop = new Button("Stop");
@@ -381,6 +382,19 @@ public class TripsTable extends Application {
         }
         );
 
+        btnChangeTrain.setOnAction(e -> {
+           LocoSpeedPairs res = ChangeTrainDialog.open(primaryStage);
+            if (res.loco1 != INVALID_INT) {
+                System.out.println("changing "+res.loco1+",*,"+res.speed1+" to "
+                +res.loco2+",*,"+res.speed2);
+                for (Trip tr : allTrips) {
+                    tr.locoString =  tr.locoString.replace(res.loco1+",", res.loco2+",");
+                    tr.locoString =  tr.locoString.replace(","+res.speed1, ","+ res.speed2);
+                    tr.convertLocoData();
+                }
+            };
+        }
+        );
         btnSetTrain.setOnAction(e -> {
             SensorLocoPair res = SetTrainDialog.open(primaryStage);
             if (res.sensor != INVALID_INT) {
@@ -411,7 +425,7 @@ public class TripsTable extends Application {
         Label lblNothing = new Label("  ");
         HBox.setHgrow(lblNothing, Priority.ALWAYS);
         lblNothing.setMaxWidth(Double.MAX_VALUE);
-        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnRefresh, lblNothing, btnSetTrain, btnReset); // , pi);
+        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnRefresh, lblNothing, btnChangeTrain, btnSetTrain, btnReset); // , pi);
         return hb;
     }
 

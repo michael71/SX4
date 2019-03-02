@@ -248,9 +248,6 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
     public String toHTML() {
         StringBuilder sb = new StringBuilder();
         switch (typeString) {  // background color depending on type
-            case "DS":
-                sb.append("<html><p bgcolor='#FFFF00'>DS");
-                break;
             case "BM":
                 sb.append("<html><p bgcolor='#FFFF00'>BM");
                 break;

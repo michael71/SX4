@@ -218,13 +218,6 @@ public class ReadConfig {
             addPanelElement("BM", items.item(i));
         }
 
-        items = root.getElementsByTagName("doubleslip");
-        if (CFG_DEBUG) {
-            debug("config: " + items.getLength() + " doubleslips");
-        }
-        for (int i = 0; i < items.getLength(); i++) {
-            addPanelElement("DS", items.item(i));
-        }
 
     }
     
