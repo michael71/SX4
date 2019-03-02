@@ -15,13 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.*;
 import static de.blankedv.sx4.Constants.TT_State.*;
+import de.blankedv.sx4.SX4;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_FREE;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_OCCUPIED;
 import de.blankedv.sx4.timetable.Trip.TripState;
@@ -44,12 +44,11 @@ public class Timetable {
     ArrayList<Integer> tripAdrs = new ArrayList<>();
     int currentTripIndex = 0;
     Trip cTrip = null;
-    TT_State state = INACTIVE;
+    TT_State state = INACTIVE;  
     private String tripsString = "";
+    final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
 
     int nextTimetable = INVALID_INT;
-
-    boolean active = false;
 
     Timetable(int adr, String time, String trip, String next) {
         // parse "time" to "startTime" array
@@ -86,12 +85,11 @@ public class Timetable {
         state = INACTIVE;
     }
 
+    // start a new timetable with 0 .. n trips, return true if successful
     public boolean start() {
-        // start a new timetable
-        // TODO Fixed = timetable0 !!
 
-        currentTripIndex = 0;
         // start first trip (index 0)
+        currentTripIndex = 0;
         cTrip = Trip.get(tripAdrs.get(currentTripIndex));
 
         if (cTrip == null) {
@@ -99,21 +97,29 @@ public class Timetable {
             return false;
         }
 
-        return startNewTrip(cTrip);
+        boolean result = startNewTrip(cTrip);
+        if (result) {
+            debug("started timetable=" + adr + " and trip=" + cTrip.adr);
+        } else {
+            debug("could not start timetable=" + adr);
+        }
+        return isActive();
     }
 
     public boolean stop() {
         // finish current timetable
         // TODO Fixed = timetable0 !!
         state = INACTIVE;   // stops also "auto() function
-
-        active = false;
         cTrip = Trip.get(tripAdrs.get(currentTripIndex));
-
+        stopAllTimelines();
+        
         if (cTrip == null) {
+            debug("stopping timetable=" + adr + " (no current trip)");
             return false;
         } else {
+
             cTrip.finish();
+            debug("finishing timetable=" + adr);
             return true;
         }
 
@@ -151,6 +157,16 @@ public class Timetable {
 
     }
 
+    public boolean isActive() {
+        switch (state) {
+            case ACTIVE:
+            case WAITING:
+                return true;
+            case INACTIVE:
+            default:
+                return false;
+        }
+    }
     public boolean advanceToNextTrip() {
         if (state == INACTIVE) {
             error("cannot advance to next Trip because TimeTable is INACTIVE");
@@ -192,7 +208,7 @@ public class Timetable {
             case ACTIVE:
                 for (Trip tr : allTrips) {
                     if (tr.adr == tt.cTrip.adr) {
-                        if (tr.state == TripState.INACTIVE) {   // current trip has been finished, start a new one (delayed)
+                        if (tr.state == TripState.INACTIVE) {   // current trip has been finished, start a new one (delayed)                        
                             tt.state = WAITING;   // wait for start of new trip
                             debug("current trip " + tt.cTrip.adr + " has ended. start new one 5 seconds after train stop.");
                             // currentTrip has ended, wait three seconds, then start next
@@ -202,6 +218,7 @@ public class Timetable {
                                         tt.advanceToNextTrip();
                                     }));
                             timeline.play();
+                            tt.addTimeline(timeline);
                         }
                     }
                 }
@@ -212,5 +229,18 @@ public class Timetable {
                 break;
         }
 
+    }
+    
+    public void addTimeline(Timeline t) {
+        myTimelines.add(t);
+    }
+
+    // STOP timers, like loco speed increase, decrease, start new trip etc.
+    public void stopAllTimelines() {
+        error("stopping all Timelines");
+        for (Timeline t : myTimelines) {
+            t.stop();
+        }
+        myTimelines.clear();
     }
 }

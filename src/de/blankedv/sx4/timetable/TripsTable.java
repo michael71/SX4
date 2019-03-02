@@ -15,10 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package de.blankedv.sx4.timetable;
 
 import static de.blankedv.sx4.Constants.INVALID_INT;
+import de.blankedv.sx4.SX4;
 import static de.blankedv.sx4.SX4.configFilename;
 import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.timetable.Trip;
@@ -88,8 +88,9 @@ public class TripsTable extends Application {
     private final Button btnReset = new Button("Reset");
     final Button btnStart = new Button("Start");
     final Button btnStop = new Button("Stop");
-    private Timetable t0;
+    private Timetable ttSelected = null;
     private Stage primaryStage;
+    
 
     @Override
     public void start(Stage stage) {
@@ -108,32 +109,29 @@ public class TripsTable extends Application {
         bp.setCenter(tableView);
         bp.setBottom(status);
 
-        t0 = allTimetables.get(0);
-        if (t0 != null) {
-            status.setText(t0.toString());           
+  
+        if (!allTimetables.isEmpty()) {
+            ttSelected = allTimetables.get(0);
+            status.setText(ttSelected.toString());
             for (Timetable tt : allTimetables) {
-                cbTimetables.add("Fahrplan "+tt.adr);
+                cbTimetables.add("Fahrplan " + tt.adr);
             }
             cbSelectTimetable.getItems().addAll(cbTimetables);
             cbSelectTimetable.getSelectionModel().select(0);
+            cbSelectTimetable.setDisable(false);
         } else {
             status.setText("kein Fahrplan vorhanden");
+            cbSelectTimetable.setDisable(true);
         }
 
         cbSelectTimetable.valueProperty().addListener(new ChangeListener<String>() {
-            @Override 
-            public void changed(ObservableValue ov, String oldV, String newV) {                
-               System.out.println("selected: "+newV);
-               status.setText(newV);
-               // extract number
-               int ttIndex = 0;
-               for (Timetable tt : allTimetables) {
-                   if (newV.contains(""+tt.adr))  break;
-                        ttIndex++;
-               }
-              
-               t0 = allTimetables.get(ttIndex);
-            }    
+            @Override
+            public void changed(ObservableValue ov, String oldV, String newV) {
+                System.out.println("selected: " + newV);
+                status.setText(newV);
+                // extract number and load new timetable
+                ttSelected = allTimetables.get(getTTIndex(newV));
+            }
         });
         // New window (Stage)
 
@@ -148,6 +146,7 @@ public class TripsTable extends Application {
 
         primaryStage.show();
 
+        // timeline for updating display
         final Timeline second = new Timeline(new KeyFrame(Duration.seconds(1), (ActionEvent event) -> {
             // update power control icon
             if (SXData.getActualPower() == true) {
@@ -164,16 +163,22 @@ public class TripsTable extends Application {
                     tableView.getSelectionModel().select(tr);
                 }
             }
-            if (tripsActive != INVALID_INT) {
+            if (ttSelected == null) {
+                btnStop.setDisable(true);
+                btnStart.setDisable(true);
+                status.setText("kein Fahrplan.");
+            } else if (ttSelected.isActive() == true) {
                 btnRefresh.setDisable(true);
-                status.setText(t0.toString() + " läuft.");
+                status.setText(ttSelected.toString() + " läuft.");
                 btnStop.setDisable(false);
                 btnStart.setDisable(true);
+                cbSelectTimetable.setDisable(true);
             } else {
                 btnRefresh.setDisable(false);
-                status.setText(t0.toString());
+                status.setText(ttSelected.toString());
                 btnStop.setDisable(true);
                 btnStart.setDisable(false);
+                cbSelectTimetable.setDisable(false);
             }
         }));
 
@@ -339,6 +344,18 @@ public class TripsTable extends Application {
         }
     }
 
+    // get timetable index from selected String, like "Fahrstraße 3300" -> 3300
+    private int getTTIndex(String s) {
+        int ttIndex = 0;
+        for (Timetable tt : allTimetables) {
+            if (s.contains("" + tt.adr)) {
+                return ttIndex;
+            }
+            ttIndex++;
+        }
+        return 0;  // if not found, return 0
+    }
+
     private VBox createButtonBar() {
 
         final HBox hb = new HBox(15);     // first line of button
@@ -353,13 +370,17 @@ public class TripsTable extends Application {
         btnStart.setOnAction(e -> {
             btnStop.setDisable(false);
             btnStart.setDisable(true);
-
-            Timetable tt = allTimetables.get(0);
-            boolean result = tt.start();
-            if (result == false) {
+            cbSelectTimetable.setDisable(true);
+            if (ttSelected == null) {
+                System.out.println("ERROR: not timetable -> cannot start any trip");
+            } else {
+            ttSelected.start();
+            if (ttSelected.isActive() == false) {
                 // reset button states if start was not successful
                 btnStop.setDisable(true);
                 btnStart.setDisable(false);
+                cbSelectTimetable.setDisable(false);
+            }
             }
         }
         );
@@ -367,9 +388,9 @@ public class TripsTable extends Application {
         btnStop.setOnAction(e -> {
             btnStop.setDisable(true);
             btnStart.setDisable(false);
-            Timetable tt = allTimetables.get(0);
-            tt.stop();
-            //tableView.getSelectionModel().clearAndSelect(0);
+            cbSelectTimetable.setDisable(false);
+            ttSelected.stop();
+                //tableView.getSelectionModel().clearAndSelect(0);
         }
         );
 
@@ -406,19 +427,21 @@ public class TripsTable extends Application {
             }
             btnStop.setDisable(true);
             btnStart.setDisable(false);
+            cbSelectTimetable.setDisable(false);
+            cbSelectTimetable.getValue();
             Timetable tt = allTimetables.get(0);
             tt.stop();
         }
         );
 
         btnChangeTrain.setOnAction(e -> {
-           LocoSpeedPairs res = ChangeTrainDialog.open(primaryStage);
+            LocoSpeedPairs res = ChangeTrainDialog.open(primaryStage);
             if (res.loco1 != INVALID_INT) {
-                System.out.println("changing "+res.loco1+",*,"+res.speed1+" to "
-                +res.loco2+",*,"+res.speed2);
+                System.out.println("changing " + res.loco1 + ",*," + res.speed1 + " to "
+                        + res.loco2 + ",*," + res.speed2);
                 for (Trip tr : allTrips) {
-                    tr.locoString =  tr.locoString.replace(res.loco1+",", res.loco2+",");
-                    tr.locoString =  tr.locoString.replace(","+res.speed1, ","+ res.speed2);
+                    tr.locoString = tr.locoString.replace(res.loco1 + ",", res.loco2 + ",");
+                    tr.locoString = tr.locoString.replace("," + res.speed1, "," + res.speed2);
                     tr.convertLocoData();
                 }
             };
@@ -456,7 +479,7 @@ public class TripsTable extends Application {
         lblNothing.setMaxWidth(Double.MAX_VALUE);
         hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnRefresh); // , pi);
         hb2.getChildren().addAll(cbSelectTimetable, btnChangeTrain, btnSetTrain, btnReset);
-        vb.getChildren().addAll(hb,hb2);
+        vb.getChildren().addAll(hb, hb2);
         return vb;
     }
 

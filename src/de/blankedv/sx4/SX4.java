@@ -15,7 +15,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package de.blankedv.sx4;
 
 import java.net.InetAddress;
@@ -41,6 +40,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.prefs.Preferences;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 
@@ -56,6 +56,7 @@ public class SX4 {
     public static volatile boolean running = true;
     public static boolean routingEnabled = false;
     public static boolean guiEnabled = false;
+   
 
     public static ArrayBlockingQueue<IntegerPair> dataToSend = new ArrayBlockingQueue<>(400);
 
@@ -145,8 +146,6 @@ public class SX4 {
         final SXnetServer serv = new SXnetServer();
 
         wifiThrottle = new WifiThrottle();
-        com.sun.javafx.application.PlatformImpl.startup(() -> {
-        });  // TODO may have to be changed in Java9
 
         Timer timer = new java.util.Timer();
         timer.schedule(new TimerTask() {
@@ -181,8 +180,10 @@ public class SX4 {
         }));
         millis400.setCycleCount(Animation.INDEFINITE);
         millis400.play(); */
-        
         if (guiEnabled) {
+            com.sun.javafx.application.PlatformImpl.startup(() -> {
+            });  // TODO may have to be changed in Java9
+
             new Thread() {
                 @Override
                 public void run() {
@@ -199,7 +200,6 @@ public class SX4 {
             @Override
             public void run() {
                 try {
-
                     running = false;  // shutdown all threads
                     server.stopClients();
                     Thread.sleep(200);
@@ -210,6 +210,8 @@ public class SX4 {
             }
         });
     }
+
+    
 
     /**
      * save current train numbers for all sensors
@@ -291,7 +293,7 @@ public class SX4 {
             // no connectivityCheck for simulation
         } else if (ifType.contains("FCC")) { // fcc has different interface handling ! 
             sxInterface = new FCCInterface(port);
-            // TODO initConnectivityCheck();
+            initConnectivityCheck();
             info("FCC mode=" + sxi.getMode());
 
         } else if (ifType.contains("SLX825")) {

@@ -21,6 +21,7 @@ package de.blankedv.sx4.timetable;
 import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.*;
+import de.blankedv.sx4.SX4;
 import de.blankedv.sx4.SXData;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_FREE;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_OCCUPIED;
@@ -29,6 +30,7 @@ import static de.blankedv.sx4.timetable.Vars.allCompRoutes;
 import static de.blankedv.sx4.timetable.Vars.allLocos;
 import static de.blankedv.sx4.timetable.Vars.allRoutes;
 import static de.blankedv.sx4.timetable.Vars.allTrips;
+import java.util.ArrayList;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
@@ -53,7 +55,7 @@ public class Trip implements Comparable<Trip> {
     int stopDelay = INVALID_INT;  // milliseconds
     TripState state = TripState.INACTIVE;
     Loco loco = null;
-
+    final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
     int currSpeedPercent = 0;
 
     enum TripState {
@@ -211,7 +213,7 @@ public class Trip implements Comparable<Trip> {
         stopLoco();
 
         clearRoutes();
-
+        stopAllTimelines();
         state = TripState.INACTIVE;
 
     }
@@ -255,6 +257,7 @@ public class Trip implements Comparable<Trip> {
         timeline.setCycleCount(10); // for slow start of loco, increase speed in steps
         timeline.setDelay(Duration.seconds(5)); // then increase speed every second
         timeline.play();
+        addTimeline(timeline);
     }
 
     public void stopLoco() {
@@ -276,6 +279,7 @@ public class Trip implements Comparable<Trip> {
                 }
         ));
         timeline.play();
+        addTimeline(timeline);
     }
 
     private boolean setRouteID(int rID) {
@@ -362,5 +366,18 @@ public class Trip implements Comparable<Trip> {
                 }
             }
         }
+    }
+    
+    public void addTimeline(Timeline t) {
+        myTimelines.add(t);
+    }
+
+    // STOP timers, like loco speed increase, decrease, start new trip etc.
+    public void stopAllTimelines() {
+        error("stopping trip="+adr+" Timelines");
+        for (Timeline t : myTimelines) {
+            t.stop();
+        }
+        myTimelines.clear();
     }
 }
