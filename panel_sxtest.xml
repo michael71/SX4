@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<layout-config filename="panel_sxtest.xml" version="20190222_162225">
+<layout-config fileName="panel_sxtest.xml" version="20190302_113452">
     <panels>
         <panel name="sxtest">
-<locos>
-<loco adr="97" name="SchoenBB" mass="2" vmax="120" />
-<loco adr="40" name="ET440" mass="3" vmax="160" />
-<loco adr="29" name="ET423-1" mass="2" vmax="120" />
-<loco adr="25" name="ET423-2" mass="2" vmax="120" />
-<loco adr="42" name="ET442-BW" mass="2" vmax="160" />
-</locos>
+            <locos>
+                <loco adr="97" mass="2" name="SchoenBB" vmax="120"/>
+                <loco adr="40" mass="3" name="ET440" vmax="160"/>
+                <loco adr="29" mass="2" name="ET423-1" vmax="120"/>
+                <loco adr="25" mass="2" name="ET423-2" vmax="120"/>
+                <loco adr="42" mass="2" name="ET442-BW" vmax="160"/>
+            </locos>
             <tracks>
                 <track x="40" x2="160" y="40" y2="40"/>
                 <track x="40" x2="560" y="80" y2="80"/>
@@ -53,44 +53,45 @@
                 <routebutton adr="1205" x="460" y="120"/>
             </routebuttons>
             <routes>
-<route adr="2201" btn1="1200" btn2="1203" route="854,1;853,0;852,0;765,2;767,0;761,0;781,0" sensors="924,928" offending="" />
-<route adr="2202" btn1="1201" btn2="1203" route="854,0;853,0;852,0;765,0;767,1;761,0;781,0" sensors="923,928" offending="" />
-<route adr="2203" btn1="1202" btn2="1203" route="853,1;852,1;765,0;767,0;761,2;781,0" sensors="922,928" offending="" />
-<route adr="2204" btn1="1202" btn2="1206" route="853,0;852,0;765,0;767,0;761,2" sensors="927,922" offending="" />
-<route adr="2206" btn1="1203" btn2="1204" route="851,0;771,0;783,1" sensors="928,926,902" offending="" />
-<route adr="2207" btn1="1203" btn2="1205" route="851,1;771,0;773,0;783,1" sensors="928,926,903" offending="" />
-<route adr="2211" btn1="1203" btn2="1200" route="854,1;853,0;852,0;765,0;767,0;761,0;781,1" sensors="926,928,924" offending="" />
-<route adr="2212" btn1="1203" btn2="1201" route="854,0;853,0;852,0;765,0;767,0;761,0;781,1" sensors="926,928,923" offending="" />
-<route adr="2213" btn1="1203" btn2="1202" route="853,1;852,1;765,0;767,0;761,0;781,1" sensors="926,928,922" offending="" />
-<route adr="2215" btn1="1206" btn2="1202" route="853,0;852,0;761,0;783,0" sensors="922,927" offending="" />
-<route adr="2216" btn1="1204" btn2="1203" route="851,0;771,1;773,0;783,0" sensors="902,926" offending="" />
-<route adr="2217" btn1="1205" btn2="1203" route="851,1;773,1;771,0;783,0" sensors="903,926" offending="" />
+                <route adr="2201" btn1="1200" btn2="1203" route="854,1;853,0;852,0;765,2;767,0;761,0;781,0" sensors="924,928"/>
+                <route adr="2202" btn1="1201" btn2="1203" route="854,0;853,0;852,0;765,0;767,1;761,0;781,0" sensors="923,928"/>
+                <route adr="2203" btn1="1202" btn2="1203" route="853,1;852,1;765,0;767,0;761,2;781,0" sensors="922,928"/>
+                <route adr="2204" btn1="1202" btn2="1206" route="853,0;852,0;765,0;767,0;761,2" sensors="927,922"/>
+                <route adr="2206" btn1="1203" btn2="1204" route="851,0;771,0;783,1" sensors="928,926,902"/>
+                <route adr="2207" btn1="1203" btn2="1205" route="851,1;771,0;773,0;783,1" sensors="928,926,903"/>
+                <route adr="2211" btn1="1203" btn2="1200" route="854,1;853,0;852,0;765,0;767,0;761,0;781,1" sensors="926,928,924"/>
+                <route adr="2212" btn1="1203" btn2="1201" route="854,0;853,0;852,0;765,0;767,0;761,0;781,1" sensors="926,928,923"/>
+                <route adr="2213" btn1="1203" btn2="1202" route="853,1;852,1;765,0;767,0;761,0;781,1" sensors="926,928,922"/>
+                <route adr="2215" btn1="1206" btn2="1202" route="853,0;852,0;761,0;783,0" sensors="922,927"/>
+                <route adr="2216" btn1="1204" btn2="1203" route="851,0;771,1;773,0;783,0" sensors="902,926"/>
+                <route adr="2217" btn1="1205" btn2="1203" route="851,1;773,1;771,0;783,0" sensors="903,926"/>
             </routes>
             <comproutes>
-<comproute adr="2300" btn1="1200" btn2="1204" routes="2201,2206" />
-<comproute adr="2301" btn1="1200" btn2="1205" routes="2201,2207" />
-<comproute adr="2302" btn1="1201" btn2="1204" routes="2202,2206" />
-<comproute adr="2303" btn1="1201" btn2="1205" routes="2202,2207" />
-<comproute adr="2304" btn1="1202" btn2="1204" routes="2203,2206" />
-<comproute adr="2305" btn1="1202" btn2="1205" routes="2203,2207" />
-<comproute adr="2310" btn1="1204" btn2="1200" routes="2216,2211" />
-<comproute adr="2311" btn1="1205" btn2="1200" routes="2217,2211" />
-<comproute adr="2312" btn1="1204" btn2="1201" routes="2216,2212" />
-<comproute adr="2313" btn1="1205" btn2="1201" routes="2217,2212" />
-<comproute adr="2314" btn1="1204" btn2="1202" routes="2216,2213" />
-<comproute adr="2315" btn1="1205" btn2="1202" routes="2217,2213" />
+                <comproute adr="2300" btn1="1200" btn2="1204" routes="2201,2206"/>
+                <comproute adr="2301" btn1="1200" btn2="1205" routes="2201,2207"/>
+                <comproute adr="2302" btn1="1201" btn2="1204" routes="2202,2206"/>
+                <comproute adr="2303" btn1="1201" btn2="1205" routes="2202,2207"/>
+                <comproute adr="2304" btn1="1202" btn2="1204" routes="2203,2206"/>
+                <comproute adr="2305" btn1="1202" btn2="1205" routes="2203,2207"/>
+                <comproute adr="2310" btn1="1204" btn2="1200" routes="2216,2211"/>
+                <comproute adr="2311" btn1="1205" btn2="1200" routes="2217,2211"/>
+                <comproute adr="2312" btn1="1204" btn2="1201" routes="2216,2212"/>
+                <comproute adr="2313" btn1="1205" btn2="1201" routes="2217,2212"/>
+                <comproute adr="2314" btn1="1204" btn2="1202" routes="2216,2213"/>
+                <comproute adr="2315" btn1="1205" btn2="1202" routes="2217,2213"/>
             </comproutes>
             <trips>
-<trip adr="3100" route="2300" sens1="924" sens2="902" loco="29,0,22" stopdelay="1700" />
-<trip adr="3101" route="2310" sens1="902" sens2="924" loco="29,1,22" stopdelay="1400" />
-<trip adr="3102" route="2303" sens1="923" sens2="903" loco="42,0,18" stopdelay="1400" />
-<trip adr="3103" route="2313" sens1="903" sens2="923" loco="42,1,18" stopdelay="1200" />
-<trip adr="3104" route="2304" sens1="922" sens2="902" loco="40,1,28" stopdelay="2300" />
-<trip adr="3105" route="2314" sens1="902" sens2="922" loco="40,0,28" stopdelay="1700" />
-<trip adr="3106" route="2300" sens1="924" sens2="902" loco="25,0,10" stopdelay="700" />
+                <trip adr="3100" loco="29,0,22" route="2300" sens1="924" sens2="902" stopdelay="1700"/>
+                <trip adr="3101" loco="29,1,22" route="2310" sens1="902" sens2="924" stopdelay="1400"/>
+                <trip adr="3102" loco="42,0,18" route="2303" sens1="923" sens2="903" stopdelay="1400"/>
+                <trip adr="3103" loco="42,1,18" route="2313" sens1="903" sens2="923" stopdelay="1200"/>
+                <trip adr="3104" loco="40,1,28" route="2304" sens1="922" sens2="902" stopdelay="2300"/>
+                <trip adr="3105" loco="40,0,28" route="2314" sens1="902" sens2="922" stopdelay="1700"/>
+                <trip adr="3106" loco="25,0,10" route="2300" sens1="924" sens2="902" stopdelay="700"/>
             </trips>
             <timetables>
-                <timetable adr="3300" next="" time="3,3,3,3,3,3" trip="3102,3101,3104,3103,3105,3100"/>
+                <timetable adr="3300" next="0" time="3,3,3,3,3,3" trip="3102,3101,3104,3103,3105,3100"/>
+                <timetable adr="3301" next="0" time="10,10,10,10,10,10" trip="3102,3101,3104,3103,3105,3100"/>
             </timetables>
         </panel>
     </panels>

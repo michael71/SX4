@@ -28,6 +28,7 @@ import static de.blankedv.sx4.timetable.Vars.allRoutes;
 import static de.blankedv.sx4.timetable.Vars.allTimetables;
 import static de.blankedv.sx4.timetable.Vars.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelName;
+import java.util.ArrayList;
 import java.util.Collections;
 
 import javafx.event.EventHandler;
@@ -41,11 +42,14 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -55,6 +59,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
@@ -76,7 +81,8 @@ public class TripsTable extends Application {
     private final Image refresh = new Image("/de/blankedv/sx4/res/refresh.png");
     private final ImageView ivPowerState = new ImageView();
     private final ImageView ivRefresh = new ImageView(refresh);
-    private final Button btnRefresh = new Button();
+    private final Button btnRefresh = new Button("Fahrten neu laden");
+    private final ComboBox cbSelectTimetable = new ComboBox();
     private final Button btnChangeTrain = new Button("Zug temp. ändern");
     private final Button btnSetTrain = new Button("Zug setzen");
     private final Button btnReset = new Button("Reset");
@@ -91,23 +97,44 @@ public class TripsTable extends Application {
         primaryStage = stage;
         BorderPane bp = new BorderPane();
         Label status = new Label();
+        ArrayList<String> cbTimetables = new ArrayList<>();
 
-        HBox hb = createButtonBar();
+        VBox buttons = createButtonBar();
 
-        bp.setTop(hb);
+        bp.setTop(buttons);
         //hb.setAlignment(Pos.CENTER);
-        BorderPane.setMargin(hb, new Insets(8, 8, 8, 8));
+        BorderPane.setMargin(buttons, new Insets(8, 8, 8, 8));
         tripTableScene = new Scene(bp, 700, 300);
         bp.setCenter(tableView);
         bp.setBottom(status);
 
         t0 = allTimetables.get(0);
         if (t0 != null) {
-            status.setText(t0.toString());
+            status.setText(t0.toString());           
+            for (Timetable tt : allTimetables) {
+                cbTimetables.add("Fahrplan "+tt.adr);
+            }
+            cbSelectTimetable.getItems().addAll(cbTimetables);
+            cbSelectTimetable.getSelectionModel().select(0);
         } else {
             status.setText("kein Fahrplan vorhanden");
         }
 
+        cbSelectTimetable.valueProperty().addListener(new ChangeListener<String>() {
+            @Override 
+            public void changed(ObservableValue ov, String oldV, String newV) {                
+               System.out.println("selected: "+newV);
+               status.setText(newV);
+               // extract number
+               int ttIndex = 0;
+               for (Timetable tt : allTimetables) {
+                   if (newV.contains(""+tt.adr))  break;
+                        ttIndex++;
+               }
+              
+               t0 = allTimetables.get(ttIndex);
+            }    
+        });
         // New window (Stage)
 
         /* btnClose.setOnAction((e) -> {
@@ -312,9 +339,11 @@ public class TripsTable extends Application {
         }
     }
 
-    private HBox createButtonBar() {
+    private VBox createButtonBar() {
 
-        final HBox hb = new HBox(15);
+        final HBox hb = new HBox(15);     // first line of button
+        final HBox hb2 = new HBox(15);    // for second line of buttons
+        final VBox vb = new VBox(5);
 
         // final ProgressIndicator pi = new ProgressIndicator();
         // pi.setVisible(false);
@@ -425,8 +454,10 @@ public class TripsTable extends Application {
         Label lblNothing = new Label("  ");
         HBox.setHgrow(lblNothing, Priority.ALWAYS);
         lblNothing.setMaxWidth(Double.MAX_VALUE);
-        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnRefresh, lblNothing, btnChangeTrain, btnSetTrain, btnReset); // , pi);
-        return hb;
+        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnRefresh); // , pi);
+        hb2.getChildren().addAll(cbSelectTimetable, btnChangeTrain, btnSetTrain, btnReset);
+        vb.getChildren().addAll(hb,hb2);
+        return vb;
     }
 
 }
