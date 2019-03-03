@@ -440,18 +440,31 @@ public class SXnetClient implements Runnable {
             }
         } else {
             // SX data range (=real data)
-            int sxaddr = lbaddr / 10;
-            int sxbit = lbaddr % 10;
 
-            if (SXUtils.isValidSXAddress(sxaddr) && SXUtils.isValidSXBit(sxbit)) {
-                if (lbdata != 0) {
-                    SXData.setBit(sxaddr, sxbit, true);
-                } else {
-                    SXData.clearBit(sxaddr, sxbit, true);
+            // check if there is a matching PanelElement
+            // this is important for multi aspect signals !
+            boolean found = false;
+            for (PanelElement pe : panelElements) {
+                if (pe.getAdr() == lbaddr) {
+                    pe.setStateAndUpdateSXData(lbdata);
                 }
-                return "OK";
             }
 
+            if (found) {
+                return "OK";
+            } else {
+                // do only if no matching panel element was found
+                int sxaddr = lbaddr / 10;
+                int sxbit = lbaddr % 10;
+                if (SXUtils.isValidSXAddress(sxaddr) && SXUtils.isValidSXBit(sxbit)) {
+                    if (lbdata != 0) {
+                        SXData.setBit(sxaddr, sxbit, true);
+                    } else {
+                        SXData.clearBit(sxaddr, sxbit, true);
+                    }
+                    return "OK";
+                }
+            }
         }
         return "ERROR";
     }
@@ -493,15 +506,30 @@ public class SXnetClient implements Runnable {
                 return "XL " + lbAddr + " " + d;
             }
         } else {
-            int sxaddr = lbAddr / 10;
-            int sxbit = lbAddr % 10;
-            if (SXUtils.isValidSXAddress(sxaddr) && SXUtils.isValidSXBit(sxbit)) {
-                if (SXUtils.isSet(SXData.get(sxaddr), sxbit)) {
-                    return "XL " + lbAddr + " 1";
-                } else {
-                    return "XL " + lbAddr + " 0";
-                }
+            // SX data range (=real data)
 
+            // check if there is a matching PanelElement
+            // this is important for multi aspect signals !
+            boolean found = false;
+            int lbdata = INVALID_INT;
+            for (PanelElement pe : panelElements) {
+                if (pe.getAdr() == lbAddr) {
+                    lbdata = pe.getState();
+                }
+            }
+
+            if (found) {
+                return "XL " + lbAddr + " " + lbdata;
+            } else {
+                int sxaddr = lbAddr / 10;
+                int sxbit = lbAddr % 10;
+                if (SXUtils.isValidSXAddress(sxaddr) && SXUtils.isValidSXBit(sxbit)) {
+                    if (SXUtils.isSet(SXData.get(sxaddr), sxbit)) {
+                        return "XL " + lbAddr + " 1";
+                    } else {
+                        return "XL " + lbAddr + " 0";
+                    }
+                }
             }
         }
         return "ERROR";

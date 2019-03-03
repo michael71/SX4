@@ -356,6 +356,7 @@ public class Trip implements Comparable<Trip> {
         return null;  // not found
     }
 
+    // check for all active trips if an END sensor is reached
     public static void auto() {
         for (Trip tr : allTrips) {
             if (tr.state == TripState.ACTIVE) {

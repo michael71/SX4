@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<layout-config filename="panel_sxtest.xml" version="20190302_113452">
+<layout-config filename="panel_sxtest.xml" version="20190303_102900">
     <panels>
         <panel name="sxtest">
             <locos>
@@ -64,7 +64,7 @@
                 <route adr="2213" btn1="1203" btn2="1202" route="853,1;852,1;765,0;767,0;761,0;781,1" sensors="926,928,922"/>
                 <route adr="2215" btn1="1206" btn2="1202" route="853,0;852,0;761,0;783,0" sensors="922,927"/>
                 <route adr="2216" btn1="1204" btn2="1203" route="851,0;771,1;773,0;783,0" sensors="902,926"/>
-                <route adr="2217" btn1="1205" btn2="1203" route="851,1;773,1;771,0;783,0" sensors="903,926"/>
+                <route adr="2217" btn1="1205" btn2="1203" route="851,1;773,2;771,0;783,0" sensors="903,926"/>
             </routes>
             <comproutes>
                 <comproute adr="2300" btn1="1200" btn2="1204" routes="2201,2206"/>
@@ -91,7 +91,7 @@
             </trips>
             <timetables>
                 <timetable adr="3300" next="0" time="3,3,3,3,3,3" trip="3102,3101,3104,3103,3105,3100"/>
-                <timetable adr="3301" next="0" time="10,10,10,10,10,10" trip="3102,3101,3104,3103,3105,3100"/>
+                <timetable adr="3301" next="0" time="10,10,10,10,10,10" trip="3101,3102,3103,3104,3105,3100"/>
             </timetables>
         </panel>
     </panels>

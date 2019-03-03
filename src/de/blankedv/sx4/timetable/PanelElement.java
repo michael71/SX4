@@ -17,6 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package de.blankedv.sx4.timetable;
 
+import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.*;
 import de.blankedv.sx4.SXUtils;
@@ -275,54 +276,33 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
         if (adr == INVALID_INT) {
             return;
         }
-
+        debug("adr="+adr+" st="+state);
+        
         int sxadr = adr / 10;
         int sxbit = adr % 10;
         if (!SXUtils.isValidSXAddress(sxadr) || !SXUtils.isValidSXBit(sxbit)) {
             return;  // no SX Element, must be virtual
         }
 
-        // set low bit
-        switch (state) {
-            case 0:
-            case 2:
-                SXUtils.clearBitSxData(sxadr, sxbit, true);  // true => write to SXInterface
-                break;
-            case 1:
-            case 3:
-                SXUtils.setBitSxData(sxadr, sxbit, true);  // true => write to SXInterface
-                break;
-            default:
-                System.out.println("invalid state in sx addr a=" + sxadr + "." + sxbit + " d=" + state);
-        }
+       
 
         // set high bit (if there is any)
-        if (secondaryAdr != INVALID_INT) {
-            int secSxadr = secondaryAdr / 10;
-            int secSxbit = secondaryAdr % 10;
-
-            // there is a second address 
-            if (SXUtils.isValidSXAddress(secSxadr)) {
-
-                switch (state) {
-                    case 0:
-                        SXUtils.clearBitSxData(secSxadr, secSxbit, true);  // true => write to SXInterface
-                        break;
-                    case 1:
-                        SXUtils.clearBitSxData(secSxadr, secSxbit, true);  // true => write to SXInterface
-                        break;
-                    case 2:
-                        SXUtils.clearBitSxData(secSxadr, secSxbit, true);  // true => write to SXInterface
-                        break;
-                    case 3:
-                        SXUtils.clearBitSxData(secSxadr, secSxbit, true);  // true => write to SXInterface
-                        break;
-                    default:
-                        error("invalid state in sx (4-aspect) addr a=" + adr + " d=" + state);
-                }
+        int secSxadr = secondaryAdr / 10;   // NOT USED CURRENTLY FOR SX ADDRESSES
+        int secSxbit = secondaryAdr % 10;   // NOT USED CURRENTLY FOR SX ADDRESSES
+        if (nbit == 2) {
+           // must be 4 aspect signal       
+            debug("secAdr="+secondaryAdr+" st="+state);  
+            SXUtils.update2BitSxData(sxadr, sxbit, state, true); // true => write to SXInterface         
+        } else {
+            debug("single bit");  
+            // single bit address
+            // use only low bit         
+            if (state == 0) {          
+                SXUtils.clearBitSxData(sxadr, sxbit, true);  // true => write to SXInterface
+            } else {
+                SXUtils.setBitSxData(sxadr, sxbit, true);  // true => write to SXInterface
             }
         }
-
     }
 
     /* public void sendUpdateToSXBus() {

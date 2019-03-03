@@ -54,12 +54,27 @@ public class SXUtils {
         return d & ~(1 << (bit - 1));  // selectrix sxbit !!! 1 ..8
     }
 
-     synchronized static public void setBitSxData(int addr, int bit, boolean writeFlag) {
+    synchronized static public void setBitSxData(int addr, int bit, boolean writeFlag) {
         debug("setBit addr="+addr+" bit="+bit);
         SXData.update(addr,  setBit(SXData.get(addr), bit), writeFlag);
         debug("sxData["+addr+"]="+SXData.get(addr));
     }
 
+    synchronized static public void updateBitSxData(int addr, int bit, int val, boolean writeFlag) {
+        debug("setBit addr="+addr+" bit="+bit);
+        SXData.update(addr,  setBit(SXData.get(addr), bit), writeFlag);
+        debug("sxData["+addr+"]="+SXData.get(addr));
+    }
+    
+    synchronized static public void update2BitSxData(int addr, int bit1, int val, boolean writeFlag) {
+        debug("update2Bits addr="+addr+" bits="+bit1+"/"+(bit1+1) + " d="+val);
+        int d = SXData.get(addr);
+        val = val & 0x03;  // mask 2 bits
+        d = (d & ~(3 << (bit1-1))) | (val << (bit1-1));
+        SXData.update(addr, d, writeFlag);
+        debug("sxData["+addr+"]="+SXData.get(addr));
+    }
+    
     synchronized static public void clearBitSxData(int addr, int bit, boolean writeFlag) {
         debug("clearBit addr="+addr+" bit="+bit);
         SXData.update(addr, clearBit(SXData.get(addr),bit), writeFlag);

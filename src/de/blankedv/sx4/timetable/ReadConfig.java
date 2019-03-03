@@ -46,7 +46,7 @@ import org.w3c.dom.NodeList;
  */
 public class ReadConfig {
 
-    public static String refreshXMLTrips(String fname)   {
+    public static String refreshXMLTripsAndTimetables(String fname)   {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
 

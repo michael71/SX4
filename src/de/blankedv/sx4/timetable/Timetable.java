@@ -198,27 +198,27 @@ public class Timetable {
         return "Fahrplan(" + adr + "): " + tripsString;
     }
 
-    public static void auto() {
-
-        final Timetable tt = allTimetables.get(0);   // TODO currently only 1 timetable is supported
-        if (tt.cTrip == null) {
+          
+    public  void timetableCheck() {
+       
+        if (cTrip == null) {
             return;  // NO CURRENT TRIP - do nothing
         }
-        switch (tt.state) {
+        switch (state) {
             case ACTIVE:
                 for (Trip tr : allTrips) {
-                    if (tr.adr == tt.cTrip.adr) {
+                    if (tr.adr == cTrip.adr) {
                         if (tr.state == TripState.INACTIVE) {   // current trip has been finished, start a new one (delayed)                        
-                            tt.state = WAITING;   // wait for start of new trip
-                            debug("current trip " + tt.cTrip.adr + " has ended. start new one 5 seconds after train stop.");
+                            state = WAITING;   // wait for start of new trip
+                            debug("current trip " + cTrip.adr + " has ended. start new one 5 seconds after train stop.");
                             // currentTrip has ended, wait three seconds, then start next
                             Timeline timeline = new Timeline(new KeyFrame(
                                     Duration.millis(5000 + tr.stopDelay),
                                     ae -> {
-                                        tt.advanceToNextTrip();
+                                        advanceToNextTrip();
                                     }));
                             timeline.play();
-                            tt.addTimeline(timeline);
+                            addTimeline(timeline);
                         }
                     }
                 }
@@ -237,7 +237,7 @@ public class Timetable {
 
     // STOP timers, like loco speed increase, decrease, start new trip etc.
     public void stopAllTimelines() {
-        error("stopping all Timelines");
+        debug("Timetable: stopping all Timelines");
         for (Timeline t : myTimelines) {
             t.stop();
         }

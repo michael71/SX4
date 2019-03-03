@@ -156,7 +156,7 @@ public class SX4 {
                         //System.out.println("m400");
                         sxi.doUpdate();     // includes reading all SX data 
                         if (routingEnabled) {
-                            Timetable.auto();
+                            TripsTable.auto();
                             Trip.auto();
                             Route.auto();
                             CompRoute.auto();
