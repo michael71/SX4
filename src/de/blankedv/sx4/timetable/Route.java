@@ -155,6 +155,7 @@ public class Route extends PanelElement {
         // deactivate sensors
         for (PanelElement se : rtSensors) {
             se.setInRoute(false);
+            debug("clearing sensor=" + se.getAdr());
             // reset trainNumber data for all but last sensor
             if (se != rtSensors.get(rtSensors.size() - 1)) {
                 se.setTrain(0);
@@ -167,12 +168,14 @@ public class Route extends PanelElement {
         for (RouteSignal rs : rtSignals) {
             rs.signal.setStateAndUpdateSXData(STATE_RED);
             rs.signal.setLocked(false);
+            debug("unlocking signal=" + rs.signal.getAdr());
             sxAddressesToUpdate.add(rs.signal.getAdr() / 10);
         }
 
         // unlock turnouts
         for (RouteTurnout rtt : rtTurnouts) {
             rtt.turnout.setLocked(false);
+            debug("unlocking turnout=" + rtt.turnout.getAdr());
         }
 
         for (int sxaddr : sxAddressesToUpdate) {
@@ -332,6 +335,10 @@ public class Route extends PanelElement {
 
         this.setState(RT_ACTIVE);
         return true;
+    }
+    
+    public boolean isLocked() {
+        return !panelElementsLocked().isEmpty();
     }
 
     private String panelElementsLocked() {

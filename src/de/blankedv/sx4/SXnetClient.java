@@ -59,6 +59,7 @@ public class SXnetClient implements Runnable {
 
     private boolean powerCopy = false;
     private int lastRouting = INVALID_INT;
+    private boolean sendSensorStatus = true;  // send once when client connection starts
 
     private Thread worker;
 
@@ -142,6 +143,10 @@ public class SXnetClient implements Runnable {
             checkForChangedSXDataAndSendUpdates(tickCounter);
             checkForLanbahnChangesAndSendUpdates();
             checkForTrainNumberChangesAndSendUpdates();
+            if (sendSensorStatus) {
+                sendSensorInRouteStatus();
+                sendSensorStatus = false;
+            }
         }
     }
 
@@ -280,8 +285,15 @@ public class SXnetClient implements Runnable {
         // check whether there is a route with this address(=adr)
         Route r = Route.getFromAddress(lbAddr);
         if (r != null) {
+
             boolean res = true;
             if (lbdata == 1) {
+                if (r.isLocked()) {
+                    if (DEBUG) {
+                        error("route locked");
+                    }
+                    return "ROUTE_LOCKED";
+                }
                 res = r.set();  // manual route setting, do not check occupancy
             } else {
                 r.clear();  // manual route setting, do not check occupancy 
@@ -299,8 +311,15 @@ public class SXnetClient implements Runnable {
         // check whether there is a compound route with this address(=adr)
         CompRoute cr = CompRoute.getFromAddress(lbAddr);
         if (cr != null) {
+
             boolean res = true;
             if (lbdata == 1) {
+                if (cr.isLocked()) {
+                    if (DEBUG) {
+                        error("comproute locked");
+                    }
+                    return "ROUTE_LOCKED";
+                }
                 res = cr.set();  // manual route setting, do not check occupancy
             } else {
                 cr.clear();
@@ -805,6 +824,25 @@ public class SXnetClient implements Runnable {
         }
     }
 
+     private void sendSensorInRouteStatus() {
+        StringBuilder msg = new StringBuilder();
+        for (PanelElement pe : panelElements) {
+            if (pe.isSensor() && (pe.getSecondaryAdr() != INVALID_INT)) {
+                    int value = LanbahnData.get(pe.getSecondaryAdr());
+                    if (msg.length() != 0) {
+                        msg.append(";");
+                    }
+                    msg.append("XL ").append(pe.getSecondaryAdr()).append(" ").append(value);
+                    if (msg.length() > 60) {
+                        sendMessage(msg.toString());
+                        msg.setLength(0);  // =delete content
+                    }
+            }
+        }
+         if (msg.length() > 0) {
+            sendMessage(msg.toString());
+        }
+     }
     /**
      * check for changed train number data and send update in case of change
      * this is only done for sensors - because these are the only panel elements

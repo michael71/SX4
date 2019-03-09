@@ -106,6 +106,19 @@ public class CompRoute extends PanelElement {
         Route start = myroutes.get(0);
         return set(false, start.getStartTrainNumber());
     }
+    
+    public boolean isLocked() {
+        boolean locked = false;
+        // check, if all routes of this compound route are unlocked
+        for (Route rt : myroutes) {
+            if (rt.isLocked()) locked = true;
+        }
+ 
+        if (DEBUG_COMPROUTE) {
+            debug(" comproute id=" + getAdr() + " is locked");
+        }
+        return locked;
+    }
 
     public boolean set(boolean automatic, int tripTrainNumber) {
 
@@ -135,7 +148,10 @@ public class CompRoute extends PanelElement {
             debug("comproute id=" + getAdr() + " - train " + trainNumber + " on start sensor=" + start.getStartSensor().getAdr());
         }
 
-        // if automatic: FIRST check, if all routes of this compound route are free
+        
+        
+        
+        // if automatic: SECOND check, if all routes of this compound route are free
         if (automatic) {
             for (Route rt : myroutes) {
                 // check if all routes are free

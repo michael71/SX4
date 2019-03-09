@@ -182,8 +182,12 @@ public class SX4 {
         millis400.play(); */
         if (guiEnabled) {
             com.sun.javafx.application.PlatformImpl.startup(() -> {
-            });  // TODO may have to be changed in Java9
-
+            });  // TODO may have to be changed in Java9 to (?)
+		/* Platform.startup(() ->
+		{
+   		 // This block will be executed on JavaFX Thread
+		}  */
+ 
             new Thread() {
                 @Override
                 public void run() {
