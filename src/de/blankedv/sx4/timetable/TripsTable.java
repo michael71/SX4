@@ -109,17 +109,17 @@ public class TripsTable extends Application {
         bp.setCenter(tableView);
         bp.setBottom(status);
 
-  
         checkTimetables();
 
         cbSelectTimetable.valueProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue ov, String oldV, String newV) {
-                System.out.println("selected: " + newV);
                 status.setText(newV);
                 // extract number and load new timetable
-                ttSelected = allTimetables.get(getTTIndex(newV));
-                orderTrips(ttSelected);
+                if (allTimetables.size() > 0) {
+                    ttSelected = allTimetables.get(getTTIndex(newV));
+                    orderTrips(ttSelected);
+                }
             }
         });
         // New window (Stage)
@@ -175,14 +175,16 @@ public class TripsTable extends Application {
         second.play();
 
     }
-    
+
     private void checkTimetables() {
         if (!allTimetables.isEmpty()) {
             ttSelected = allTimetables.get(0);
             status.setText(ttSelected.toString());
+            cbTimetables.clear();
             for (Timetable tt : allTimetables) {
                 cbTimetables.add("Fahrplan " + tt.adr);
             }
+            cbSelectTimetable.getItems().clear();
             cbSelectTimetable.getItems().addAll(cbTimetables);
             cbSelectTimetable.getSelectionModel().select(0);
             cbSelectTimetable.setDisable(false);
@@ -197,11 +199,13 @@ public class TripsTable extends Application {
         allTimetableTrips.clear();
         for (Integer a : tt.tripAdrs) {
             for (Trip tr : allTrips) {
-                if (a == tr.adr) allTimetableTrips.add(tr);
+                if (a == tr.adr) {
+                    allTimetableTrips.add(tr);
+                }
             }
         }
     }
-    
+
     public void show() {
         tripWindow.show();
     }
@@ -389,13 +393,13 @@ public class TripsTable extends Application {
             if (ttSelected == null) {
                 System.out.println("ERROR: not timetable -> cannot start any trip");
             } else {
-            ttSelected.start();
-            if (ttSelected.isActive() == false) {
-                // reset button states if start was not successful
-                btnStop.setDisable(true);
-                btnStart.setDisable(false);
-                cbSelectTimetable.setDisable(false);
-            }
+                ttSelected.start();
+                if (ttSelected.isActive() == false) {
+                    // reset button states if start was not successful
+                    btnStop.setDisable(true);
+                    btnStart.setDisable(false);
+                    cbSelectTimetable.setDisable(false);
+                }
             }
         }
         );
@@ -405,7 +409,7 @@ public class TripsTable extends Application {
             btnStart.setDisable(false);
             cbSelectTimetable.setDisable(false);
             ttSelected.stop();
-                //tableView.getSelectionModel().clearAndSelect(0);
+            //tableView.getSelectionModel().clearAndSelect(0);
         }
         );
 

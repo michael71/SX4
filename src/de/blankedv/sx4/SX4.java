@@ -56,7 +56,6 @@ public class SX4 {
     public static volatile boolean running = true;
     public static boolean routingEnabled = false;
     public static boolean guiEnabled = false;
-   
 
     public static ArrayBlockingQueue<IntegerPair> dataToSend = new ArrayBlockingQueue<>(400);
 
@@ -147,47 +146,15 @@ public class SX4 {
 
         wifiThrottle = new WifiThrottle();
 
-        Timer timer = new java.util.Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Platform.runLater(new Runnable() {
-                    public void run() {
-                        //System.out.println("m400");
-                        sxi.doUpdate();     // includes reading all SX data 
-                        if (routingEnabled) {
-                            TripsTable.auto();
-                            Trip.auto();
-                            Route.auto();
-                            CompRoute.auto();
-                        }
-                        saveTrainNumbers();
-                    }
-                });
-            }
-        }, 300, 300);
-
-        /*  DOES NOT WORK SOMETIMES => switched back to "plain old java timer"
-        Timeline millis400 = new Timeline(new KeyFrame(Duration.millis(400), (ActionEvent event) -> {
-                System.out.println("m400");
-                sxi.doUpdate();     // includes reading all SX data 
-                if (routingEnabled) {
-                    Route.auto();
-                    CompRoute.auto();
-                }
-                // TrainNumberData.auto();  will be actively reset by fahrstrassensteurung
-                saveTrainNumbers();
-        }));
-        millis400.setCycleCount(Animation.INDEFINITE);
-        millis400.play(); */
         if (guiEnabled) {
+            // JavaFX is only started when GUI is needed - to be able to run the
+            // core-sx4 deamon without javafx
             com.sun.javafx.application.PlatformImpl.startup(() -> {
             });  // TODO may have to be changed in Java9 to (?)
-		/* Platform.startup(() ->
+            /* Platform.startup(() ->
 		{
    		 // This block will be executed on JavaFX Thread
 		}  */
- 
             new Thread() {
                 @Override
                 public void run() {
@@ -195,6 +162,25 @@ public class SX4 {
                 }
             }.start();
         }
+
+        Timer timer = new java.util.Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                //System.out.println("m400");
+                sxi.doUpdate();     // includes reading all SX data 
+                if (routingEnabled) {
+                    if (guiEnabled) {
+                        TripsTable.auto();
+                        Trip.auto();
+                    }
+                    Route.auto();
+                    CompRoute.auto();
+                }
+                saveTrainNumbers();
+
+            }
+        }, 300, 300);
 
         shutdownHook(serv);
     }
@@ -214,8 +200,6 @@ public class SX4 {
             }
         });
     }
-
-    
 
     /**
      * save current train numbers for all sensors
