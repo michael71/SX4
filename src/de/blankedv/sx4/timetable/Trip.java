@@ -21,19 +21,16 @@ package de.blankedv.sx4.timetable;
 import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.*;
-import de.blankedv.sx4.SX4;
 import de.blankedv.sx4.SXData;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_FREE;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_OCCUPIED;
-import static de.blankedv.sx4.timetable.Vars.RT_INACTIVE;
 import static de.blankedv.sx4.timetable.Vars.allCompRoutes;
 import static de.blankedv.sx4.timetable.Vars.allLocos;
 import static de.blankedv.sx4.timetable.Vars.allRoutes;
-import static de.blankedv.sx4.timetable.Vars.allTrips;
+import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 import java.util.ArrayList;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.event.ActionEvent;
 import javafx.util.Duration;
 
 /**

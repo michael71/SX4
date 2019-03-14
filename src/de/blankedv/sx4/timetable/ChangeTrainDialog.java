@@ -19,7 +19,7 @@ package de.blankedv.sx4.timetable;
 
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.timetable.Vars.allLocos;
-import static de.blankedv.sx4.timetable.Vars.allTrips;
+import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,7 +67,7 @@ public class ChangeTrainDialog {
 
         Collections.sort(locoAddresses);
 
-        final ChoiceBox<Integer> locos1 = new ChoiceBox(FXCollections.observableArrayList(
+        final ChoiceBox<Integer> locos1 = new ChoiceBox<Integer>(FXCollections.observableArrayList(
                 locoAddresses)
         );
         locos1.getSelectionModel().select(0);
@@ -81,7 +81,7 @@ public class ChangeTrainDialog {
                     speed1.setText("" + s);
                 });
 
-        final ChoiceBox<Integer> locos2 = new ChoiceBox(FXCollections.observableArrayList(
+        final ChoiceBox<Integer> locos2 = new ChoiceBox<Integer>(FXCollections.observableArrayList(
                 locoAddresses)
         );
         locos2.getSelectionModel().select(0);
@@ -186,7 +186,7 @@ public class ChangeTrainDialog {
         // convert locoString string to int values for address, direction and speed
         String[] lData = tr.locoString.split(",");
         if (lData.length < 2) {
-            return new Pair(INVALID_INT, 0);
+            return new Pair<> (INVALID_INT, 0);
         }
 
         int locoAddr, locoSpeed;
@@ -198,10 +198,10 @@ public class ChangeTrainDialog {
             } else {
                 locoSpeed = 28;
             }
-            return new Pair(locoAddr, locoSpeed);
+            return new Pair<>(locoAddr, locoSpeed);
 
         } catch (NumberFormatException e) {
-            return new Pair(INVALID_INT, 0);
+            return new Pair<>(INVALID_INT, 0);
 
         }
     }

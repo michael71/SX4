@@ -23,8 +23,8 @@ import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.timetable.Trip.TripState;
 import static de.blankedv.sx4.timetable.Vars.allCompRoutes;
 import static de.blankedv.sx4.timetable.Vars.allRoutes;
-import static de.blankedv.sx4.timetable.Vars.allTimetables;
-import static de.blankedv.sx4.timetable.Vars.allTrips;
+import static de.blankedv.sx4.timetable.VarsFX.allTimetables;
+import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelName;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -109,17 +109,16 @@ public class TripsTable extends Application {
         bp.setCenter(tableView);
         bp.setBottom(status);
 
+        ReadConfigTrips.readTripsAndTimetables(configFilename);
+        
         checkTimetables();
 
-        cbSelectTimetable.valueProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue ov, String oldV, String newV) {
-                status.setText(newV);
-                // extract number and load new timetable
-                if (allTimetables.size() > 0) {
-                    ttSelected = allTimetables.get(getTTIndex(newV));
-                    orderTrips(ttSelected);
-                }
+        cbSelectTimetable.valueProperty().addListener((ov, oldV, newV) -> {
+            status.setText(newV.toString());
+            // extract number and load new timetable
+            if (allTimetables.size() > 0) {
+                ttSelected = allTimetables.get(getTTIndex(newV.toString()));
+                orderTrips(ttSelected);
             }
         });
         // New window (Stage)
@@ -246,7 +245,13 @@ public class TripsTable extends Application {
             }
         };
 
-        tableView.getColumns().setAll(adrCol, routeCol, sens1Col, sens2Col, locoCol, stopDelayCol);
+        tableView.getColumns().add(adrCol);
+        tableView.getColumns().add(routeCol);
+        tableView.getColumns().add(sens1Col);
+        tableView.getColumns().add(sens2Col);
+        tableView.getColumns().add(locoCol);
+        tableView.getColumns().add(stopDelayCol);
+        
         tableView.setEditable(true);
         //idCol.setCellFactory(TextFieldTableCell.forTableColumn());
         /*adrCol.setCellFactory(TextFieldTableCell.forTableColumn(myStringIntConverter));
@@ -430,7 +435,7 @@ public class TripsTable extends Application {
             } else {
                 //  pi.setVisible(true);  TIME TOO SHORT, cannot be seen
 
-                ReadConfig.refreshXMLTripsAndTimetables(configFilename);
+                ReadConfigTrips.readTripsAndTimetables(configFilename);
                 Collections.sort(allTrips, (a, b) -> b.compareTo(a));
                 checkTimetables();
             }

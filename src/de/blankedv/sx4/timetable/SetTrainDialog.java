@@ -20,7 +20,7 @@ package de.blankedv.sx4.timetable;
 
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.timetable.Vars.allLocos;
-import static de.blankedv.sx4.timetable.Vars.allTrips;
+import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,12 +75,12 @@ public class SetTrainDialog {
         }
         Collections.sort(locoAddresses);
         
-        final ChoiceBox<Integer> sensors = new ChoiceBox(FXCollections.observableArrayList(
+        final ChoiceBox<Integer> sensors = new ChoiceBox<Integer>(FXCollections.observableArrayList(
                sensorAddresses)
         );
         sensors.getSelectionModel().select(0);
 
-        final ChoiceBox<Integer> locos = new ChoiceBox(FXCollections.observableArrayList(
+        final ChoiceBox<Integer> locos = new ChoiceBox<Integer>(FXCollections.observableArrayList(
                locoAddresses)
         );
         locos.getSelectionModel().select(0);
