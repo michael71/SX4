@@ -9,7 +9,7 @@ If a GUI is activated via the "-g" option, JavaFX is needed (part of Java8-JRE, 
 installed separately if Java11 is used) - with this option (-g), automatic runs of trains can
 be enabled (see SX4Draw documentation)
 
-[url]http://opensx.net/sx4[/url]
+more info: https://opensx.net/sx4
 
 # USAGE
 
