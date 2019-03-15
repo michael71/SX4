@@ -31,8 +31,9 @@ import java.util.Comparator;
  * the same number as the "data" of the lanbahn messages "SET 810 2" => set
  * state of panel element with address=810 to state=2
  *
- * NO DUPLICATE ADDRESSES in panel elements, i.e. when lanbahn-panel shows (for optical
- * reasons) several sensor elements with the same address, "SX4" has ONLY 1 sensor !
+ * NO DUPLICATE ADDRESSES in panel elements, i.e. when lanbahn-panel shows (for
+ * optical reasons) several sensor elements with the same address, "SX4" has
+ * ONLY 1 sensor !
  *
  * @author mblank
  *
@@ -51,7 +52,6 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
 
     // these constants are defined just for easier understanding of the
     // methods of the classes derived from this class
-    
     // turnouts
     protected static final int STATE_CLOSED = 0;
     protected static final int STATE_THROWN = 1;
@@ -72,7 +72,7 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
     // sensors
     public static final int STATE_FREE = 0;
     public static final int STATE_OCCUPIED = 1;
-    
+
     protected boolean locked = false;
 
     protected long lastToggle = 0L;
@@ -182,46 +182,6 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
         this.secondaryAdr = adr;
     }
 
-    public int setBit0(boolean occ) {
-        lastUpdateTime = System.currentTimeMillis();
-        if (occ) {
-            // set bit 0
-            state |= 0x01;
-        } else {
-            state &= ~(0x01);
-        }
-        return state;
-    }
-
-    // used for multi-aspect signals
-    public int setBit1(boolean occ) {
-        lastUpdateTime = System.currentTimeMillis();
-        if (occ) {
-            // set bit 1
-            state |= 0x02;
-        } else {
-            state &= ~(0x02);
-        }
-        return state;
-    }
-
-    public boolean isBit0() {
-        if ((state & 0x01) != 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    // used for multi-aspect signals
-    public boolean isBit1() {
-        if ((state & 0x02) != 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public boolean isLocked() {
         return locked;
     }
@@ -230,7 +190,6 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
         this.locked = locked;
     }
 
-    
     public String getType() {
         return typeString;
     }
@@ -277,28 +236,26 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
         if (adr == INVALID_INT) {
             return;
         }
-        debug("adr="+adr+" st="+state);
-        
+        debug("adr=" + adr + " st=" + state);
+
         int sxadr = adr / 10;
         int sxbit = adr % 10;
         if (!SXUtils.isValidSXAddress(sxadr) || !SXUtils.isValidSXBit(sxbit)) {
             return;  // no SX Element, must be virtual
         }
 
-       
-
         // set high bit (if there is any)
         int secSxadr = secondaryAdr / 10;   // NOT USED CURRENTLY FOR SX ADDRESSES
         int secSxbit = secondaryAdr % 10;   // NOT USED CURRENTLY FOR SX ADDRESSES
         if (nbit == 2) {
-           // must be 4 aspect signal       
-            debug("secAdr="+secondaryAdr+" st="+state);  
+            // must be 4 aspect signal       
+            debug("secAdr=" + secondaryAdr + " st=" + state);
             SXUtils.update2BitSxData(sxadr, sxbit, state, true); // true => write to SXInterface         
         } else {
-            debug("single bit");  
+            debug("single bit");
             // single bit address
             // use only low bit         
-            if (state == 0) {          
+            if (state == 0) {
                 SXUtils.clearBitSxData(sxadr, sxbit, true);  // true => write to SXInterface
             } else {
                 SXUtils.setBitSxData(sxadr, sxbit, true);  // true => write to SXInterface
@@ -322,22 +279,6 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
     }
 
     // STATIC METHODS ---------------------------------------------------------------------------
-    /**
-     * search for a panel element when only the address is known
-     *
-     * @param address
-     * @return
-     */
-    public static ArrayList<PanelElement> getByAddress(int address) {
-        ArrayList<PanelElement> peList = new ArrayList<>();
-        for (PanelElement pe : panelElements) {
-            if (pe.getAdr() == address) {
-                peList.add(pe);
-            }
-        }
-        return peList;
-    }
-
     public static int getSecondaryAddressByAddress(int address) {
         for (PanelElement pe : panelElements) {
             if (pe.getAdr() == address) {
@@ -347,7 +288,7 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
         return INVALID_INT;
     }
 
-    public static PanelElement getSingleByAddress(int address) {
+    public static PanelElement getByAddress(int address) {
         for (PanelElement pe : panelElements) {
             if (pe.getAdr() == address) {
                 return pe;
@@ -383,11 +324,11 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
     public static void updateFromSXData(int sxAddr, int d) {
         // check for all of the 8 SX-bits if we have a matching panel element
         // which needs to be updated
-        ArrayList<PanelElement> peList;
+
         for (int bit = 1; bit <= 8; bit++) {
             int addr = sxAddr * 10 + bit;
-            peList = PanelElement.getByAddress(addr);
-            for (PanelElement pe : peList) {
+            PanelElement pe = PanelElement.getByAddress(addr);
+            if (pe != null) {
                 switch (pe.nbit) {
                     case 1:
                         // set a single bit
@@ -402,25 +343,23 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
                     // TODO for nbit>2
                 }
             }
-
         }
     }
-    
-    /** check if a panel element with given address is locked
-     * 
+
+    /**
+     * check if a panel element with given address is locked
+     *
      * @param addr
-     * @return 
+     * @return
      */
     public static boolean isAddressLocked(int addr) {
-        ArrayList<PanelElement> peList = PanelElement.getByAddress(addr);
-        for (PanelElement pe : peList) {
-            if (pe.isLocked()) return true;
-        }
-        return false;
+        PanelElement pe = PanelElement.getByAddress(addr);
+        return pe.isLocked();
     }
-    
-    /** used in case of unfinished (i.e. not cleared) routes
-     * 
+
+    /**
+     * used in case of unfinished (i.e. not cleared) routes
+     *
      */
     public static int unlockAll() {
         int count = 0;
@@ -428,7 +367,7 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
             if (pe.isLocked()) {
                 count++;
                 pe.setLocked(false);
-            }          
+            }
         }
         return count;
     }

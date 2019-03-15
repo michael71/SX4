@@ -1,4 +1,4 @@
-    /*
+/*
 SX4
 Copyright (C) 2019 Michael Blank
 
@@ -15,7 +15,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
@@ -48,7 +47,7 @@ import org.w3c.dom.NodeList;
  */
 public class ReadConfigTrips {
 
-    public static String readTripsAndTimetables(String fname)   {
+    public static String readTripsAndTimetables(String fname) {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
 
@@ -62,7 +61,7 @@ public class ReadConfigTrips {
         try {
             doc = builder.parse(new File(fname));
             parseTripsAndTimetable(doc);
-              // sort the trips by ID
+            // sort the trips by ID
             Collections.sort(allTrips, (a, b) -> b.compareTo(a));
 
         } catch (SAXException e) {
@@ -78,11 +77,10 @@ public class ReadConfigTrips {
 
         return "OK";
     }
-   
-       
-     // code template from lanbahnPanel
+
+    // code template from lanbahnPanel
     private static void parseTripsAndTimetable(Document doc) {
- 
+
         allTrips.clear();
         allTimetables.clear();
 
@@ -90,25 +88,29 @@ public class ReadConfigTrips {
         Element root = doc.getDocumentElement();
 
         items = root.getElementsByTagName("trip");
-        if (CFG_DEBUG) {
-            debug("config: " + items.getLength() + " trips");
-        }
+
+        debug("config: " + items.getLength() + " trips");
+
         for (int i = 0; i < items.getLength(); i++) {
             Trip tr = parseTrip(items.item(i));
             if (tr != null) {
-                if (CFG_DEBUG) debug("trip adr=" + tr.adr);
+                if (CFG_DEBUG) {
+                    debug("trip adr=" + tr.adr);
+                }
                 allTrips.add(tr);
             }
         }
 
         items = root.getElementsByTagName("timetable");
-        if (CFG_DEBUG) {
-            debug("config: " + items.getLength() + " timetables");
-        }
+
+        debug("config: " + items.getLength() + " timetables");
+
         for (int i = 0; i < items.getLength(); i++) {
             Timetable ti = parseTimetable(items.item(i));
             if (ti != null) {
-                if (CFG_DEBUG) debug("timetable adr=" + ti.adr);
+                if (CFG_DEBUG) {
+                    debug("timetable adr=" + ti.adr);
+                }
                 allTimetables.add(ti);
             }
         }
@@ -258,14 +260,14 @@ public class ReadConfigTrips {
         }
 
         // check if Loco is valid
-        if (lo.getAddr() != INVALID_INT)  {
+        if (lo.getAddr() != INVALID_INT) {
             // we have the minimum info needed
             return lo;
         } else {
             return null;
         }
     }
-    
+
     private static Trip parseTrip(Node item) {
 
         Trip t = new Trip();
@@ -273,10 +275,10 @@ public class ReadConfigTrips {
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Node theAttribute = attributes.item(i);
-            if (theAttribute.getNodeName().equals("adr") ) {
+            if (theAttribute.getNodeName().equals("adr")) {
                 t.adr = getIntValueOfNode(theAttribute);
-            } else if ((theAttribute.getNodeName().equals("route")) ||
-                    (theAttribute.getNodeName().equals("routeid")) ) {
+            } else if ((theAttribute.getNodeName().equals("route"))
+                    || (theAttribute.getNodeName().equals("routeid"))) {
                 t.route = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("sens1")) {
                 t.sens1 = getIntValueOfNode(theAttribute);
@@ -391,7 +393,7 @@ public class ReadConfigTrips {
         } else {
             // everything is o.k.
             Route rt = new Route(adr, route, sensors, offending);
-           
+
             panelElements.add(rt);
             allRoutes.add(rt);
         }

@@ -179,7 +179,7 @@ public class Trip implements Comparable<Trip> {
             error("ERROR: keine Gleisspannung, kann Fahrt nicht starten!");
             return false;
         }
-        PanelElement startSensor = PanelElement.getSingleByAddress(sens1);
+        PanelElement startSensor = PanelElement.getByAddress(sens1);
 
         if (startSensor.getState() == STATE_FREE) {
             error("cannot start trip id=" + adr + " because no train on start-sensor " + sens1);
@@ -200,12 +200,13 @@ public class Trip implements Comparable<Trip> {
 
         // aquire locoString and start 'full' speed
         startLocoDelayed();
+        debug("starting trip id=" + adr );
         state = TripState.ACTIVE;
         return true;
     }
 
     public void finish() {
-        debug("trip " + adr + " ends");
+        debug("finish trip " + adr);
         // finish current loco
         stopLoco();
 
@@ -320,7 +321,7 @@ public class Trip implements Comparable<Trip> {
     }
 
     public boolean checkEndSensor() {
-        PanelElement seEnd = PanelElement.getSingleByAddress(sens2);
+        PanelElement seEnd = PanelElement.getByAddress(sens2);
         if ((state != TripState.ACTIVE) || (seEnd == null)) {
             return false;
         }
@@ -377,5 +378,14 @@ public class Trip implements Comparable<Trip> {
             t.stop();
         }
         myTimelines.clear();
+    }
+    
+    public static Trip getTripByAddress(int addr) {
+        for (Trip tr : allTrips) {
+                    if (tr.adr == addr) {
+                        return tr;
+                    }
+        }
+        return null;
     }
 }

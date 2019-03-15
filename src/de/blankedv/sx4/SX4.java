@@ -31,6 +31,7 @@ import de.blankedv.sx4.timetable.CompRoute;
 import de.blankedv.sx4.timetable.PanelElement;
 
 import de.blankedv.sx4.timetable.ReadConfig;
+import de.blankedv.sx4.timetable.ReadConfigTrips;
 import de.blankedv.sx4.timetable.Route;
 import de.blankedv.sx4.timetable.Trip;
 import de.blankedv.sx4.timetable.TripsTable;
@@ -132,6 +133,11 @@ public class SX4 {
                 if (routingEnabled) {
                     routingEnabled = false;  // override setting
                     error("routing disabled - because config file could not be read");
+                }
+            } else {
+                if (guiEnabled) {
+                    // read also timetables (needs JavaFX)
+                    ReadConfigTrips.readTripsAndTimetables(configFilename);
                 }
             }
 

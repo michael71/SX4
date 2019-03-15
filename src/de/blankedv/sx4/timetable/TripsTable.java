@@ -17,6 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package de.blankedv.sx4.timetable;
 
+import static com.esotericsoftware.minlog.Log.debug;
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.SX4.configFilename;
 import de.blankedv.sx4.SXData;
@@ -108,17 +109,18 @@ public class TripsTable extends Application {
         tripTableScene = new Scene(bp, 700, 300);
         bp.setCenter(tableView);
         bp.setBottom(status);
-
-        ReadConfigTrips.readTripsAndTimetables(configFilename);
-        
+        debug("starting TripsTable");
+        // already done in SX4 (if guiEnabled): ReadConfigTrips.readTripsAndTimetables(configFilename);
         checkTimetables();
 
         cbSelectTimetable.valueProperty().addListener((ov, oldV, newV) -> {
-            status.setText(newV.toString());
-            // extract number and load new timetable
-            if (allTimetables.size() > 0) {
-                ttSelected = allTimetables.get(getTTIndex(newV.toString()));
-                orderTrips(ttSelected);
+            if (newV != null) {
+                status.setText(newV.toString());
+                // extract number and load new timetable
+                if (allTimetables.size() > 0) {
+                    ttSelected = allTimetables.get(getTTIndex(newV.toString()));
+                    orderTrips(ttSelected);
+                }
             }
         });
         // New window (Stage)
@@ -251,7 +253,7 @@ public class TripsTable extends Application {
         tableView.getColumns().add(sens2Col);
         tableView.getColumns().add(locoCol);
         tableView.getColumns().add(stopDelayCol);
-        
+
         tableView.setEditable(true);
         //idCol.setCellFactory(TextFieldTableCell.forTableColumn());
         /*adrCol.setCellFactory(TextFieldTableCell.forTableColumn(myStringIntConverter));

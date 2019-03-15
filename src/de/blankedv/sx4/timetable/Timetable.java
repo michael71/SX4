@@ -41,7 +41,7 @@ public class Timetable {
     ArrayList<Integer> tripAdrs = new ArrayList<>();
     int currentTripIndex = 0;
     Trip cTrip = null;
-    TT_State state = INACTIVE;  
+    TT_State state = INACTIVE;
     private String tripsString = "";
     final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
 
@@ -109,7 +109,7 @@ public class Timetable {
         state = INACTIVE;   // stops also "auto() function
         cTrip = Trip.get(tripAdrs.get(currentTripIndex));
         stopAllTimelines();
-        
+
         if (cTrip == null) {
             debug("stopping timetable=" + adr + " (no current trip)");
             return false;
@@ -124,11 +124,11 @@ public class Timetable {
 
     public boolean startNewTrip(Trip t) {
         // check if start sensor is occupied and endsensor is free
-        debug("try starting new trip with adr=" + t.adr);
+        debug("try starting new trip with adr=" + t.adr + " from sens1=" + t.sens1 + " to sens2=" + t.sens2);
 
         // set route(s)
-        int start = PanelElement.getSingleByAddress(t.sens1).getState();
-        int end = PanelElement.getSingleByAddress(t.sens2).getState();
+        int start = PanelElement.getByAddress(t.sens1).getState();
+        int end = PanelElement.getByAddress(t.sens2).getState();
 
         if ((start == STATE_OCCUPIED) && (end == STATE_FREE)) {
             debug("start sensor (" + t.sens1 + ") occupied and end sensor(" + t.sens2 + ") free, we can start the trip");
@@ -164,6 +164,7 @@ public class Timetable {
                 return false;
         }
     }
+
     public boolean advanceToNextTrip() {
         if (state == INACTIVE) {
             error("cannot advance to next Trip because TimeTable is INACTIVE");
@@ -179,6 +180,7 @@ public class Timetable {
         // get trip 
         try {
             cTrip = Trip.get(tripAdrs.get(currentTripIndex));
+            debug("found next trip in timetable - trip="+cTrip.adr);
         } catch (IndexOutOfBoundsException ex) {
             cTrip = null;
         }
@@ -195,30 +197,26 @@ public class Timetable {
         return "Fahrplan(" + adr + "): " + tripsString;
     }
 
-          
-    public  void timetableCheck() {
-       
+    public void timetableCheck() {
+
         if (cTrip == null) {
             return;  // NO CURRENT TRIP - do nothing
         }
         switch (state) {
             case ACTIVE:
-                for (Trip tr : allTrips) {
-                    if (tr.adr == cTrip.adr) {
-                        if (tr.state == TripState.INACTIVE) {   // current trip has been finished, start a new one (delayed)                        
-                            state = WAITING;   // wait for start of new trip
-                            debug("current trip " + cTrip.adr + " has ended. start new one 5 seconds after train stop.");
-                            // currentTrip has ended, wait three seconds, then start next
-                            Timeline timeline = new Timeline(new KeyFrame(
-                                    Duration.millis(5000 + tr.stopDelay),
-                                    ae -> {
-                                        advanceToNextTrip();
-                                    }));
-                            timeline.play();
-                            addTimeline(timeline);
-                        }
-                    }
+                if (cTrip.state == TripState.INACTIVE) {   // current trip has been finished, start a new one (delayed)                        
+                    state = WAITING;   // wait for start of new trip
+                    debug("current trip " + cTrip.adr + " has ended. start new one 5 seconds after train stop.");
+                    // currentTrip has ended, wait three seconds, then start next
+                    Timeline timeline = new Timeline(new KeyFrame(
+                            Duration.millis(5000 + cTrip.stopDelay),
+                            ae -> {
+                                advanceToNextTrip();
+                            }));
+                    timeline.play();
+                    addTimeline(timeline);
                 }
+
                 break;
             case WAITING:
             case INACTIVE:
@@ -227,12 +225,12 @@ public class Timetable {
         }
 
     }
-    
+
     public void addTimeline(Timeline t) {
         myTimelines.add(t);
     }
 
-    // STOP timers, like loco speed increase, decrease, start new trip etc.
+    // STOP all timers of this timetable, like loco speed increase, decrease, start new trip etc.
     public void stopAllTimelines() {
         debug("Timetable: stopping all Timelines");
         for (Timeline t : myTimelines) {

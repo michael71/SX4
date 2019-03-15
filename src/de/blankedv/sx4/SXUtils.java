@@ -125,27 +125,7 @@ public class SXUtils {
         }
     }
 
-    /** update the internal state if there is a (or several) matching panel 
-     * elements for this sxAddr
-     * !!! DO NOT SEND AN UPDATE TO THE SX INTERFACE (-> LOOP !!)
-     *
-     * @param sxAddr
-     * @param sxdata 
-     */
-    public static void updatePanelElementsStateFromSX(int sxAddr, int sxdata) {
-        for (int sxbit = 1; sxbit <= 8; sxbit++) {
-            // check if we have a matching panel element
-            int lbAddr = sxAddr * 10 + sxbit;
-            for (PanelElement pe : panelElements) {
-                if (pe.getAdr() == lbAddr) {
-                    pe.setBit0(isSet(sxdata, sxbit));
-                }
-                if (pe.getSecondaryAdr() == lbAddr) {
-                    pe.setBit1(isSet(sxdata, sxbit));
-                }
-            }
-        }
-    }
+   
     
     public static String getConfigFilename() {
         String fileName = "";

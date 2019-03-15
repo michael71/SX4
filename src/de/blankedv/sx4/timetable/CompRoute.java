@@ -71,7 +71,7 @@ public class CompRoute extends PanelElement {
             }
         }
 
-        debug("creating comproute id=" + routeAddr + " - " + myroutes.size() + " routes in this route.");
+        //debug("creating comproute id=" + routeAddr + " - " + myroutes.size() + " routes in this route.");
 
 
     }
