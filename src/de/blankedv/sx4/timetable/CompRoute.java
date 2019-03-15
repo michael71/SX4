@@ -19,11 +19,11 @@ package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
-import static de.blankedv.sx4.Constants.DEBUG_COMPROUTE;
 import de.blankedv.sx4.LanbahnData;
 import static de.blankedv.sx4.timetable.Vars.*;
 
 import java.util.ArrayList;
+
 
 /**
  * composite route, i.e. a list of allRoutes which build a new "compound" route
@@ -70,17 +70,14 @@ public class CompRoute extends PanelElement {
                 }
             }
         }
-        if (DEBUG_COMPROUTE) {
-            debug("creating comproute id=" + routeAddr + " - " + myroutes.size() + " routes in this route.");
-        }
+
+        debug("creating comproute id=" + routeAddr + " - " + myroutes.size() + " routes in this route.");
+
 
     }
 
     public void clearOffendingRoutes() {
-        if (DEBUG_COMPROUTE) {
-            debug(" clearing (active) offending Routes");
-        }
-
+        debug(" clearing (active) offending Routes");
         for (Route rt : myroutes) {
             rt.clearOffendingRoutes();
 
@@ -101,35 +98,35 @@ public class CompRoute extends PanelElement {
         return result;
     }
 
+    
+
+    public boolean isLocked() {
+        boolean locked = false;
+        // check, if all routes of this compound route are unlocked
+        for (Route rt : myroutes) {
+            if (rt.isLocked()) {
+                locked = true;
+            }
+        }
+        debug(" comproute id=" + getAdr() + " is locked");
+        
+        return locked;
+    }
+
     public boolean set() {
         // get current train number from first sensor of first route
         Route start = myroutes.get(0);
         return set(false, start.getStartTrainNumber());
     }
     
-    public boolean isLocked() {
-        boolean locked = false;
-        // check, if all routes of this compound route are unlocked
-        for (Route rt : myroutes) {
-            if (rt.isLocked()) locked = true;
-        }
- 
-        if (DEBUG_COMPROUTE) {
-            debug(" comproute id=" + getAdr() + " is locked");
-        }
-        return locked;
-    }
-
     public boolean set(boolean automatic, int tripTrainNumber) {
 
         automaticFlag = automatic;
+        clearRouteTime = Long.MAX_VALUE;   // set only if route could be set successfully
 
-        if (DEBUG_COMPROUTE) {
+
             debug(" setting comproute id=" + getAdr() + "auto-mode=" + automatic);
-        }
-
-        clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
-
+    
         // check if all (sub-)routes can be set successfully
         boolean res = true;
 
@@ -148,9 +145,6 @@ public class CompRoute extends PanelElement {
             debug("comproute id=" + getAdr() + " - train " + trainNumber + " on start sensor=" + start.getStartSensor().getAdr());
         }
 
-        
-        
-        
         // if automatic: SECOND check, if all routes of this compound route are free
         if (automatic) {
             for (Route rt : myroutes) {
@@ -167,6 +161,7 @@ public class CompRoute extends PanelElement {
                     }
                 }
             }
+            
         }
 
         // SECOND: add train number info - and get last sensor last route (=endSensor)
@@ -188,8 +183,10 @@ public class CompRoute extends PanelElement {
 
         if (res == true) {
             // set active only if the comprising routes could be set with success
-            if (DEBUG_COMPROUTE) {
-                debug(" setting comproute id=" + getAdr() + " successful, endSensor=" + endSensor.getAdr());
+            debug(" setting comproute id=" + getAdr() + " successful, endSensor=" + endSensor.getAdr());
+
+            if (!automatic) {
+                clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
             }
             setState(RT_ACTIVE);
         }
@@ -221,9 +218,7 @@ public class CompRoute extends PanelElement {
         for (CompRoute comp : allCompRoutes) {
             if (comp.getState() == RT_ACTIVE) {
                 //debug("comp auto id=" + comp.getAdr());
-                if ((System.currentTimeMillis() - comp.clearRouteTime) > 0) {
-                    comp.setState(RT_INACTIVE);
-                }
+
                 if (comp.automaticFlag) {
                     // check for route end sensor - if it gets occupied (train reached end of route), rt will be cleared
                     if ((comp.endSensor != null) && (comp.endSensor.getState() == STATE_OCCUPIED)) {
@@ -233,7 +228,13 @@ public class CompRoute extends PanelElement {
                             rt.clearIn3Seconds();
                         }
                     }
-                }
+                } 
+                
+                    if ((System.currentTimeMillis() - comp.clearRouteTime) > 0) {
+                        comp.setState(RT_INACTIVE);
+                    }
+               
+                    
             }
         }
 

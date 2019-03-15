@@ -1,4 +1,4 @@
-    /*
+/*
 SX4
 Copyright (C) 2019 Michael Blank
 
@@ -15,7 +15,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
@@ -46,7 +45,6 @@ import org.w3c.dom.NodeList;
  */
 public class ReadConfig {
 
-     
     public static String readPanelName(String fname) {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
@@ -57,7 +55,7 @@ public class ReadConfig {
             error("ParserConfigException Exception - " + e1.getMessage());
             return "ERROR: ParserConfigException";
         }
-        
+
         Document doc;
         try {
             doc = builder.parse(new File(fname));
@@ -110,35 +108,37 @@ public class ReadConfig {
         return "OK";
     }
 
-   
     private static String parsePanelName(Document doc) {
-    
+
         NodeList items;
         Element root = doc.getDocumentElement();
 
         return parsePanelAttribute(root, "filename");
 
     }
-    
+
     private static void parseLocos(Document doc) {
         // <loco adr="97" name="SchoenBB" mass="2" vmax="120" />
-        
+
         allLocos.clear();
 
         NodeList items;
         Element root = doc.getDocumentElement();
-        
+
         items = root.getElementsByTagName("loco");
         for (int i = 0; i < items.getLength(); i++) {
             Loco loco = parseLoco(items.item(i));
-            if (loco != null ) allLocos.add(loco);
+            if (loco != null) {
+                allLocos.add(loco);
+            }
         }
         debug("config: " + allLocos.size() + " locos");
 
     }
+
     // code template from lanbahnPanel
     private static void parsePanelElements(Document doc) {
-        
+
         panelElements.clear();
 
         NodeList items;
@@ -183,10 +183,8 @@ public class ReadConfig {
             addPanelElement("BM", items.item(i));
         }
 
-
     }
-    
-    
+
     // code from lanbahnPanel
     private static int getIntValueOfNode(Node a) {
         return Integer.parseInt(a.getNodeValue());
@@ -330,14 +328,14 @@ public class ReadConfig {
         }
 
         // check if Loco is valid
-        if (lo.getAddr() != INVALID_INT)  {
+        if (lo.getAddr() != INVALID_INT) {
             // we have the minimum info needed
             return lo;
         } else {
             return null;
         }
     }
-    
+
     private static Trip parseTrip(Node item) {
 
         Trip t = new Trip();
@@ -345,10 +343,10 @@ public class ReadConfig {
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Node theAttribute = attributes.item(i);
-            if (theAttribute.getNodeName().equals("adr") ) {
+            if (theAttribute.getNodeName().equals("adr")) {
                 t.adr = getIntValueOfNode(theAttribute);
-            } else if ((theAttribute.getNodeName().equals("route")) ||
-                    (theAttribute.getNodeName().equals("routeid")) ) {
+            } else if ((theAttribute.getNodeName().equals("route"))
+                    || (theAttribute.getNodeName().equals("routeid"))) {
                 t.route = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("sens1")) {
                 t.sens1 = getIntValueOfNode(theAttribute);
@@ -463,7 +461,7 @@ public class ReadConfig {
         } else {
             // everything is o.k.
             Route rt = new Route(adr, route, sensors, offending);
-           
+
             panelElements.add(rt);
             allRoutes.add(rt);
         }
@@ -524,18 +522,22 @@ public class ReadConfig {
     private static void addPanelElement(String type, Node a) {
         ArrayList<Integer> addressArr = parseAddressArray(a);
         if (addressArr != null) {
+            // do not add panel elements with duplicate addresses
             int lba = addressArr.get(0);
-            switch (addressArr.size()) {
-                case 1:
-                    panelElements.add(new PanelElement(type, lba));
-                    break;
-                case 2:
-                    int secLba = addressArr.get(1);
-                    panelElements.add(new PanelElement(type, lba, secLba));
-                    break;
-                default:
-                    error("ERROR in XML definition, more than 2 adresses");
+            if (PanelElement.getByAddress(lba) == null) {
+                switch (addressArr.size()) {
+                    case 1:
+                        panelElements.add(new PanelElement(type, lba));
+                        break;
+                    case 2:
+                        int secLba = addressArr.get(1);
+                        panelElements.add(new PanelElement(type, lba, secLba));
+                        break;
+                    default:
+                        error("ERROR in XML definition, more than 2 adresses");
+                }
             }
+
         } else {
             error("ERROR in XML definition, no address found");
         }

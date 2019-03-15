@@ -255,12 +255,16 @@ public class Route extends PanelElement {
     /**
      * set function if the route is part of a compound route
      *
+     * @param automatic
+     * @param trainNumber
      * @param startTrain
      * @param partOfCompRoute
      * @return
      */
     public boolean set(boolean automatic, int trainNumber) {
         automaticFlag = automatic;
+        clearRouteTime = Long.MAX_VALUE;   // set only if route could be set successfully
+
         // if not given from compound route, get from occupation of first sensor
         if (trainNumber == 0) {
             trainNumber = getStartTrainNumber();
@@ -283,9 +287,9 @@ public class Route extends PanelElement {
                 error("cannot set route id=" + getAdr() + " because there is a train on route!");
                 return false;
             }
-        }
+        } else {
 
-        clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
+        }
 
         for (PanelElement se : rtSensors) {
             se.setInRoute(true);
@@ -333,10 +337,15 @@ public class Route extends PanelElement {
             }
         }
 
+        if (!automaticFlag) {
+            // only autoclear when route manual set
+            clearRouteTime = System.currentTimeMillis() + AUTO_CLEAR_ROUTE_TIME_SECONDS * 1000L;
+        }
+
         this.setState(RT_ACTIVE);
         return true;
     }
-    
+
     public boolean isLocked() {
         return !panelElementsLocked().isEmpty();
     }
@@ -475,12 +484,6 @@ public class Route extends PanelElement {
         // debug("checking route auto clear");
         for (Route rt : allRoutes) {
             if (rt.getState() == RT_ACTIVE) {  // check only active routes
-                if ((System.currentTimeMillis() - rt.clearRouteTime) > 0) {
-                    debug("route#" + rt.getAdr() + " cleared (time)");
-                    rt.clear();
-                }
-                // update dependencies
-                rt.updateDependencies();
 
                 if (rt.automaticFlag) {  // only for automatic driven traines
                     // check for route end sensor - if it gets occupied (train reached end of route), rt will be cleared immediately
@@ -489,6 +492,13 @@ public class Route extends PanelElement {
                         rt.clear();
                     }
                 }
+                if ((System.currentTimeMillis() - rt.clearRouteTime) > 0) {
+                    debug("route#" + rt.getAdr() + " cleared (time)");
+                    rt.clear();
+                }
+
+                // update dependencies
+                rt.updateDependencies();
             }
         }
 

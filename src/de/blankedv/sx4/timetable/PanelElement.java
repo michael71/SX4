@@ -31,7 +31,8 @@ import java.util.Comparator;
  * the same number as the "data" of the lanbahn messages "SET 810 2" => set
  * state of panel element with address=810 to state=2
  *
- * a panel element has only 1 address (=> double slips are 2 panel elements)
+ * NO DUPLICATE ADDRESSES in panel elements, i.e. when lanbahn-panel shows (for optical
+ * reasons) several sensor elements with the same address, "SX4" has ONLY 1 sensor !
  *
  * @author mblank
  *
