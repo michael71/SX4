@@ -222,7 +222,8 @@ public class TripsTable extends Application {
         TableColumn<Trip, Integer> sens1Col = new TableColumn<>("Start");
         TableColumn<Trip, Integer> sens2Col = new TableColumn<>("Ende");
         TableColumn<Trip, String> locoCol = new TableColumn<>("Zug,Dir,Speed");
-        TableColumn<Trip, Integer> stopDelayCol = new TableColumn<>("StopDelay");
+        TableColumn<Trip, Integer> startDelayCol = new TableColumn<>("StartDelay[ms]");
+        TableColumn<Trip, Integer> stopDelayCol = new TableColumn<>("StopDelay[ms]");
         /* final TextFormatter<String> formatter = new TextFormatter<String>(change -> {
             change.setText(change.getText().replaceAll("[^0-9.,]", ""));
             return change;
@@ -251,8 +252,10 @@ public class TripsTable extends Application {
         tableView.getColumns().add(routeCol);
         tableView.getColumns().add(sens1Col);
         tableView.getColumns().add(sens2Col);
-        tableView.getColumns().add(locoCol);
+        tableView.getColumns().add(startDelayCol);
         tableView.getColumns().add(stopDelayCol);
+        tableView.getColumns().add(locoCol);
+
 
         tableView.setEditable(true);
         //idCol.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -287,65 +290,37 @@ public class TripsTable extends Application {
             dataCol.setMaxWidth(1f * Integer.MAX_VALUE * 18); // 70% width
             dataCol.setStyle("-fx-alignment: CENTER;"); */
         tableView.setCenterShape(true);
-        tableView.setRowFactory(new Callback<TableView<Trip>, TableRow<Trip>>() {
-            @Override
-            public TableRow<Trip> call(TableView<Trip> tableView) {
-                final TableRow<Trip> row = new TableRow<>();
-                final ContextMenu contextMenu = new ContextMenu();
-                final MenuItem startMenuItem = new MenuItem("Starte diese Fahrt");
-                startMenuItem.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
-                        final Trip tr = row.getItem();
-                        startTrip(tr);
-                    }
-                });
-                final MenuItem stopMenuItem = new MenuItem("Stoppe diese Fahrt");
-                stopMenuItem.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
-                        final Trip tripShown = row.getItem();
-                        tripShown.finish();
-                    }
-                });
-                contextMenu.getItems().addAll(startMenuItem, stopMenuItem);
-                // Set context menu on row, but use a binding to make it only show for non-empty rows:
-                row.contextMenuProperty().bind(
-                        Bindings.when(row.emptyProperty())
-                                .then((ContextMenu) null)
-                                .otherwise(contextMenu)
-                );
-
-                return row;
-            }
+        tableView.setRowFactory((TableView<Trip> tableView1) -> {
+            final TableRow<Trip> row = new TableRow<>();
+            final ContextMenu contextMenu = new ContextMenu();
+            final MenuItem startMenuItem = new MenuItem("Starte diese Fahrt");
+            startMenuItem.setOnAction((ActionEvent event) -> {
+                final Trip tr = row.getItem();
+                startTrip(tr);
+            });
+            final MenuItem stopMenuItem = new MenuItem("Stoppe diese Fahrt");
+            stopMenuItem.setOnAction((ActionEvent event) -> {
+                final Trip tripShown = row.getItem();
+                tripShown.finish();
+            });
+            contextMenu.getItems().addAll(startMenuItem, stopMenuItem);
+            // Set context menu on row, but use a binding to make it only show for non-empty rows:
+            row.contextMenuProperty().bind(
+                    Bindings.when(row.emptyProperty())
+                            .then((ContextMenu) null)
+                            .otherwise(contextMenu)
+            );
+            
+            return row;
         });
-        /*   tableView.setRowFactory(new Callback<TableView<RouteData>, TableRow<RouteData>>() {
-                @Override
-                public TableRow<RouteData> call(TableView<RouteData> tableView) {
-                    final TableRow<RouteData> row = new TableRow<RouteData>() {
-                        @Override
-                        protected void updateItem(Route sxv, boolean empty) {
-                            super.updateItem(sxv, empty);
-                            if (!empty) {
-                                if (sxv.isMarked()) {
-                                    setStyle("-fx-background-color: yellow;");
-                                } else {
-                                    setStyle("");
-                                }
-                            } else {
-                                setStyle("");
-                            }
-                        }
-                    };
-                    return row;
-                }
-            }); */
+  
 
         adrCol.setCellValueFactory(new PropertyValueFactory<>("adr"));
         routeCol.setCellValueFactory(new PropertyValueFactory<>("route"));
         sens1Col.setCellValueFactory(new PropertyValueFactory<>("sens1"));
         sens2Col.setCellValueFactory(new PropertyValueFactory<>("sens2"));
         locoCol.setCellValueFactory(new PropertyValueFactory<>("locoString"));
+        startDelayCol.setCellValueFactory(new PropertyValueFactory<>("startDelay"));
         stopDelayCol.setCellValueFactory(new PropertyValueFactory<>("stopDelay"));
 
         tableView.setItems(allTimetableTrips);

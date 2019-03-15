@@ -49,7 +49,9 @@ public class Trip implements Comparable<Trip> {
     int locoAddr = INVALID_INT;
     int locoDir = INVALID_INT;
     int locoSpeed = INVALID_INT;
+    int startDelay = INVALID_INT;  // milliseconds
     int stopDelay = INVALID_INT;  // milliseconds
+    
     TripState state = TripState.INACTIVE;
     Loco loco = null;
     final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
@@ -125,6 +127,14 @@ public class Trip implements Comparable<Trip> {
 
     public void setLocoSpeed(int locoSpeed) {
         this.locoSpeed = locoSpeed;
+    }
+
+    public int getStartDelay() {
+        return startDelay;
+    }
+
+    public void setStartDelay(int startDelay) {
+        this.startDelay = startDelay;
     }
 
     public int getStopDelay() {

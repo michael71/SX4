@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<layout-config filename="panel_sxtest.xml" version="20190303_102900">
+<layout-config filename="panel_sxtest.xml" version="20190315_185000">
     <panels>
         <panel name="sxtest">
             <locos>
@@ -35,13 +35,13 @@
                 <sensor adr="903,1903" name="S1" x="440" x2="560" y="120" y2="120"/>
             </sensors>
             <signals>
-                <signal adr="765,766" x="140" x2="132" y="60" y2="60"/>
-                <signal adr="767" x="160" x2="152" y="100" y2="100"/>
-                <signal adr="761,762" x="160" x2="152" y="140" y2="140"/>
-                <signal adr="781" x="300" x2="308" y="60" y2="60"/>
-                <signal adr="783" x="340" x2="332" y="100" y2="100"/>
-                <signal adr="771,772" x="460" x2="468" y="60" y2="60"/>
-                <signal adr="773,774" x="460" x2="468" y="100" y2="100"/>
+                <signal adr="765,766" x="140" x2="127" y="60" y2="60"/>
+                <signal adr="767,768" x="160" x2="147" y="100" y2="100"/>
+                <signal adr="761,762" x="160" x2="147" y="140" y2="140"/>
+                <signal adr="781,782" x="300" x2="313" y="60" y2="60"/>
+                <signal adr="783,784" x="340" x2="353" y="100" y2="100"/>
+                <signal adr="771,772" x="460" x2="473" y="60" y2="60"/>
+                <signal adr="773,774" x="460" x2="473" y="100" y2="100"/>
             </signals>
             <routebuttons>
                 <routebutton adr="1200" x="140" y="40"/>
@@ -81,17 +81,17 @@
                 <comproute adr="2315" btn1="1205" btn2="1202" routes="2217,2213"/>
             </comproutes>
             <trips>
-                <trip adr="3100" loco="29,0,22" route="2300" sens1="924" sens2="902" stopdelay="1700"/>
-                <trip adr="3101" loco="29,1,22" route="2310" sens1="902" sens2="924" stopdelay="1400"/>
-                <trip adr="3102" loco="42,0,18" route="2303" sens1="923" sens2="903" stopdelay="1400"/>
-                <trip adr="3103" loco="42,1,18" route="2313" sens1="903" sens2="923" stopdelay="1200"/>
-                <trip adr="3104" loco="40,1,28" route="2304" sens1="922" sens2="902" stopdelay="2300"/>
-                <trip adr="3105" loco="40,0,28" route="2314" sens1="902" sens2="922" stopdelay="1700"/>
-                <trip adr="3106" loco="25,0,10" route="2300" sens1="924" sens2="902" stopdelay="700"/>
+                <trip adr="3100" loco="29,0,22" route="2300" sens1="924" sens2="902" startdelay="3000" stopdelay="1700"/>
+                <trip adr="3101" loco="29,1,22" route="2310" sens1="902" sens2="924" startdelay="3000" stopdelay="1400"/>
+                <trip adr="3102" loco="42,0,18" route="2303" sens1="923" sens2="903" startdelay="3000" stopdelay="1400"/>
+                <trip adr="3103" loco="42,1,18" route="2313" sens1="903" sens2="923" startdelay="3000" stopdelay="1200"/>
+                <trip adr="3104" loco="40,1,28" route="2304" sens1="922" sens2="902" startdelay="3000" stopdelay="2300"/>
+                <trip adr="3105" loco="40,0,28" route="2314" sens1="902" sens2="922" startdelay="3000" stopdelay="1700"/>
+                <trip adr="3106" loco="25,0,10" route="2300" sens1="924" sens2="902" startdelay="3000" stopdelay="700"/>
             </trips>
             <timetables>
-                <timetable adr="3300" next="0" time="3,3,3,3,3,3" trip="3102,3101,3104,3103,3105,3100"/>
-                <timetable adr="3301" next="0" time="10,10,10,10,10,10" trip="3101,3102,3103,3104,3105,3100"/>
+                <timetable adr="3300" next="0" trip="3102,3101,3104,3103,3105,3100"/>
+                <timetable adr="3301" next="0" trip="3101,3102,3103,3104,3105,3100"/>
             </timetables>
         </panel>
     </panels>

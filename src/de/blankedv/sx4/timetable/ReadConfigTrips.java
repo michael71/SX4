@@ -233,41 +233,6 @@ public class ReadConfigTrips {
         return Integer.parseInt(a.getNodeValue());
     }
 
-    private static Loco parseLoco(Node item) {
-//<loco adr="97" name="SchoenBB" mass="2" vmax="120" />
-        Loco lo = new Loco();
-
-        NamedNodeMap attributes = item.getAttributes();
-        for (int i = 0; i < attributes.getLength(); i++) {
-            Node theAttribute = attributes.item(i);
-            switch (theAttribute.getNodeName()) {
-                case "adr":
-                case "addr":
-                    lo.setAddr(getIntValueOfNode(theAttribute));
-                    break;
-                case "name":
-                    lo.setName(theAttribute.getNodeValue());
-                    break;
-                case "mass":
-                    lo.setMass(getIntValueOfNode(theAttribute));
-                    break;
-                case "sens2":
-                    lo.setVmax(getIntValueOfNode(theAttribute));
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        // check if Loco is valid
-        if (lo.getAddr() != INVALID_INT) {
-            // we have the minimum info needed
-            return lo;
-        } else {
-            return null;
-        }
-    }
-
     private static Trip parseTrip(Node item) {
 
         Trip t = new Trip();
@@ -286,7 +251,9 @@ public class ReadConfigTrips {
                 t.sens2 = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("loco")) {
                 t.locoString = theAttribute.getNodeValue();
-            } else if (theAttribute.getNodeName().equals("stopdelay")) {
+            } else if (theAttribute.getNodeName().equals("startdelay")) {
+                t.startDelay = getIntValueOfNode(theAttribute);
+            }else if (theAttribute.getNodeName().equals("stopdelay")) {
                 t.stopDelay = getIntValueOfNode(theAttribute);
             }
         }
@@ -299,9 +266,13 @@ public class ReadConfigTrips {
                 && (t.convertLocoData())) {
             // we have the minimum info needed
 
+            if (t.startDelay == INVALID_INT) {
+                t.startDelay = 0;
+            }
             if (t.stopDelay == INVALID_INT) {
                 t.stopDelay = 0;
             }
+
             return t;
         } else {
             error("invalid trip, adr=" + t.adr);
@@ -312,31 +283,25 @@ public class ReadConfigTrips {
     private static Timetable parseTimetable(Node item) {
 
         int adr = INVALID_INT;
-        String sTime = "";
         String sTrip = "";
-        String sNext = "";
+        int next = 0;
 
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Node theAttribute = attributes.item(i);
             if (theAttribute.getNodeName().equals("adr")) {
                 adr = getIntValueOfNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("time")) {
-                sTime = theAttribute.getNodeValue();
             } else if (theAttribute.getNodeName().equals("trip")) {
                 sTrip = theAttribute.getNodeValue();
             } else if (theAttribute.getNodeName().equals("next")) {
-                sNext = theAttribute.getNodeValue();
+                next = getIntValueOfNode(theAttribute);
             }
         }
 
         // check if Trip information is complete
-        if ((adr != INVALID_INT)
-                && (!sTime.isEmpty())
-                && (!sTrip.isEmpty())) {
+        if ((adr != INVALID_INT) && (!sTrip.isEmpty())) {
             // we have the minimum info needed
-
-            return new Timetable(adr, sTime, sTrip, sNext);
+            return new Timetable(adr, sTrip, next);
         } else {
             error("invalid Timetable, adr=" + adr);
             return null;

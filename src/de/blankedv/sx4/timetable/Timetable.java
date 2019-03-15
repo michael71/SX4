@@ -37,8 +37,8 @@ import javafx.util.Duration;
 public class Timetable {
 
     int adr = INVALID_INT;
-    ArrayList<Integer> startTime = new ArrayList<>();
     ArrayList<Integer> tripAdrs = new ArrayList<>();
+    int nextTT = 0;
     int currentTripIndex = 0;
     Trip cTrip = null;
     TT_State state = INACTIVE;
@@ -47,36 +47,22 @@ public class Timetable {
 
     int nextTimetable = INVALID_INT;
 
-    Timetable(int adr, String time, String trip, String next) {
+    Timetable(int adr, String trip, int next) {
         // parse "time" to "startTime" array
         tripsString = trip;
-        String[] sTime = time.split(",");
         String[] sTrip = trip.split(",");
-        startTime = new ArrayList<>();
+        nextTT = next;  // next timetable after this one is finished
 
-        if (sTime.length != sTrip.length) {
-            error("number of start times in timetable does not match number of trips!");
-            adr = INVALID_INT;
-        } else {
-            this.adr = adr;
-            for (String s2 : sTime) {
-                int t = INVALID_INT;
-                try {
-                    t = Integer.parseInt(s2);
-                } catch (NumberFormatException ex) {
-                }
-                startTime.add(t);
-            }
+        this.adr = adr;
 
-            for (String s2 : sTrip) {
-                int t = INVALID_INT;
-                try {
-                    t = Integer.parseInt(s2);
-                } catch (NumberFormatException ex) {
-                }
-                //debug("tripIDs, added #" + t);
-                tripAdrs.add(t);
+        for (String s2 : sTrip) {
+            int t = INVALID_INT;
+            try {
+                t = Integer.parseInt(s2);
+            } catch (NumberFormatException ex) {
             }
+            //debug("tripIDs, added #" + t);
+            tripAdrs.add(t);
         }
 
         state = INACTIVE;
@@ -180,7 +166,7 @@ public class Timetable {
         // get trip 
         try {
             cTrip = Trip.get(tripAdrs.get(currentTripIndex));
-            debug("found next trip in timetable - trip="+cTrip.adr);
+            debug("found next trip in timetable - trip=" + cTrip.adr);
         } catch (IndexOutOfBoundsException ex) {
             cTrip = null;
         }
