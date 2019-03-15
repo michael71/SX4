@@ -23,6 +23,8 @@ import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.*;
 import de.blankedv.sx4.SXUtils;
 import static de.blankedv.sx4.timetable.Vars.*;
+import static de.blankedv.sx4.timetable.VarsFX.allTimetables;
+import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,39 +46,9 @@ import org.w3c.dom.NodeList;
  *
  * @author mblank
  */
-public class ReadConfig {
+public class ReadConfigTrips {
 
-     
-    public static String readPanelName(String fname) {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder;
-
-        try {
-            builder = factory.newDocumentBuilder();
-        } catch (ParserConfigurationException e1) {
-            error("ParserConfigException Exception - " + e1.getMessage());
-            return "ERROR: ParserConfigException";
-        }
-        
-        Document doc;
-        try {
-            doc = builder.parse(new File(fname));
-            return parsePanelName(doc);
-        } catch (SAXException e) {
-            error("SAX Exception - " + e.getMessage());
-            return "ERROR: SAX Exception";
-        } catch (IOException e) {
-            error("IO Exception - " + e.getMessage());
-            return "ERROR: IO Exception";
-        } catch (Exception e) {
-            error("other Exception - " + e.getMessage());
-            return "ERROR: other Exception";
-        }
-
-    }
-
-    // code template taken from lanbahnPanel
-    public static String readXML(String fname) {
+    public static String readTripsAndTimetables(String fname)   {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
 
@@ -89,12 +61,9 @@ public class ReadConfig {
         Document doc;
         try {
             doc = builder.parse(new File(fname));
-            parseLocos(doc);
-            parsePanelElements(doc);
-            parseRoutes(doc); // can be done only after all turnouts, signals etc have been read
-            // elements have been read
-            Route.calcOffendingRoutes(); // calculate offending routes
-            parseCompRoutes(doc); // can be done only after all routes have been read
+            parseTripsAndTimetable(doc);
+              // sort the trips by ID
+            Collections.sort(allTrips, (a, b) -> b.compareTo(a));
 
         } catch (SAXException e) {
             error("SAX Exception - " + e.getMessage());
@@ -109,84 +78,43 @@ public class ReadConfig {
 
         return "OK";
     }
-
    
-    private static String parsePanelName(Document doc) {
-    
-        NodeList items;
-        Element root = doc.getDocumentElement();
-
-        return parsePanelAttribute(root, "filename");
-
-    }
-    
-    private static void parseLocos(Document doc) {
-        // <loco adr="97" name="SchoenBB" mass="2" vmax="120" />
-        
-        allLocos.clear();
-
-        NodeList items;
-        Element root = doc.getDocumentElement();
-        
-        items = root.getElementsByTagName("loco");
-        for (int i = 0; i < items.getLength(); i++) {
-            Loco loco = parseLoco(items.item(i));
-            if (loco != null ) allLocos.add(loco);
-        }
-        debug("config: " + allLocos.size() + " locos");
-
-    }
-    // code template from lanbahnPanel
-    private static void parsePanelElements(Document doc) {
-        
-        panelElements.clear();
+       
+     // code template from lanbahnPanel
+    private static void parseTripsAndTimetable(Document doc) {
+ 
+        allTrips.clear();
+        allTimetables.clear();
 
         NodeList items;
         Element root = doc.getDocumentElement();
 
-        items = root.getElementsByTagName("panel");
-        if (items.getLength() == 0) {
-            return;
-        }
-
-        panelName = parsePanelAttribute(items.item(0), "name");
-
+        items = root.getElementsByTagName("trip");
         if (CFG_DEBUG) {
-            debug("panelname =" + panelName);
-        }
-
-        // NamedNodeMap attributes = item.getAttributes();
-        // Node theAttribute = attributes.items.item(i);
-        // look for TrackElements - this is the lowest layer
-        items = root.getElementsByTagName("turnout");
-        if (CFG_DEBUG) {
-            debug("config: " + items.getLength() + " turnouts");
+            debug("config: " + items.getLength() + " trips");
         }
         for (int i = 0; i < items.getLength(); i++) {
-            addPanelElement("T", items.item(i));
+            Trip tr = parseTrip(items.item(i));
+            if (tr != null) {
+                if (CFG_DEBUG) debug("trip adr=" + tr.adr);
+                allTrips.add(tr);
+            }
         }
 
-        items = root.getElementsByTagName("signal");
+        items = root.getElementsByTagName("timetable");
         if (CFG_DEBUG) {
-            debug("config: " + items.getLength() + " signals");
-        }
-
-        for (int i = 0; i < items.getLength(); i++) {
-            addPanelElement("Si", items.item(i));
-        }
-
-        items = root.getElementsByTagName("sensor");
-        if (CFG_DEBUG) {
-            debug("config: " + items.getLength() + " sensors");
+            debug("config: " + items.getLength() + " timetables");
         }
         for (int i = 0; i < items.getLength(); i++) {
-            addPanelElement("BM", items.item(i));
+            Timetable ti = parseTimetable(items.item(i));
+            if (ti != null) {
+                if (CFG_DEBUG) debug("timetable adr=" + ti.adr);
+                allTimetables.add(ti);
+            }
         }
-
 
     }
-    
-    
+
     // code from lanbahnPanel
     private static int getIntValueOfNode(Node a) {
         return Integer.parseInt(a.getNodeValue());

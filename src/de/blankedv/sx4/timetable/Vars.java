@@ -19,8 +19,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package de.blankedv.sx4.timetable;
 
 import java.util.ArrayList;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 public class Vars {
 
@@ -40,14 +38,11 @@ public class Vars {
     static final int RT_INACTIVE = 0;
     static final int RT_ACTIVE = 1;
 
-    public static ArrayList<PanelElement> panelElements = new ArrayList<>();
-    public static ArrayList<Loco> allLocos =  new ArrayList<>();
+    public static final ArrayList<PanelElement> panelElements = new ArrayList<>();
+    public static final ArrayList<Loco> allLocos =  new ArrayList<>();
 
-    public static final ObservableList<Trip> allTrips = FXCollections.observableArrayList();
-    public static final ObservableList<Timetable> allTimetables  = FXCollections.observableArrayList();
-
-    public static final ObservableList<Route> allRoutes  = FXCollections.observableArrayList();
-    public static final ObservableList<CompRoute> allCompRoutes = FXCollections.observableArrayList();
+    public static final ArrayList<Route> allRoutes  = new ArrayList<>();
+    public static final ArrayList<CompRoute> allCompRoutes = new ArrayList<>();
 
 
 }

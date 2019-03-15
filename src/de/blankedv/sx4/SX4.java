@@ -32,7 +32,6 @@ import de.blankedv.sx4.timetable.PanelElement;
 
 import de.blankedv.sx4.timetable.ReadConfig;
 import de.blankedv.sx4.timetable.Route;
-import de.blankedv.sx4.timetable.Timetable;
 import de.blankedv.sx4.timetable.Trip;
 import de.blankedv.sx4.timetable.TripsTable;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
@@ -40,9 +39,6 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.prefs.Preferences;
-import javafx.animation.Timeline;
-import javafx.application.Application;
-import javafx.application.Platform;
 
 /**
  *
@@ -101,6 +97,17 @@ public class SX4 {
 
         EvalOptions.sx4options(args);
 
+        boolean fxresult = false;
+        if (guiEnabled) {
+            fxresult = FXGUI.init();
+            if (fxresult == false) {
+                guiEnabled = false;
+                error("could not start javafx");
+            } else {
+                debug("starting javafx");
+            }
+        }
+
         boolean result = false;
         sxi = initSXInterface(portName, baudrate);
         if (sxi != null) {
@@ -116,16 +123,18 @@ public class SX4 {
             error("no panel...xml file found, NOT starting config server");
             if (routingEnabled) {
                 routingEnabled = false;  // override setting
-                debug("routing disabled - because there is no config file");
+                error("routing and gui disabled - because there is no config file");
+                guiEnabled = false;
             }
         } else {
             if (!ReadConfig.readXML(configFilename).equals("OK")) {
                 // config has to be read successfully - a requirement for enabling routing
                 if (routingEnabled) {
                     routingEnabled = false;  // override setting
-                    debug("routing disabled - because config file could not be read");
+                    error("routing disabled - because config file could not be read");
                 }
             }
+
             loadTrainNumbers();  // sensors must be know when setting train numbers
 
             try {
@@ -134,7 +143,7 @@ public class SX4 {
                 error(ex.getMessage());
             }
         }
-
+// TODO may have to be changed in Java9 to (?)
         myips = NIC.getmyip();
 
         if (myips.isEmpty()) {
@@ -147,20 +156,7 @@ public class SX4 {
         wifiThrottle = new WifiThrottle();
 
         if (guiEnabled) {
-            // JavaFX is only started when GUI is needed - to be able to run the
-            // core-sx4 deamon without javafx
-            com.sun.javafx.application.PlatformImpl.startup(() -> {
-            });  // TODO may have to be changed in Java9 to (?)
-            /* Platform.startup(() ->
-		{
-   		 // This block will be executed on JavaFX Thread
-		}  */
-            new Thread() {
-                @Override
-                public void run() {
-                    Application.launch(TripsTable.class, args);
-                }
-            }.start();
+            FXGUI.start(args);
         }
 
         Timer timer = new java.util.Timer();
