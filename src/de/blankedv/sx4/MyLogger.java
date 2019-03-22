@@ -40,9 +40,9 @@ public class MyLogger extends Logger {
             writer = new OutputStreamWriter(new FileOutputStream(path));
         } catch (FileNotFoundException ex) {
             error(ex.getMessage());
-            System.out.println("could not open "+path+" - using log.txt instead");
             try {
                 writer = new OutputStreamWriter(new FileOutputStream("log.txt"));
+                error("could not open "+path+" - using log.txt instead");
             } catch (FileNotFoundException ex1) {
                 error(ex.getMessage());
             }

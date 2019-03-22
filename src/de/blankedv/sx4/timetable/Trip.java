@@ -56,6 +56,8 @@ public class Trip implements Comparable<Trip> {
     Loco loco = null;
     final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
     int currSpeedPercent = 0;
+    
+    String message = "";
 
     enum TripState {
         INACTIVE, ACTIVE, WAITING
@@ -71,6 +73,10 @@ public class Trip implements Comparable<Trip> {
 
     public void setAdr(int adr) {
         this.adr = adr;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     public int getRoute() {
@@ -186,31 +192,37 @@ public class Trip implements Comparable<Trip> {
 
     public boolean start() {
         if (SXData.getActualPower() == false) {
-            error("ERROR: keine Gleisspannung, kann Fahrt nicht starten!");
+            message = "ERROR: keine Gleisspannung, kann Fahrt nicht starten!";
+            error(message);
             return false;
         }
         PanelElement startSensor = PanelElement.getByAddress(sens1);
 
         if (startSensor.getState() == STATE_FREE) {
-            error("cannot start trip id=" + adr + " because no train on start-sensor " + sens1);
+            
+            message = "cannot start trip id=" + adr + " because no train on start-sensor " + sens1;
+            error(message);
                 return false;
         }
 
         int trainNumber = startSensor.getTrain();
         if (trainNumber != locoAddr) {
-            error("cannot start trip id=" + adr + " because WRONG train=" + trainNumber + " on start-sensor " + sens1);
+            message = "cannot start trip id=" + adr + " because WRONG train=" + trainNumber + " on start-sensor " + sens1;
+            error(message);
             return false;
         }
 
         boolean couldSetRoutes = setRouteID(route);
         if (!couldSetRoutes) {
-            error("cannot start trip id=" + adr + " cannot set (comp)route id=" + route);
+            message = "cannot start trip id=" + adr + " cannot set (comp)route id=" + route;
+            error(message);
             return false;
         }
 
         // aquire locoString and start 'full' speed
         startLocoDelayed();
-        debug("starting trip id=" + adr );
+        message = "starting trip id=" + adr ;
+        debug(message);
         state = TripState.ACTIVE;
         return true;
     }

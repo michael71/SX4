@@ -46,6 +46,8 @@ public class Timetable {
     final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
 
     int nextTimetable = INVALID_INT;
+    
+    String message = "";
 
     Timetable(int adr, String trip, int next) {
         // parse "time" to "startTime" array
@@ -76,7 +78,8 @@ public class Timetable {
         cTrip = Trip.get(tripAdrs.get(currentTripIndex));
 
         if (cTrip == null) {
-            error("in Timetable - no trip found for adr=" + currentTripIndex);
+            message = "in Timetable - no trip found for adr=" + currentTripIndex;
+            error(message);
             return false;
         }
 
@@ -89,6 +92,12 @@ public class Timetable {
         return isActive();
     }
 
+    public String getMessage() {
+        return message;
+    }
+    
+    
+
     public boolean stop() {
         // finish current timetable
         // TODO Fixed = timetable0 !!
@@ -97,12 +106,14 @@ public class Timetable {
         stopAllTimelines();
 
         if (cTrip == null) {
-            debug("stopping timetable=" + adr + " (no current trip)");
+            message = "stopping timetable=" + adr + " (no current trip)";
+            debug(message);
             return false;
         } else {
 
             cTrip.finish();
-            debug("finishing timetable=" + adr);
+            message = "finishing timetable=" + adr;
+            debug(message);
             return true;
         }
 
@@ -121,19 +132,23 @@ public class Timetable {
             state = ACTIVE;
             boolean result = t.start();
             if (result) {
+                message = "trip started";
                 state = ACTIVE;
                 return true;
             } else {
+                message = t.getMessage();
                 state = INACTIVE;
                 return false;
             }
 
         } else {
             if (start != STATE_OCCUPIED) {
-                debug("start sensor (" + t.sens1 + ") free, we CANNOT start the trip");
+                message = "start sensor (" + t.sens1 + ") free, we CANNOT start the trip";
+                debug(message);
             }
             if (end != STATE_FREE) {
-                debug("end sensor (" + t.sens2 + ")is not free, we CANNOT start the trip");
+                message = "end sensor (" + t.sens2 + ")is not free, we CANNOT start the trip";
+                debug(message);
             }
             return false;
         }

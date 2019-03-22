@@ -84,7 +84,7 @@ public class TripsTable extends Application {
     private final ImageView ivRefresh = new ImageView(refresh);
     private final Button btnRefresh = new Button("Fahrten neu laden");
     private final ComboBox cbSelectTimetable = new ComboBox();
-    private final Button btnChangeTrain = new Button("Zug temp. ändern");
+    private final Button btnChangeTrain = new Button("Zug temp. austauschen");
     private final Button btnSetTrain = new Button("Zug setzen");
     private final Button btnReset = new Button("Reset");
     final Button btnStart = new Button("Start");
@@ -256,7 +256,6 @@ public class TripsTable extends Application {
         tableView.getColumns().add(stopDelayCol);
         tableView.getColumns().add(locoCol);
 
-
         tableView.setEditable(true);
         //idCol.setCellFactory(TextFieldTableCell.forTableColumn());
         /*adrCol.setCellFactory(TextFieldTableCell.forTableColumn(myStringIntConverter));
@@ -293,6 +292,15 @@ public class TripsTable extends Application {
         tableView.setRowFactory((TableView<Trip> tableView1) -> {
             final TableRow<Trip> row = new TableRow<>();
             final ContextMenu contextMenu = new ContextMenu();
+            final MenuItem setTrainMenuItem = new MenuItem("Zug setzen");
+            setTrainMenuItem.setOnAction((ActionEvent event) -> {
+                final Trip tr = row.getItem();
+                int resLoco = SelectLocoDialog.open(primaryStage,tr.sens1);
+                if ((resLoco != INVALID_INT) && (resLoco != 0)) {
+                    PanelElement.setTrain(tr.sens1, resLoco);
+                    debug("Sensor "+tr.sens1+" belegt mit Zug#"+resLoco);
+                };
+            });
             final MenuItem startMenuItem = new MenuItem("Starte diese Fahrt");
             startMenuItem.setOnAction((ActionEvent event) -> {
                 final Trip tr = row.getItem();
@@ -303,17 +311,16 @@ public class TripsTable extends Application {
                 final Trip tripShown = row.getItem();
                 tripShown.finish();
             });
-            contextMenu.getItems().addAll(startMenuItem, stopMenuItem);
+            contextMenu.getItems().addAll(setTrainMenuItem, startMenuItem, stopMenuItem);
             // Set context menu on row, but use a binding to make it only show for non-empty rows:
             row.contextMenuProperty().bind(
                     Bindings.when(row.emptyProperty())
                             .then((ContextMenu) null)
                             .otherwise(contextMenu)
             );
-            
+
             return row;
         });
-  
 
         adrCol.setCellValueFactory(new PropertyValueFactory<>("adr"));
         routeCol.setCellValueFactory(new PropertyValueFactory<>("route"));
@@ -373,7 +380,12 @@ public class TripsTable extends Application {
             btnStart.setDisable(true);
             cbSelectTimetable.setDisable(true);
             if (ttSelected == null) {
-                System.out.println("ERROR: not timetable -> cannot start any trip");
+                System.out.println("ERROR: no timetable -> cannot start any trip");
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error alert");
+                alert.setHeaderText(null);
+                alert.setContentText("no timetable -> cannot start any trip");
+                alert.showAndWait();
             } else {
                 ttSelected.start();
                 if (ttSelected.isActive() == false) {
@@ -381,6 +393,11 @@ public class TripsTable extends Application {
                     btnStop.setDisable(true);
                     btnStart.setDisable(false);
                     cbSelectTimetable.setDisable(false);
+                    Alert alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Error alert");
+                    alert.setHeaderText(null);
+                    alert.setContentText(ttSelected.getMessage());
+                    alert.showAndWait();
                 }
             }
         }
@@ -452,6 +469,7 @@ public class TripsTable extends Application {
             SensorLocoPair res = SetTrainDialog.open(primaryStage);
             if (res.sensor != INVALID_INT) {
                 PanelElement.setTrain(res.sensor, res.loco);
+                debug("Sensor "+res.sensor+" belegt mit Zug#"+res.loco);
             };
         }
         );

@@ -115,7 +115,7 @@ public class SX4 {
             result = sxi.open();
         }
         if (!result) {
-            error("SX4 program ends.");
+            error("Could not open SX-interface, SX4 program ends.");
             System.exit(1);
         }
         configFilename = SXUtils.getConfigFilename();
@@ -195,7 +195,7 @@ public class SX4 {
                     running = false;  // shutdown all threads
                     server.stopClients();
                     Thread.sleep(200);
-                    error("SX4 ends.");
+                    info("Shutdown, SX4 ends.");
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                 }
@@ -299,7 +299,7 @@ public class SX4 {
     private static boolean isDebugFlagSet(String[] args) {
         for (String s : args) {
             //System.out.println(s);
-            if (s.equals("-d")) {
+            if (s.equals("-d") || s.equals("--debug")) {
                 return true;
             }
         }
