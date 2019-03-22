@@ -24,6 +24,7 @@ import static de.blankedv.sx4.Constants.TT_State.*;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_FREE;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_OCCUPIED;
 import de.blankedv.sx4.timetable.Trip.TripState;
+import static de.blankedv.sx4.timetable.VarsFX.allTimetables;
 import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 import java.util.ArrayList;
 import javafx.animation.KeyFrame;
@@ -46,7 +47,9 @@ public class Timetable {
     final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
 
     int nextTimetable = INVALID_INT;
-    
+
+    private TripsTable tripsTable = null;
+
     String message = "";
 
     Timetable(int adr, String trip, int next) {
@@ -71,7 +74,9 @@ public class Timetable {
     }
 
     // start a new timetable with 0 .. n trips, return true if successful
-    public boolean start() {
+    public boolean start(TripsTable ttable) {
+
+        tripsTable = ttable;  // store for reference, we need it at end of this tt.
 
         // start first trip (index 0)
         currentTripIndex = 0;
@@ -95,8 +100,6 @@ public class Timetable {
     public String getMessage() {
         return message;
     }
-    
-    
 
     public boolean stop() {
         // finish current timetable
@@ -176,6 +179,13 @@ public class Timetable {
             // the was the last trip.
             state = INACTIVE;
             debug("last trip of timetable was finished.");
+            for (Timetable tt : allTimetables) {
+                if (tt.adr == nextTT) {
+                    debug("next timetable=" + nextTT);
+                    tripsTable.startNewTimetable(tt);
+                    return true;
+                }
+            }
             return true;
         }
         // get trip 
@@ -195,7 +205,16 @@ public class Timetable {
 
     @Override
     public String toString() {
-        return "Fahrplan(" + adr + "): " + tripsString;
+        String nextS = "";
+        if (nextTT > 0) {
+            nextS += "(danach Fahrplan" + nextTT + ")";
+        }
+        if (state == INACTIVE) {
+            return "Fahrplan(" + adr + "): " + tripsString + nextS;
+        } else {
+
+            return "Fahrplan(" + adr + "): " + tripsString + "läuft." + nextS;
+        }
     }
 
     public void timetableCheck() {

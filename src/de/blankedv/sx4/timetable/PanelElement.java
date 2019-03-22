@@ -371,6 +371,16 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
         }
         return count;
     }
+    
+    public static int getTrainFromSensor(int addr) {
+        int tr = 0;
+        for (PanelElement pe : panelElements) {
+            if ((pe.getAdr() == addr) && (pe.isSensor())) {
+                return pe.getTrain();
+            }
+        }
+        return 0;
+    }
 
     @Override
     public int compare(PanelElement o1, PanelElement o2) {

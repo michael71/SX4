@@ -83,7 +83,7 @@ public class TripsTable extends Application {
     private final ImageView ivPowerState = new ImageView();
     private final ImageView ivRefresh = new ImageView(refresh);
     private final Button btnRefresh = new Button("Fahrten neu laden");
-    private final ComboBox cbSelectTimetable = new ComboBox();
+    private final ComboBox<String> cbSelectTimetable = new ComboBox<>();
     private final Button btnChangeTrain = new Button("Zug temp. austauschen");
     private final Button btnSetTrain = new Button("Zug setzen");
     private final Button btnReset = new Button("Reset");
@@ -159,7 +159,7 @@ public class TripsTable extends Application {
                 status.setText("kein Fahrplan.");
             } else if (ttSelected.isActive() == true) {
                 btnRefresh.setDisable(true);
-                status.setText(ttSelected.toString() + " läuft.");
+                status.setText(ttSelected.toString());
                 btnStop.setDisable(false);
                 btnStart.setDisable(true);
                 cbSelectTimetable.setDisable(true);
@@ -213,6 +213,14 @@ public class TripsTable extends Application {
 
     public void selectTrip(Trip tr) {
 
+    }
+    
+    
+    public void startNewTimetable(Timetable newTT) {
+        ttSelected = newTT;
+        cbSelectTimetable.getSelectionModel().select("Fahrplan " + ttSelected.adr);
+        ttSelected.start(this);
+        
     }
 
     private void createDataTables() {
@@ -387,7 +395,7 @@ public class TripsTable extends Application {
                 alert.setContentText("no timetable -> cannot start any trip");
                 alert.showAndWait();
             } else {
-                ttSelected.start();
+                ttSelected.start(this);
                 if (ttSelected.isActive() == false) {
                     // reset button states if start was not successful
                     btnStop.setDisable(true);

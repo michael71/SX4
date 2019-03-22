@@ -15,15 +15,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package de.blankedv.sx4.timetable;
 
+import static com.esotericsoftware.minlog.Log.debug;
+import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.timetable.Vars.allLocos;
 import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.util.ArrayList;
 import java.util.Collections;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -44,18 +47,16 @@ import javafx.util.Pair;
  * @author mblank
  */
 public class SetTrainDialog {
-    
 
-  
     final static Spinner<Integer> loco = new Spinner<>(0, 9, 0);
     final static Spinner<Integer> spinner10 = new Spinner<>(0, 9, 0);
     final static Spinner<Integer> spinner1 = new Spinner<>(0, 9, 0);
     final static Label lblAdr = new Label(" Adresse");
- 
+
     static SensorLocoPair open(Stage primaryStage) {
-        
+
         final SensorLocoPair result = new SensorLocoPair();
-        
+
         ArrayList<Integer> sensorAddresses = new ArrayList<>();
         // get all sensors
         for (PanelElement pe : panelElements) {
@@ -63,28 +64,51 @@ public class SetTrainDialog {
                 sensorAddresses.add(pe.getAdr());
             }
         }
+        
+        if (sensorAddresses.size() == 0) {
+            error("no sensors, cannot set train");
+            return result;
+        }
         Collections.sort(sensorAddresses);
         ArrayList<Integer> locoAddresses = new ArrayList<>();
         // get all locos from all trips
         locoAddresses.add(0);  // 0 == no loco
         for (Loco lo : allLocos) {
-            int a =  lo.getAddr();
+            int a = lo.getAddr();
             if (!locoAddresses.contains(a)) {
-            locoAddresses.add(a);
+                locoAddresses.add(a);
             }
         }
         Collections.sort(locoAddresses);
-        
-        final ChoiceBox<Integer> sensors = new ChoiceBox<Integer>(FXCollections.observableArrayList(
-               sensorAddresses)
-        );
-        sensors.getSelectionModel().select(0);
 
-        final ChoiceBox<Integer> locos = new ChoiceBox<Integer>(FXCollections.observableArrayList(
-               locoAddresses)
+        final ChoiceBox<Integer> sensors = new ChoiceBox<Integer>(FXCollections.observableArrayList(
+                sensorAddresses)
         );
-        locos.getSelectionModel().select(0);
+        final ChoiceBox<Integer> locos = new ChoiceBox<Integer>(FXCollections.observableArrayList(
+                locoAddresses)
+        );
         
+        sensors.getSelectionModel().select(0);
+        sensors.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Integer>() {
+            @Override
+            public void changed(ObservableValue<? extends Integer> observable, Integer oldValue, Integer newValue) {
+                debug("sens="+newValue+" train="+PanelElement.getTrainFromSensor(newValue));
+                int l = PanelElement.getTrainFromSensor(newValue);
+                locos.getSelectionModel().select(new Integer(l));
+            }
+        });
+       
+
+        
+        if (sensorAddresses.size() >= 1) {
+            int l = PanelElement.getTrainFromSensor(sensorAddresses.get(0));
+            locos.getSelectionModel().select(new Integer(l));
+            debug("sens=" + sensorAddresses.get(0) + " loco=" + l);
+        } else {
+            locos.getSelectionModel().select(0);
+            debug("no sensorAddresses");
+        }
+
         Label lblSensor = new Label("Sensor");
         lblSensor.setAlignment(Pos.CENTER);
         Label lblLoco = new Label("Loco");
@@ -105,7 +129,6 @@ public class SetTrainDialog {
         ColumnConstraints col2 = new ColumnConstraints();
         col2.setPercentWidth(50);
         col2.setHalignment(HPos.CENTER);
-      
 
         grid.getColumnConstraints().addAll(col1, col2);
 
@@ -114,7 +137,7 @@ public class SetTrainDialog {
         Button btnCancel = new Button("zurück");
 
         Button btnSave = new Button("  OK  ");
-        
+
         grid.add(btnCancel, 0, 3);
         grid.add(btnSave, 1, 3);
         //GridPane.setMargin(btnCancel, new Insets(5, 5, 5, 5));
