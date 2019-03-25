@@ -207,13 +207,13 @@ public class Timetable {
     public String toString() {
         String nextS = "";
         if (nextTT > 0) {
-            nextS += "(danach Fahrplan" + nextTT + ")";
+            nextS += " (danach Fahrplan " + nextTT + ")";
         }
         if (state == INACTIVE) {
             return "Fahrplan(" + adr + "): " + tripsString + nextS;
         } else {
 
-            return "Fahrplan(" + adr + "): " + tripsString + "läuft." + nextS;
+            return "Fahrplan(" + adr + "): " + tripsString + " läuft." + nextS;
         }
     }
 

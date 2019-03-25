@@ -20,6 +20,7 @@ package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
+import static com.esotericsoftware.minlog.Log.info;
 import static de.blankedv.sx4.Constants.*;
 import de.blankedv.sx4.SXData;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_FREE;
@@ -395,7 +396,7 @@ public class Trip implements Comparable<Trip> {
 
     // STOP timers, like loco speed increase, decrease, start new trip etc.
     public void stopAllTimelines() {
-        error("stopping trip="+adr+" Timelines");
+        info("stopping trip="+adr+" Timelines");
         for (Timeline t : myTimelines) {
             t.stop();
         }
