@@ -30,7 +30,6 @@ import static de.blankedv.sx4.timetable.Vars.panelName;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -41,8 +40,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -61,7 +58,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 
@@ -145,14 +141,7 @@ public class TripsTable extends Application {
                 ivPowerState.setImage(red);
             }
 
-            // look for active trip and enable/disable refresh button and start/stop buttons
-            int tripsActive = INVALID_INT;
-            for (Trip tr : allTimetableTrips) {
-                if (tr.state != TripState.INACTIVE) {
-                    tripsActive = tr.adr;
-                    tableView.getSelectionModel().select(tr);
-                }
-            }
+            tableView.getSelectionModel().select(ttSelected.getCurrentTripIndex());
             if (ttSelected == null) {
                 btnStop.setDisable(true);
                 btnStart.setDisable(true);
@@ -183,7 +172,7 @@ public class TripsTable extends Application {
             status.setText(ttSelected.toString());
             cbTimetables.clear();
             for (Timetable tt : allTimetables) {
-                cbTimetables.add("Fahrplan " + tt.adr);
+                cbTimetables.add("Fahrplan " + tt.getAdr());
             }
             cbSelectTimetable.getItems().clear();
             cbSelectTimetable.getItems().addAll(cbTimetables);
@@ -198,29 +187,25 @@ public class TripsTable extends Application {
 
     private void orderTrips(Timetable tt) {
         allTimetableTrips.clear();
-        for (Integer a : tt.tripAdrs) {
-            for (Trip tr : allTrips) {
-                if (a == tr.adr) {
-                    allTimetableTrips.add(tr);
-                }
-            }
-        }
+        allTimetableTrips.addAll(tt.getTripsList());
     }
 
     public void show() {
         tripWindow.show();
     }
 
-    public void selectTrip(Trip tr) {
 
-    }
-    
-    
-    public void startNewTimetable(Timetable newTT) {
-        ttSelected = newTT;
-        cbSelectTimetable.getSelectionModel().select("Fahrplan " + ttSelected.adr);
-        ttSelected.start(this);
-        
+    public boolean startNewTimetable(int timetableAdrToStart) {
+        debug("next timetable=" + timetableAdrToStart);
+        for (Timetable tt : allTimetables) {
+            if (tt.getAdr() == timetableAdrToStart) {
+                ttSelected = tt;
+                cbSelectTimetable.getSelectionModel().select("Fahrplan " + ttSelected.getAdr());
+                ttSelected.start(this);
+                return true; // timetable found
+            }
+        }
+        return false;  // did not find a timetable with this address
     }
 
     private void createDataTables() {
@@ -232,29 +217,6 @@ public class TripsTable extends Application {
         TableColumn<Trip, String> locoCol = new TableColumn<>("Zug,Dir,Speed");
         TableColumn<Trip, Integer> startDelayCol = new TableColumn<>("StartDelay[ms]");
         TableColumn<Trip, Integer> stopDelayCol = new TableColumn<>("StopDelay[ms]");
-        /* final TextFormatter<String> formatter = new TextFormatter<String>(change -> {
-            change.setText(change.getText().replaceAll("[^0-9.,]", ""));
-            return change;
-
-        }); */
-        StringConverter myStringIntConverter = new StringConverter<Integer>() {
-            @Override
-            public String toString(Integer object) {
-                if (object == null) {
-                    return "-";
-                }
-                return "" + object;
-            }
-
-            @Override
-            public Integer fromString(String string) {
-                try {
-                    return Integer.parseInt(string);
-                } catch (NumberFormatException e) {
-                    return null;
-                }
-            }
-        };
 
         tableView.getColumns().add(adrCol);
         tableView.getColumns().add(routeCol);
@@ -265,37 +227,7 @@ public class TripsTable extends Application {
         tableView.getColumns().add(locoCol);
 
         tableView.setEditable(true);
-        //idCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        /*adrCol.setCellFactory(TextFieldTableCell.forTableColumn(myStringIntConverter));
-        adrCol.setOnEditCommit(new EventHandler<CellEditEvent<Route, Integer>>() {
-            @Override
-            public void handle(CellEditEvent<Route, Integer> ev) {
-                ((Route) ev.getTableView().getItems().get(
-                        ev.getTablePosition().getRow())).setRoute("" + ev.getNewValue());
-            }
-        }); */
 
- /*routeCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        routeCol.setOnEditCommit(new EventHandler<CellEditEvent<Trip, String>>() {
-            @Override
-            public void handle(CellEditEvent<Route, String> ev) {
-                ((Trip) ev.getTableView().getItems().get(
-                        ev.getTablePosition().getRow())).setRoute(ev.getNewValue());
-            }
-        });
-        sensorsCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        sensorsCol.setOnEditCommit(new EventHandler<CellEditEvent<Trip, String>>() {
-            @Override
-            public void handle(CellEditEvent<Route, String> ev) {
-                ((Trip) ev.getTableView().getItems().get(
-                        ev.getTablePosition().getRow())).setSensors(ev.getNewValue());
-            }
-        });
-            tableViewData[i].setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-            chanCol.setMaxWidth(1f * Integer.MAX_VALUE * 18); // 30% width
-            chanCol.setStyle("-fx-alignment: CENTER;");
-            dataCol.setMaxWidth(1f * Integer.MAX_VALUE * 18); // 70% width
-            dataCol.setStyle("-fx-alignment: CENTER;"); */
         tableView.setCenterShape(true);
         tableView.setRowFactory((TableView<Trip> tableView1) -> {
             final TableRow<Trip> row = new TableRow<>();
@@ -303,10 +235,10 @@ public class TripsTable extends Application {
             final MenuItem setTrainMenuItem = new MenuItem("Zug setzen");
             setTrainMenuItem.setOnAction((ActionEvent event) -> {
                 final Trip tr = row.getItem();
-                int resLoco = SelectLocoDialog.open(primaryStage,tr.sens1);
+                int resLoco = SelectLocoDialog.open(primaryStage, tr.sens1);
                 if ((resLoco != INVALID_INT) && (resLoco != 0)) {
                     PanelElement.setTrain(tr.sens1, resLoco);
-                    debug("Sensor "+tr.sens1+" belegt mit Zug#"+resLoco);
+                    debug("Sensor " + tr.sens1 + " belegt mit Zug#" + resLoco);
                 };
             });
             final MenuItem startMenuItem = new MenuItem("Starte diese Fahrt");
@@ -364,7 +296,7 @@ public class TripsTable extends Application {
     private int getTTIndex(String s) {
         int ttIndex = 0;
         for (Timetable tt : allTimetables) {
-            if (s.contains("" + tt.adr)) {
+            if (s.contains("" + tt.getAdr())) {
                 return ttIndex;
             }
             ttIndex++;
@@ -477,7 +409,7 @@ public class TripsTable extends Application {
             SensorLocoPair res = SetTrainDialog.open(primaryStage);
             if (res.sensor != INVALID_INT) {
                 PanelElement.setTrain(res.sensor, res.loco);
-                debug("Sensor "+res.sensor+" belegt mit Zug#"+res.loco);
+                debug("Sensor " + res.sensor + " belegt mit Zug#" + res.loco);
             };
         }
         );

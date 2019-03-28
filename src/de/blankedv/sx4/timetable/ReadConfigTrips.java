@@ -109,7 +109,7 @@ public class ReadConfigTrips {
             Timetable ti = parseTimetable(items.item(i));
             if (ti != null) {
                 if (CFG_DEBUG) {
-                    debug("timetable adr=" + ti.adr);
+                    debug("timetable adr=" + ti.getAdr());
                 }
                 allTimetables.add(ti);
             }

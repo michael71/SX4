@@ -37,29 +37,38 @@ import javafx.util.Duration;
  */
 public class Timetable {
 
-    int adr = INVALID_INT;
-    ArrayList<Integer> tripAdrs = new ArrayList<>();
-    int nextTT = 0;
-    int currentTripIndex = 0;
-    Trip cTrip = null;
+    private int adr = INVALID_INT;
+
+    //ArrayList<Integer> tripAdrs = new ArrayList<>();
+    private final ArrayList<Trip> tripsList = new ArrayList<>();
+    private int currentTripIndex = INVALID_INT;
+
+    private int nextTT = 0;
+
     TT_State state = INACTIVE;
     private String tripsString = "";
-    final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
-
-    int nextTimetable = INVALID_INT;
+    private final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
 
     private TripsTable tripsTable = null;
 
     String message = "";
 
-    Timetable(int adr, String trip, int next) {
+    /**
+     * construct a timetable from address, allTripsString and "next TT" info
+     *
+     * @param adr
+     * @param allTtripsString
+     * @param next
+     */
+    Timetable(int adr, String allTtripsString, int next) {
         // parse "time" to "startTime" array
-        tripsString = trip;
-        String[] sTrip = trip.split(",");
+        tripsString = allTtripsString;
+        String[] sTrip = allTtripsString.split(",");
         nextTT = next;  // next timetable after this one is finished
 
         this.adr = adr;
 
+        // convert allTripsString to ArrayList of trips
         for (String s2 : sTrip) {
             int t = INVALID_INT;
             try {
@@ -67,10 +76,13 @@ public class Timetable {
             } catch (NumberFormatException ex) {
             }
             //debug("tripIDs, added #" + t);
-            tripAdrs.add(t);
+            Trip tr = Trip.getTripByAddress(t);
+            if (tr != null) {
+                tripsList.add(tr);
+            }
         }
 
-        state = INACTIVE;
+        state = INACTIVE;   // not started yet
     }
 
     // start a new timetable with 0 .. n trips, return true if successful
@@ -80,17 +92,16 @@ public class Timetable {
 
         // start first trip (index 0)
         currentTripIndex = 0;
-        cTrip = Trip.get(tripAdrs.get(currentTripIndex));
-
-        if (cTrip == null) {
-            message = "in Timetable - no trip found for adr=" + currentTripIndex;
+        if (tripsList.size() == 0) {
+            currentTripIndex = INVALID_INT;
+            message = "timetable empty - no trips";
             error(message);
             return false;
         }
 
-        boolean result = startNewTrip(cTrip);
+        boolean result = startNewTrip(tripsList.get(currentTripIndex));
         if (result) {
-            debug("started timetable=" + adr + " and trip=" + cTrip.adr);
+            debug("started timetable=" + adr + " and trip=" + tripsList.get(currentTripIndex).adr);
         } else {
             debug("could not start timetable=" + adr);
         }
@@ -101,24 +112,30 @@ public class Timetable {
         return message;
     }
 
+    public ArrayList<Trip> getTripsList() {
+        return tripsList;
+    }
+
+    public int getCurrentTripIndex() {
+        return currentTripIndex;
+    }
+
     public boolean stop() {
         // finish current timetable
         // TODO Fixed = timetable0 !!
         state = INACTIVE;   // stops also "auto() function
-        cTrip = Trip.get(tripAdrs.get(currentTripIndex));
-        stopAllTimelines();
-
-        if (cTrip == null) {
+        if (currentTripIndex == INVALID_INT) {
             message = "stopping timetable=" + adr + " (no current trip)";
             debug(message);
             return false;
-        } else {
-
-            cTrip.finish();
-            message = "finishing timetable=" + adr;
-            debug(message);
-            return true;
         }
+
+        stopAllTimelines();
+
+        tripsList.get(currentTripIndex).finish();
+        message = "finishing timetable=" + adr;
+        debug(message);
+        return true;
 
     }
 
@@ -169,38 +186,31 @@ public class Timetable {
         }
     }
 
+    public int getAdr() {
+        return adr;
+    }
+
     public boolean advanceToNextTrip() {
         if (state == INACTIVE) {
             error("cannot advance to next Trip because TimeTable is INACTIVE");
+            return false;
+        }
+        if (currentTripIndex == INVALID_INT) {
+            error("cannot advance to next Trip because currentTripIndex is INVALID");
+            return false;
         }
         currentTripIndex++;
         // is there a next trip??
-        if (currentTripIndex >= tripAdrs.size()) {
+        if (currentTripIndex >= tripsList.size()) {
             // the was the last trip.
             state = INACTIVE;
+            currentTripIndex = INVALID_INT;  // reset
             debug("last trip of timetable was finished.");
-            for (Timetable tt : allTimetables) {
-                if (tt.adr == nextTT) {
-                    debug("next timetable=" + nextTT);
-                    tripsTable.startNewTimetable(tt);
-                    return true;
-                }
-            }
-            return true;
+            return tripsTable.startNewTimetable(nextTT);
+        } else {
+            Trip tr = tripsList.get(currentTripIndex);
+            return startNewTrip(tr);
         }
-        // get trip 
-        try {
-            cTrip = Trip.get(tripAdrs.get(currentTripIndex));
-            debug("found next trip in timetable - trip=" + cTrip.adr);
-        } catch (IndexOutOfBoundsException ex) {
-            cTrip = null;
-        }
-        if (cTrip == null) {
-            error("ERROR in Timetable - no trip found for adr=" + currentTripIndex);
-            return false;
-        }
-
-        return startNewTrip(cTrip);
     }
 
     @Override
@@ -219,29 +229,29 @@ public class Timetable {
 
     public void timetableCheck() {
 
-        if (cTrip == null) {
-            return;  // NO CURRENT TRIP - do nothing
-        }
-        switch (state) {
-            case ACTIVE:
-                if (cTrip.state == TripState.INACTIVE) {   // current trip has been finished, start a new one (delayed)                        
-                    state = WAITING;   // wait for start of new trip
-                    debug("current trip " + cTrip.adr + " has ended. start new one 5 seconds after train stop.");
-                    // currentTrip has ended, wait three seconds, then start next
-                    Timeline timeline = new Timeline(new KeyFrame(
-                            Duration.millis(5000 + cTrip.stopDelay),
-                            ae -> {
-                                advanceToNextTrip();
-                            }));
-                    timeline.play();
-                    addTimeline(timeline);
-                }
+        if (currentTripIndex != INVALID_INT) {
+            Trip cTrip = tripsList.get(currentTripIndex);
+            switch (state) {
+                case ACTIVE:
+                    if (cTrip.state == TripState.INACTIVE) {   // current trip has been finished, start a new one (delayed)                        
+                        state = WAITING;   // wait for start of new trip
+                        debug("current trip " + cTrip.adr + " has ended. start new one 5 seconds after train stop.");
+                        // currentTrip has ended, wait three seconds, then start next
+                        Timeline timeline = new Timeline(new KeyFrame(
+                                Duration.millis(5000 + cTrip.stopDelay),
+                                ae -> {
+                                    advanceToNextTrip();
+                                }));
+                        timeline.play();
+                        addTimeline(timeline);
+                    }
 
-                break;
-            case WAITING:
-            case INACTIVE:
-                // do nothing
-                break;
+                    break;
+                case WAITING:
+                case INACTIVE:
+                    // do nothing
+                    break;
+            }
         }
 
     }
