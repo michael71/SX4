@@ -318,7 +318,17 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
                 return pe.getTrain();
             }
         }
-        return INVALID_INT;
+        return INVALID_INT;  // sensor not found
+    }
+    
+     // occupation for SENSOR panel element with a given address
+    public static boolean isSensorOccupied(int address) {
+        for (PanelElement pe : panelElements) {
+            if (pe.isSensor() && (pe.getAdr() == address)) {
+                return (pe.getState() == STATE_OCCUPIED);
+            }
+        } 
+        return false;  // sensor not found
     }
 
     public static void updateFromSXData(int sxAddr, int d) {

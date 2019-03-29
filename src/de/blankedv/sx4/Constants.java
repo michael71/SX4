@@ -27,7 +27,10 @@ public class Constants {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "SX4 - rev1.31 - 28 Mar 2019";
+    public static final String NUM_VERSION = "1.32";
+    public static final String VERSION = "SX4 - rev" + NUM_VERSION +" - 29 Mar 2019";
+    // finales SX4.jar file erzeugen mit
+    // rechter Mausclick auf "build.xml" in Netbeans, dann "Run Target -> Other Targets -> Package-SX4.jar"
     
     // switch one more debugging?
     // DEBUG can be set via args - and therefor is a variable

@@ -24,8 +24,6 @@ import static de.blankedv.sx4.Constants.TT_State.*;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_FREE;
 import static de.blankedv.sx4.timetable.PanelElement.STATE_OCCUPIED;
 import de.blankedv.sx4.timetable.Trip.TripState;
-import static de.blankedv.sx4.timetable.VarsFX.allTimetables;
-import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 import java.util.ArrayList;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -85,6 +83,32 @@ public class Timetable {
         state = INACTIVE;   // not started yet
     }
 
+    /**
+     * check if all trains in this timetable are currently located 
+     * at the right sensors
+     * 
+     * @return 
+     */
+    public String checkPositions() {
+        // iterate over tripsList
+        
+        ArrayList<Integer> ttLocos = new ArrayList<>();
+        
+        for (Trip tr : tripsList) {
+            int loco = tr.getLocoAddr();
+            if (!ttLocos.contains(loco)) {
+                // so far we did not check this train/loco
+                  if (PanelElement.isSensorOccupied(tr.sens1) && (PanelElement.getTrain(tr.sens1) == loco)) {
+                    // position o.k.
+                    ttLocos.add(loco);
+                } else {
+                    return "Zug# "+loco + " nicht auf Start-Position (Sensor "+tr.sens1+")";
+                }
+            }
+        }      
+        return "";  // all positions are correct
+    }
+    
     // start a new timetable with 0 .. n trips, return true if successful
     public boolean start(TripsTable ttable) {
 
@@ -122,7 +146,6 @@ public class Timetable {
 
     public boolean stop() {
         // finish current timetable
-        // TODO Fixed = timetable0 !!
         state = INACTIVE;   // stops also "auto() function
         if (currentTripIndex == INVALID_INT) {
             message = "stopping timetable=" + adr + " (no current trip)";
@@ -135,6 +158,7 @@ public class Timetable {
         tripsList.get(currentTripIndex).finish();
         message = "finishing timetable=" + adr;
         debug(message);
+        currentTripIndex = INVALID_INT;
         return true;
 
     }

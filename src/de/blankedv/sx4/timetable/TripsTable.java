@@ -19,6 +19,7 @@ package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
 import static de.blankedv.sx4.Constants.INVALID_INT;
+import static de.blankedv.sx4.Constants.NUM_VERSION;
 import static de.blankedv.sx4.SX4.configFilename;
 import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.timetable.Trip.TripState;
@@ -125,7 +126,7 @@ public class TripsTable extends Application {
             //sxAddress.addr = -1;
             tripWindow.close();
         }); */
-        primaryStage.setTitle("Fahrplan " + panelName);
+        primaryStage.setTitle("Fahrplan " + panelName + " ("+NUM_VERSION+")");
         primaryStage.setScene(tripTableScene);
 
         createDataTables();
@@ -141,7 +142,10 @@ public class TripsTable extends Application {
                 ivPowerState.setImage(red);
             }
 
-            tableView.getSelectionModel().select(ttSelected.getCurrentTripIndex());
+            if (ttSelected.getCurrentTripIndex() != INVALID_INT) {
+                tableView.getSelectionModel().select(ttSelected.getCurrentTripIndex());
+            }
+
             if (ttSelected == null) {
                 btnStop.setDisable(true);
                 btnStart.setDisable(true);
@@ -152,6 +156,9 @@ public class TripsTable extends Application {
                 btnStop.setDisable(false);
                 btnStart.setDisable(true);
                 cbSelectTimetable.setDisable(true);
+                if (ttSelected.getCurrentTripIndex() != INVALID_INT) {
+                    tableView.getSelectionModel().select(ttSelected.getCurrentTripIndex());
+                }
             } else {
                 btnRefresh.setDisable(false);
                 status.setText(ttSelected.toString());
@@ -193,7 +200,6 @@ public class TripsTable extends Application {
     public void show() {
         tripWindow.show();
     }
-
 
     public boolean startNewTimetable(int timetableAdrToStart) {
         debug("next timetable=" + timetableAdrToStart);
@@ -244,7 +250,7 @@ public class TripsTable extends Application {
             final MenuItem startMenuItem = new MenuItem("Starte diese Fahrt");
             startMenuItem.setOnAction((ActionEvent event) -> {
                 final Trip tr = row.getItem();
-                startTrip(tr);
+                startTripManually(tr);
             });
             final MenuItem stopMenuItem = new MenuItem("Stoppe diese Fahrt");
             stopMenuItem.setOnAction((ActionEvent event) -> {
@@ -277,18 +283,31 @@ public class TripsTable extends Application {
 
     }
 
-    private void startTrip(Trip trip) {
-
+    private void startTripManually(Trip trip) {
         if (trip != null) {
-            if (SXData.getActualPower() == true) {
-                trip.start();
-            } else {
-                Alert alert = new Alert(AlertType.ERROR);
-                alert.setTitle("Error alert");
-                alert.setHeaderText(null);
-                alert.setContentText("Start der Fahrt nicht möglich, da keine Gleisspannung!");
-                alert.showAndWait();
+            if (globalPowerCheck()) {
+                boolean result = trip.start();
+                if (!result) {
+                    Alert alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Error alert");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Start der Fahrt nicht möglich: " + trip.getMessage());
+                    alert.showAndWait();
+                }
             }
+        }
+    }
+
+    private boolean globalPowerCheck() {
+        if (SXData.getActualPower() == true) {
+            return true;
+        } else {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error alert");
+            alert.setHeaderText(null);
+            alert.setContentText("Start der Fahrt nicht möglich, da keine Gleisspannung!");
+            alert.showAndWait();
+            return false;
         }
     }
 
@@ -316,29 +335,26 @@ public class TripsTable extends Application {
         btnStop.setDisable(true);
 
         btnStart.setOnAction(e -> {
+            if (!globalPowerCheck()) {
+                return;
+            }
+            if (!checkTrainsPositions()) {
+                return;
+            }
             btnStop.setDisable(false);
             btnStart.setDisable(true);
             cbSelectTimetable.setDisable(true);
-            if (ttSelected == null) {
-                System.out.println("ERROR: no timetable -> cannot start any trip");
+            ttSelected.start(this);
+            if (ttSelected.isActive() == false) {
+                // reset button states if start was not successful
+                btnStop.setDisable(true);
+                btnStart.setDisable(false);
+                cbSelectTimetable.setDisable(false);
                 Alert alert = new Alert(AlertType.ERROR);
                 alert.setTitle("Error alert");
                 alert.setHeaderText(null);
-                alert.setContentText("no timetable -> cannot start any trip");
+                alert.setContentText(ttSelected.getMessage());
                 alert.showAndWait();
-            } else {
-                ttSelected.start(this);
-                if (ttSelected.isActive() == false) {
-                    // reset button states if start was not successful
-                    btnStop.setDisable(true);
-                    btnStart.setDisable(false);
-                    cbSelectTimetable.setDisable(false);
-                    Alert alert = new Alert(AlertType.ERROR);
-                    alert.setTitle("Error alert");
-                    alert.setHeaderText(null);
-                    alert.setContentText(ttSelected.getMessage());
-                    alert.showAndWait();
-                }
             }
         }
         );
@@ -348,7 +364,7 @@ public class TripsTable extends Application {
             btnStart.setDisable(false);
             cbSelectTimetable.setDisable(false);
             ttSelected.stop();
-            //tableView.getSelectionModel().clearAndSelect(0);
+            tableView.getSelectionModel().clearSelection();
         }
         );
 
@@ -440,6 +456,31 @@ public class TripsTable extends Application {
         hb2.getChildren().addAll(cbSelectTimetable, btnChangeTrain, btnSetTrain, btnReset);
         vb.getChildren().addAll(hb, hb2);
         return vb;
+    }
+
+    private boolean checkTrainsPositions() {
+        if (ttSelected == null) {
+            System.out.println("ERROR: no timetable -> cannot start any trip");
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error alert");
+            alert.setHeaderText(null);
+            alert.setContentText("no timetable -> cannot start any trip");
+            alert.showAndWait();
+            return false;
+        }
+
+        String msg = ttSelected.checkPositions();
+        if (msg.isEmpty()) {
+            return true;
+        } else {
+            System.out.println("ERROR: start positions for trains not valid.");
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error alert");
+            alert.setHeaderText(null);
+            alert.setContentText(msg);
+            alert.showAndWait();
+            return false;
+        }
     }
 
     public static void auto() {

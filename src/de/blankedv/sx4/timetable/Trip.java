@@ -232,7 +232,6 @@ public class Trip implements Comparable<Trip> {
         debug("finish trip " + adr);
         // finish current loco
         stopLoco();
-
         clearRoutes();
         stopAllTimelines();
         state = TripState.INACTIVE;

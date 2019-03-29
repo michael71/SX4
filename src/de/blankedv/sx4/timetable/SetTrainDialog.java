@@ -109,9 +109,9 @@ public class SetTrainDialog {
             debug("no sensorAddresses");
         }
 
-        Label lblSensor = new Label("Sensor");
+        Label lblSensor = new Label("Sensor (Gleis)");
         lblSensor.setAlignment(Pos.CENTER);
-        Label lblLoco = new Label("Loco");
+        Label lblLoco = new Label("Lok/Zug");
         lblLoco.setAlignment(Pos.CENTER);
 
         GridPane grid = new GridPane();
@@ -154,7 +154,7 @@ public class SetTrainDialog {
             result.loco = locos.getSelectionModel().getSelectedItem();
             newWindow.close();
         });
-        newWindow.setTitle("Sensor / Lok Zuordnung setzen");
+        newWindow.setTitle("Sensor / Zug (Lok) Zuordnung setzen");
         newWindow.setScene(secondScene);
 
         // Specifies the modality for new window.
