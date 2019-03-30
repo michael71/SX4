@@ -116,7 +116,7 @@ public class Timetable {
 
         // start first trip (index 0)
         currentTripIndex = 0;
-        if (tripsList.size() == 0) {
+        if (tripsList.isEmpty()) {
             currentTripIndex = INVALID_INT;
             message = "timetable empty - no trips";
             error(message);

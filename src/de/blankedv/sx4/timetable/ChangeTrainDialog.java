@@ -20,10 +20,8 @@ package de.blankedv.sx4.timetable;
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.timetable.Vars.allLocos;
 import static de.blankedv.sx4.timetable.VarsFX.allTrips;
-import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.util.ArrayList;
 import java.util.Collections;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
@@ -67,8 +65,8 @@ public class ChangeTrainDialog {
 
         Collections.sort(locoAddresses);
 
-        final ChoiceBox<Integer> locos1 = new ChoiceBox<Integer>(FXCollections.observableArrayList(
-                locoAddresses)
+        final ChoiceBox<Integer> locos1 = 
+                new ChoiceBox<>(FXCollections.observableArrayList(locoAddresses)
         );
         locos1.getSelectionModel().select(0);
         speed1.setText("" + getSpeed(locoAddresses.get(0)));
@@ -81,8 +79,8 @@ public class ChangeTrainDialog {
                     speed1.setText("" + s);
                 });
 
-        final ChoiceBox<Integer> locos2 = new ChoiceBox<Integer>(FXCollections.observableArrayList(
-                locoAddresses)
+        final ChoiceBox<Integer> locos2 = 
+                new ChoiceBox<>(FXCollections.observableArrayList(locoAddresses)
         );
         locos2.getSelectionModel().select(0);
         locos2.getSelectionModel().selectedItemProperty().addListener(
@@ -103,7 +101,7 @@ public class ChangeTrainDialog {
         grid.setVgap(20);
         grid.setHgap(20);
         grid.add(new Label("von"), 1, 0);
-        grid.add(new Label("temp. ändern zu"), 2, 0);
+        grid.add(new Label("ändern zu"), 2, 0);
         grid.add(new Label("Zug-Nr."), 0, 1);
         grid.add(new Label("Geschw."), 0, 2);
 

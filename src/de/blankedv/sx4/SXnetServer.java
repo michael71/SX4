@@ -15,7 +15,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package de.blankedv.sx4;
 
 import static de.blankedv.sx4.SX4.*;
@@ -39,14 +38,14 @@ public class SXnetServer {
     //Preferences prefs = Preferences.userNodeForPackage(this.getClass());
     protected Thread t;
     private ServerSocket s;
-    
+
     private ArrayList<SXnetClient> clients = new ArrayList<>();
 
     /**
      * Creates new form SRCPServerUI
      */
     public SXnetServer() {
-        
+
         if (myips.isEmpty()) {
             error("ERROR, no usable network interface. EXITING");
             System.exit(1);
@@ -73,7 +72,7 @@ public class SXnetServer {
         }
 
     }
-    
+
     public void stopClients() {
         for (SXnetClient c : clients) {
             c.stop();
@@ -89,9 +88,9 @@ public class SXnetServer {
     in the finalize() method closes the Socket connection used by each thread 
     in this program.
      */
-    protected void finalize() {
-//Objects created in run method are finalized when
-//program terminates and thread exits
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
         close();
     }
 

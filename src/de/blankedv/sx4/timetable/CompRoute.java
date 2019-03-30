@@ -49,10 +49,12 @@ public class CompRoute extends PanelElement {
      * constructs a composite route
      *
      *
+     * @param routeAddr
+     * @param sRoutes
      */
     public CompRoute(int routeAddr, String sRoutes) {
         super("CR", routeAddr);
-        setState(RT_INACTIVE);
+        state = RT_INACTIVE;
         // this string is written back to config file.
         this.routesString = sRoutes;
 

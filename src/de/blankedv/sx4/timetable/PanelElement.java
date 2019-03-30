@@ -18,11 +18,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
-import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.*;
 import de.blankedv.sx4.SXUtils;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
-import java.util.ArrayList;
 import java.util.Comparator;
 
 /**
@@ -40,14 +38,14 @@ import java.util.Comparator;
  */
 public class PanelElement implements Comparator<PanelElement>, Comparable<PanelElement> {
 
-    private int state = 0;
-    private int adr = INVALID_INT;
-    private int secondaryAdr = INVALID_INT;  // needed for DCC sensors/signals 
+    protected int state = 0;
+    protected int adr = INVALID_INT;
+    protected int secondaryAdr = INVALID_INT;  // needed for DCC sensors/signals 
     private int nbit = 1;  // number of significant bits for signals
     private boolean inRoute = false;
     private String typeString = "AC";
     // with 2 addresses (adr1=occ/free, 2=in-route)
-    protected String route = "";
+    protected String rIntegeoute = "";
     private int train = INVALID_INT;   // train number, if train is occupying this panel element
 
     // these constants are defined just for easier understanding of the
@@ -84,6 +82,7 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
     /**
      * constructor for an ACTIVE panel element with 1 address default state is
      * "CLOSED" (="RED")
+     * @param adr
      */
     public PanelElement(int adr) {
 
@@ -161,14 +160,6 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
         this.train = train;
     }
 
-    public boolean hasAdrX(int address) {
-        if (adr == address) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public void setAdr(int adr) {
         this.adr = adr;
         this.state = this.state = 0;  // initialized to CLOSED / RED / FREE
@@ -194,15 +185,15 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
         return typeString;
     }
 
-    public boolean isSignal() {
+    public final boolean isSignal() {
         return (typeString.equals("Si"));
     }
 
-    public boolean isTurnout() {
+    public final boolean isTurnout() {
         return (typeString.equals("T"));
     }
 
-    public boolean isSensor() {
+    public final boolean isSensor() {
         return (typeString.equals("BM"));
     }
 
@@ -370,6 +361,7 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
     /**
      * used in case of unfinished (i.e. not cleared) routes
      *
+     * @return number of routes to unlock
      */
     public static int unlockAll() {
         int count = 0;

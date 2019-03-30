@@ -21,7 +21,6 @@ import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.timetable.Vars.allLocos;
-import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +39,6 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Pair;
 
 /**
  *
@@ -65,7 +63,7 @@ public class SetTrainDialog {
             }
         }
         
-        if (sensorAddresses.size() == 0) {
+        if (sensorAddresses.isEmpty()) {
             error("no sensors, cannot set train");
             return result;
         }
@@ -81,22 +79,21 @@ public class SetTrainDialog {
         }
         Collections.sort(locoAddresses);
 
-        final ChoiceBox<Integer> sensors = new ChoiceBox<Integer>(FXCollections.observableArrayList(
-                sensorAddresses)
+        final ChoiceBox<Integer> sensors = 
+                new ChoiceBox<>(FXCollections.observableArrayList(sensorAddresses)
         );
-        final ChoiceBox<Integer> locos = new ChoiceBox<Integer>(FXCollections.observableArrayList(
-                locoAddresses)
+        final ChoiceBox<Integer> locos = 
+                new ChoiceBox<>(FXCollections.observableArrayList(locoAddresses)
         );
         
         sensors.getSelectionModel().select(0);
-        sensors.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Integer>() {
-            @Override
-            public void changed(ObservableValue<? extends Integer> observable, Integer oldValue, Integer newValue) {
-                debug("sens="+newValue+" train="+PanelElement.getTrainFromSensor(newValue));
-                int l = PanelElement.getTrainFromSensor(newValue);
-                locos.getSelectionModel().select(new Integer(l));
-            }
-        });
+        sensors.getSelectionModel().selectedItemProperty().addListener(
+           (ObservableValue<? extends Integer> observable, Integer oldValue, Integer newValue) -> {
+               debug("sens="+newValue+" train="+PanelElement.getTrainFromSensor(newValue));
+               int l = PanelElement.getTrainFromSensor(newValue);
+               locos.getSelectionModel().select(new Integer(l));
+               }
+        );
        
 
         

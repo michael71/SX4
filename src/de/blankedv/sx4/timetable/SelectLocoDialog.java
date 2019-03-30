@@ -18,27 +18,23 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package de.blankedv.sx4.timetable;
 
+import static com.esotericsoftware.minlog.Log.debug;
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.timetable.Vars.allLocos;
-import static de.blankedv.sx4.timetable.VarsFX.allTrips;
-import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.util.ArrayList;
 import java.util.Collections;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Spinner;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Pair;
 
 /**
  *
@@ -70,11 +66,12 @@ public class SelectLocoDialog {
         Collections.sort(locoAddresses);
        
 
-        final ChoiceBox<Integer> locos = new ChoiceBox<Integer>(FXCollections.observableArrayList(
-               locoAddresses)
-        );
-        locos.getSelectionModel().select(0);
-        
+        final ChoiceBox<Integer> locos = 
+                new ChoiceBox<>(FXCollections.observableArrayList(locoAddresses)
+        );    
+
+        int l = PanelElement.getTrainFromSensor(sensor);
+        locos.getSelectionModel().select(new Integer(l));
 
         GridPane grid = new GridPane();
         grid.setVgap(20);

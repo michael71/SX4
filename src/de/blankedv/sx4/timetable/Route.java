@@ -75,7 +75,7 @@ public class Route extends PanelElement {
             String offending) {
 
         super("RT", routeAddr);
-        this.setState(RT_INACTIVE);
+        state = RT_INACTIVE;
         // these strings are written back to config file.
         this.routeString = route;
         this.sensorsString = allSensors;
@@ -83,11 +83,9 @@ public class Route extends PanelElement {
 
         // route = "750,1;751,2" => set 750 turnout 1 and 751 turnout value 2
         String[] routeElements = route.split(";");
-        for (int i = 0; i < routeElements.length; i++) {
-            String reInfo[] = routeElements[i].split(",");
-
+        for (String routeElement : routeElements) {
+            String[] reInfo = routeElement.split(",");
             PanelElement pe = PanelElement.getByAddress(Integer.parseInt(reInfo[0]));
-
             // if this is a signal, then add to my signal list "rtSignals"
             if (pe != null) {
                 if (pe.isSignal()) {
@@ -112,11 +110,11 @@ public class Route extends PanelElement {
 
         // format for sensors: just a list of addresses, seperated by comma ","
         String[] sensorAddresses = allSensors.split(",");
-        for (int i = 0; i < sensorAddresses.length; i++) {
+        for (String sensorAddress : sensorAddresses) {
             // add the matching elements turnout sensors list
             for (PanelElement pe : panelElements) {
                 if (pe.isSensor()) {
-                    if (pe.getAdr() == Integer.parseInt(sensorAddresses[i])) {
+                    if (pe.getAdr() == Integer.parseInt(sensorAddress)) {
                         rtSensors.add(pe);
                         if (CFG_DEBUG) {
                             debug("RT, add sensor " + pe.getAdr());
@@ -126,23 +124,22 @@ public class Route extends PanelElement {
             }
         }
         if (CFG_DEBUG) {
-            debug("creating route id/adr=" + this.getAdr() + " - " + rtSignals.size() + " signals/" + rtTurnouts.size() + " turnouts/" + rtSensors.size() + " sensors");
+            debug("creating route id/adr=" + adr + " - " + rtSignals.size() + " signals/" + rtTurnouts.size() + " turnouts/" + rtSensors.size() + " sensors");
         }
 
         String[] offRoutes = offendingString.split(",");
-        for (int i = 0; i < offRoutes.length; i++) {
+        for (String offRoute : offRoutes) {
             for (Route rt : allRoutes) {
                 try {
-                    int offID = Integer.parseInt(offRoutes[i]);
+                    int offID = Integer.parseInt(offRoute);
                     if ((rt.getAdr() == offID) && (rt.getState() == RT_ACTIVE)) {
                         rtOffending.add(rt);
                         // (debug)("RT, add off. rt " + rt.getAdr());
                     }
-                } catch (NumberFormatException e) {
+                }catch (NumberFormatException e) {
                 }
             }
         }
-
         //	if (DEBUG)
         //		Log.d(TAG, rtOffending.size() + " offending allRoutes in config");
     }
@@ -224,14 +221,14 @@ public class Route extends PanelElement {
     public boolean offendingRouteActive() {
         debug(" checking for (active) offending Routes");
         String[] offRoutes = offendingString.split(",");
-        for (int i = 0; i < offRoutes.length; i++) {
+        for (String offRoute : offRoutes) {
             for (Route rt : allRoutes) {
                 try {
-                    int offID = Integer.parseInt(offRoutes[i]);
+                    int offID = Integer.parseInt(offRoute);
                     if ((rt.getAdr() == offID) && (rt.getState() == RT_ACTIVE)) {
                         return true;
                     }
-                } catch (NumberFormatException e) {
+                }catch (NumberFormatException e) {
                 }
             }
         }
@@ -257,8 +254,6 @@ public class Route extends PanelElement {
      *
      * @param automatic
      * @param trainNumber
-     * @param startTrain
-     * @param partOfCompRoute
      * @return
      */
     public boolean set(boolean automatic, int trainNumber) {
@@ -346,6 +341,7 @@ public class Route extends PanelElement {
         return true;
     }
 
+    @Override
     public boolean isLocked() {
         return !panelElementsLocked().isEmpty();
     }
@@ -416,8 +412,8 @@ public class Route extends PanelElement {
     protected class RouteSignal {
 
         PanelElement signal;
-        private int valueToSetForRoute;
-        private int depFrom;
+        final private int valueToSetForRoute;
+        final private int depFrom;
 
         RouteSignal(PanelElement se, int value) {
             signal = se;

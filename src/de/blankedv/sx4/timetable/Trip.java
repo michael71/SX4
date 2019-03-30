@@ -35,8 +35,11 @@ import javafx.animation.Timeline;
 import javafx.util.Duration;
 
 /**
- *
- * <trip id="3100" routeid="2300" sens1="924" sens2="902" loco="29,1,126" stopdelay="1500" />
+ * A Trip is a combination of a route with a loco-command (adr,speed,dir) and
+ * is used to run a loco/train over a route to a destination (sensor)
+ * 
+ * example for trip xml content:
+ *  trip id="3100" routeid="2300" sens1="924" sens2="902" loco="29,1,126" stopdelay="1500" 
  *
  * @author mblank
  */
@@ -348,13 +351,7 @@ public class Trip implements Comparable<Trip> {
             return false;
         }
 
-        if (seEnd.getState() == STATE_OCCUPIED) {
-            // this trip ends
-
-            return true;
-        } else {
-            return false;
-        }
+        return (seEnd.getState() == STATE_OCCUPIED); // this trip ends
     }
 
     // to be able to sort the trips by their ID

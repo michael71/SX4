@@ -26,7 +26,6 @@ import static de.blankedv.sx4.timetable.Vars.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -272,12 +271,18 @@ public class ReadConfig {
             Node theAttribute = attributes.item(i);
             // if (CFG_DEBUG_PARSING) Log.d(TAG,theAttribute.getNodeName() + "=" +
             // theAttribute.getNodeValue());
-            if (theAttribute.getNodeName().equals("sxadr")) {
-                sxmap.sxAddr = getPositionNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("sxbit")) {
-                sxmap.sxBit = getPositionNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("nbit")) {
-                sxmap.nBit = getPositionNode(theAttribute);
+            switch (theAttribute.getNodeName()) {
+                case "sxadr":
+                    sxmap.sxAddr = getPositionNode(theAttribute);
+                    break;
+                case "sxbit":
+                    sxmap.sxBit = getPositionNode(theAttribute);
+                    break;
+                case "nbit":
+                    sxmap.nBit = getPositionNode(theAttribute);
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -361,14 +366,21 @@ public class ReadConfig {
             Node theAttribute = attributes.item(i);
             // if (DEBUG_PARSING) System.out.println(TAG+theAttribute.getNodeName() + "=" +
             // theAttribute.getNodeValue());
-            if (theAttribute.getNodeName().equals("adr")) {
-                adr = Integer.parseInt(theAttribute.getNodeValue());
-            } else if (theAttribute.getNodeName().equals("route")) {
-                route = theAttribute.getNodeValue();
-            } else if (theAttribute.getNodeName().equals("sensors")) {
-                sensors = theAttribute.getNodeValue();
-            } else if (theAttribute.getNodeName().equals("offending")) {
-                offending = theAttribute.getNodeValue();
+            switch (theAttribute.getNodeName()) {
+                case "adr":
+                    adr = Integer.parseInt(theAttribute.getNodeValue());
+                    break;
+                case "route":
+                    route = theAttribute.getNodeValue();
+                    break;
+                case "sensors":
+                    sensors = theAttribute.getNodeValue();
+                    break;
+                case "offending":
+                    offending = theAttribute.getNodeValue();
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -376,17 +388,13 @@ public class ReadConfig {
         if (adr == INVALID_INT) {
             // missing info, log error
             error("missing adr= info in route definition");
-            return;
         } else if (route == null) {
             error("missing route= info in route definition");
-            return;
         } else if (sensors == null) {
             error("missing sensors= info in route definition");
-            return;
         } else {
             // everything is o.k.
             Route rt = new Route(adr, route, sensors, offending);
-
             panelElements.add(rt);
             allRoutes.add(rt);
         }
@@ -431,10 +439,8 @@ public class ReadConfig {
         if (adr == INVALID_INT) {
             // missing info, log error
             error("missing adr= info in route definition");
-            return;
         } else if (routes == null) {
             error("missing routes= info in route definition");
-            return;
         } else {
             // everything is o.k.
             CompRoute cr = new CompRoute(adr, routes);

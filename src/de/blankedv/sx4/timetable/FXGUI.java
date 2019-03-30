@@ -3,10 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.blankedv.sx4;
+package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
-import de.blankedv.sx4.timetable.TripsTable;
 import javafx.application.Application;
 import javafx.embed.swing.JFXPanel;
 

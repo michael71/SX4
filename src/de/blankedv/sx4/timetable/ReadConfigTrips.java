@@ -204,12 +204,18 @@ public class ReadConfigTrips {
             Node theAttribute = attributes.item(i);
             // if (CFG_DEBUG_PARSING) Log.d(TAG,theAttribute.getNodeName() + "=" +
             // theAttribute.getNodeValue());
-            if (theAttribute.getNodeName().equals("sxadr")) {
-                sxmap.sxAddr = getPositionNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("sxbit")) {
-                sxmap.sxBit = getPositionNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("nbit")) {
-                sxmap.nBit = getPositionNode(theAttribute);
+            switch (theAttribute.getNodeName()) {
+                case "sxadr":
+                    sxmap.sxAddr = getPositionNode(theAttribute);
+                    break;
+                case "sxbit":
+                    sxmap.sxBit = getPositionNode(theAttribute);
+                    break;
+                case "nbit":
+                    sxmap.nBit = getPositionNode(theAttribute);
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -240,21 +246,31 @@ public class ReadConfigTrips {
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Node theAttribute = attributes.item(i);
-            if (theAttribute.getNodeName().equals("adr")) {
-                t.adr = getIntValueOfNode(theAttribute);
-            } else if ((theAttribute.getNodeName().equals("route"))
-                    || (theAttribute.getNodeName().equals("routeid"))) {
-                t.route = getIntValueOfNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("sens1")) {
-                t.sens1 = getIntValueOfNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("sens2")) {
-                t.sens2 = getIntValueOfNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("loco")) {
-                t.locoString = theAttribute.getNodeValue();
-            } else if (theAttribute.getNodeName().equals("startdelay")) {
-                t.startDelay = getIntValueOfNode(theAttribute);
-            }else if (theAttribute.getNodeName().equals("stopdelay")) {
-                t.stopDelay = getIntValueOfNode(theAttribute);
+            switch (theAttribute.getNodeName()) {
+                case "adr":
+                    t.adr = getIntValueOfNode(theAttribute);
+                    break;
+                case "route":
+                case "routeid":
+                    t.route = getIntValueOfNode(theAttribute);
+                    break;
+                case "sens1":
+                    t.sens1 = getIntValueOfNode(theAttribute);
+                    break;
+                case "sens2":
+                    t.sens2 = getIntValueOfNode(theAttribute);
+                    break;
+                case "loco":
+                    t.locoString = theAttribute.getNodeValue();
+                    break;
+                case "startdelay":
+                    t.startDelay = getIntValueOfNode(theAttribute);
+                    break;
+                case "stopdelay":
+                    t.stopDelay = getIntValueOfNode(theAttribute);
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -289,12 +305,18 @@ public class ReadConfigTrips {
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Node theAttribute = attributes.item(i);
-            if (theAttribute.getNodeName().equals("adr")) {
-                adr = getIntValueOfNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("trip")) {
-                sTrip = theAttribute.getNodeValue();
-            } else if (theAttribute.getNodeName().equals("next")) {
-                next = getIntValueOfNode(theAttribute);
+            switch (theAttribute.getNodeName()) {
+                case "adr":
+                    adr = getIntValueOfNode(theAttribute);
+                    break;
+                case "trip":
+                    sTrip = theAttribute.getNodeValue();
+                    break;
+                case "next":
+                    next = getIntValueOfNode(theAttribute);
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -333,14 +355,21 @@ public class ReadConfigTrips {
             Node theAttribute = attributes.item(i);
             // if (DEBUG_PARSING) System.out.println(TAG+theAttribute.getNodeName() + "=" +
             // theAttribute.getNodeValue());
-            if (theAttribute.getNodeName().equals("adr")) {
-                adr = Integer.parseInt(theAttribute.getNodeValue());
-            } else if (theAttribute.getNodeName().equals("route")) {
-                route = theAttribute.getNodeValue();
-            } else if (theAttribute.getNodeName().equals("sensors")) {
-                sensors = theAttribute.getNodeValue();
-            } else if (theAttribute.getNodeName().equals("offending")) {
-                offending = theAttribute.getNodeValue();
+            switch (theAttribute.getNodeName()) {
+                case "adr":
+                    adr = Integer.parseInt(theAttribute.getNodeValue());
+                    break;
+                case "route":
+                    route = theAttribute.getNodeValue();
+                    break;
+                case "sensors":
+                    sensors = theAttribute.getNodeValue();
+                    break;
+                case "offending":
+                    offending = theAttribute.getNodeValue();
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -348,17 +377,13 @@ public class ReadConfigTrips {
         if (adr == INVALID_INT) {
             // missing info, log error
             error("missing adr= info in route definition");
-            return;
         } else if (route == null) {
             error("missing route= info in route definition");
-            return;
         } else if (sensors == null) {
             error("missing sensors= info in route definition");
-            return;
         } else {
             // everything is o.k.
             Route rt = new Route(adr, route, sensors, offending);
-
             panelElements.add(rt);
             allRoutes.add(rt);
         }
@@ -403,10 +428,8 @@ public class ReadConfigTrips {
         if (adr == INVALID_INT) {
             // missing info, log error
             error("missing adr= info in route definition");
-            return;
         } else if (routes == null) {
             error("missing routes= info in route definition");
-            return;
         } else {
             // everything is o.k.
             CompRoute cr = new CompRoute(adr, routes);

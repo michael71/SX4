@@ -38,7 +38,7 @@ public class WifiThrottle {
 
     private static final int LANBAHN_PORT = 27027;
     private static final String LANBAHN_GROUP = "239.200.201.250";
-    private static String TEXT_ENCODING = "UTF8";
+    final private static String TEXT_ENCODING = "UTF8";
     protected InetAddress mgroup;
     protected MulticastSocket multicastsocket;
     static LanbahnServer lbServer;
@@ -92,6 +92,7 @@ public class WifiThrottle {
 
     class LanbahnServer implements Runnable {
 
+        @Override
         public void run() {
             try {
 
@@ -124,7 +125,7 @@ public class WifiThrottle {
         }
 
         private void interpretLanbahnMessage(String msg, String ip) {
-            if (msg == null) {
+            if ((msg == null) || msg.isEmpty()) {
                 return;
             }
             int sxaddr, sxdata;
@@ -145,7 +146,7 @@ public class WifiThrottle {
                             sxdata = Integer.parseInt(cmd[2]);
                             SXData.update(sxaddr, sxdata, true);
                         }
-                    } catch (Exception e) {
+                    } catch (NumberFormatException e) {
                         error("could not understand SX command format: " + msg + " error=" + e.getMessage());
                     }
                     break;
@@ -168,14 +169,13 @@ public class WifiThrottle {
                             }
                             
                         }
-                    } catch (Exception e) {
+                    } catch (IOException | NumberFormatException e) {
                         error("could not understand SX command format: " + msg + " error=" + e.getMessage());
                     }
                     break;
 
                 case "A":
                     // announcement of name / ip-address / battery-state
-                    try {
                         if (cmd.length >= 4) {
                             String name = cmd[1];
                             if (name.contains("FUNKR")) {  // only "FUNKR" is a "lanbahn FREDI"
@@ -190,16 +190,13 @@ public class WifiThrottle {
 
                             }
                         }
-                    } catch (Exception e) {
-                        error("could not understand A command format: " + msg + " error=" + e.getMessage());
-                    }
                     break;
 
             }
 
         }
 
-        private boolean isOwnIP(String ip) {
+        /* private boolean isOwnIP(String ip) {
             //error(ip);
             for (int i = 0; i < myips.size(); i++) {
                 //error(myip.get(i).toString());
@@ -208,7 +205,7 @@ public class WifiThrottle {
                 }
             }
             return false;
-        }
+        } */
 
     }
 

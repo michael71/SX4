@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat;
 import static de.blankedv.sx4.Constants.*;
 import static com.esotericsoftware.minlog.Log.*;
 import de.blankedv.sx4.timetable.CompRoute;
+import de.blankedv.sx4.timetable.FXGUI;
 import de.blankedv.sx4.timetable.PanelElement;
 
 import de.blankedv.sx4.timetable.ReadConfig;

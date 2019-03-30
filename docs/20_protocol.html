@@ -446,38 +446,42 @@
     </a>
     <nav id="menu">
       <ul>
-<li><a class="active" href="index.html">index</a></li>
+<li><a class="" href="index.html">index</a></li>
 <li><a class="" href="01_usage_en.html">01 usage en</a></li>
 <li><a class="" href="02_usage_de.html">02 usage de</a></li>
-<li><a class="" href="20_protocol.html">20 protocol</a></li>
+<li><a class="active" href="20_protocol.html">20 protocol</a></li>
 </ul>
  <img src="sx4_loco2_core.png" />
     </nav>
     <article id="main" class="content">
-      <h1>SX4 (Core)</h1>
-<p>Das SX4 Programm wird verwendet zur Steuerung einer Selectrix
-Modellbahn über das Netzwerk (per TCP/IP Befehlen,
-siehe <a href="20_protocol.html">Protokoll</a>
-). Hierzu muss die
-“Command Station” per seriellem Interface mit dem PC verbunden sein (RS232 oder USB).</p>
-<p>Das SX4 Programm kann auch als Dämon gestartet werden ohne GUI.</p>
-<p>Falls ein panel.xml file im Startverzeichnis existiert
-(erzeugt durch <a href="https://michael71.github.io/SX4Draw">SX4Draw</a>&gt;SX4Draw),
-so können auch Fahrstraßen gestellt werden.
-(siehe auch die LanbahnPanel und SX4Draw Dokumentation)</p>
-<p>Falls darüberhinaus ein GUI aktiviert wird durch die “-g” Option, so kann auch
-ein Fahrplan gestartet werden, der mehrere Zugfahrten nacheinander automatisch
-abarbeitet (für das GUI muss JavaFX installiert sein - dies ist in der Java-8-JRE
-enthalten, muss aber bei Verwendung von Java-11 separat installiert werden).</p>
-<p><img src="fahrplan1.png" alt=""></p>
-<p>Mehr allgemeinte Info: <a href="https://opensx.net/sx4">https://opensx.net/sx4</a></p>
-<h1>Startoptionen</h1>
-<p>siehe: <a href="02_usage_de.html">Startoptionen (de)</a>
-bzw englisch: <a href="01_usage_en.html">Usage (en)</a></p>
-<h1>Handbuch Fahrplanbedienung</h1>
-<p>kommt noch …</p>
-<h1>SXnet Protokoll</h1>
-<p><a href="20_protocol.html">SXnet Protokoll</a></p>
+      <h1>SX4 - ASCII Protocol</h1>
+<h2>SXnet - Port</h2>
+<p>Es wird Port 4104 verwendet</p>
+<h1>Befehlsübersicht</h1>
+<h2>reine SX Befehle</h2>
+<p>Über folgende ASCII Befehle werden SX-Bytes gesetzt und gelesen</p>
+<pre><code>S &lt;c&gt; &lt;d&gt;  - set an sx-channel &lt;c&gt; to value &lt;d&gt;  (&quot;S 44 12&quot; -&gt; result &quot;OK&quot;)
+SX &lt;c&gt; &lt;d&gt; = same as S &lt;c&gt; &lt;d&gt;
+R &lt;c&gt; - read a channel (&quot;R 44 -&gt; result  would be &quot;X 44 12)
+
+hierbei kann c die Werte von 1 bis 111 annehmen und d die Werte 0 bis 255 (8bit)
+</code></pre>
+<h2>erweiterte, SX Bit Befehle</h2>
+<p>Um unabhängig von der anderen Bits eines SX Kanals zB eine einzelne Weiche stellen
+zu können, gibt es die “Bit-Befehle” SET und GET, Beispiel:</p>
+<pre><code>SET 853 1 =&gt; Setze Bit 3 auf Adresse 85
+SET 853 0 =&gt; Clear Bit 3 auf Adresse 85
+(Bit sind hier die typischen SX-Bits, die von 1..8 numeriert sind)
+
+READ 853  =&gt; gibt den Wert von Bit 3 auf Adresse 85 aus
+   response will be something like 'XL 853 1' (or ... 0)
+</code></pre>
+<h2>Gleisspannungs Befehle Ein/AUS</h2>
+<pre><code>SETPOWER 1  =&gt; track power on (SETPOWER 0 =&gt; track power off)
+READPOWER   =&gt; lese den aktuellen &quot;Gleisspannungszustand&quot;
+                  Antwort:  &quot;XPOWER 1&quot; or &quot;XPOWER 0&quot;
+</code></pre>
+<p>zurück zum <a href="index.html">Index</a></p>
 <h1>Licence</h1>
 <p><a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPL v3.0</a></p>
 <p><img src="sx4_loco2_core.png" alt=""></p>
