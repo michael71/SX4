@@ -1,7 +1,5 @@
 # SX4 USAGE (Startoptionen)
 
-
-
     usage: SX4 [-b <arg>] [-d] [-h] [-s <arg>] [-t <arg>] [-v] [-r] [-g]
 
     -b,--baudrate <arg>   Baudrate (only needed for SLX825), default=9600

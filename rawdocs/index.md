@@ -1,7 +1,7 @@
 # SX4 (Core)
 
 Das SX4 Programm wird verwendet zur Steuerung einer Selectrix 
-Modellbahn über das Netzwerk (per TCP/IP Befehlen, 
+Modellbahn über das Netzwerk (per TCP/IP ASCII Kommandos, 
 siehe [Protokoll](20_protocol.md)
 ). Hierzu muss die 
 "Command Station" per seriellem Interface mit dem PC verbunden sein (RS232 oder USB).
@@ -36,7 +36,7 @@ kommt noch ....
 
 # SXnet
 
-[SXnet ASCII Protocol](20_protocol.md)
+[SXnet ASCII Protocol](20-protocol.md)
 
 
 # Licence
