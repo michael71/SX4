@@ -1,8 +1,8 @@
 # Fahrplan Stop
 
-Die Taste "Stop" (direkt neben Start)
+Die Taste "Stop" (rechts neben Start)
 
-![](power-start-stop.png)
+![](stop.png)
 
 ist *mit Vorsicht* zu bedienen! Sie führt zum sofortigen Stop aller Züge und Auflösen aller
 Fahrstraßen. In der Regel führt dies nämlich zu einem Zustand, der mit dem Neustart des Fahrplans
