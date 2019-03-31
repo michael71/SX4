@@ -44,6 +44,9 @@ Im Einzelnen: (jeweils Kurzform, zum Beispiel "-b" und Langform "--baudrate")
     java -jar SX4.jar -t SIM -d
 
 
+### =>> weiter zu [Hauptfenster](03-Hauptfenster.md)
+
+___
 
 ![](sx4_loco2_core.png)
 

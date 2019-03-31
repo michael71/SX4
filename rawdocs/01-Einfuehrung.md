@@ -3,7 +3,7 @@
 Das SX4 Programm wird verwendet zur Steuerung einer Selectrix 
 Modellbahn über das Netzwerk (per TCP/IP ASCII KommandosModellbahn über das Netzwerk (per TCP/IP ASCII Kommandos, 
 , 
-siehe [Protokoll](20_protocol.md)
+siehe [Protokoll](20-protocol.md)
 ). Hierzu muss die 
 "Command Station" per seriellem Interface mit dem PC verbunden sein (RS232 oder USB).
 
@@ -23,15 +23,11 @@ enthalten, muss aber bei Verwendung von Java-11 separat installiert werden).
 
 Mehr allgemeine Info: https://opensx.net/sx4
 
-weiter zu *[Startoptionen](02_Optionen.md)*
+### =>> weiter zu [Startoptionen](02-Optionen.md)
 
-bzw englisch: [Usage](02_usage.md)
+bzw englisch: [Usage](02-usage.md)
 
-
-
-# Licence
-
-[GPL v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html)
+___
 
 ![](sx4_loco2_core.png)
 

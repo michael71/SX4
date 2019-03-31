@@ -16,12 +16,13 @@ starten mit
 
 ## Startoptionen
 
-siehe: [Startoptionen](02-optionen.md)
+siehe: [Startoptionen](02-Optionen.md)
 bzw englisch: [Usage](02-usage.md)
 
 ## Handbuch Fahrplanbedienung
 
 * [Einführung](01-Einfuehrung.md)
+* [Startoptionen](02-Optionen.md)
 * [Hauptfenster](03-Hauptfenster.md)
 * [Fahrplan_Start](04-Fahrplan_Start.md)
 * [Zug setzen](05-Zug_setzen.md)
@@ -35,6 +36,7 @@ bzw englisch: [Usage](02-usage.md)
 
 [SXnet ASCII Protocol](20-protocol.md)
 
+___
 
 ## Licence
 

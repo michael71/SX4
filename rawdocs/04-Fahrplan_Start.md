@@ -32,13 +32,11 @@ Falls die Positionen nicht stimmen, so kann das 2 Gründe haben:
 2. die Positionen sind dem Programm noch nicht bekannt
 (oder beides)
 
-weiter zu [Zug-setzen](05-Zug_setzen.md)
 
-zurück zum [Index](index.md)
 
-# Licence
+### =>> weiter zu [Zug setzen](05-Zug_setzen.md)
 
-[GPL v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html)
+___
 
 ![](sx4_loco2_core.png)
 
