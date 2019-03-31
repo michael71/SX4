@@ -2,7 +2,7 @@
 
 Mehr allgemeine Info: https://opensx.net/sx4
 
-# Installation
+## Installation
 
 Nach Download von *SX4.jar* von github, Verzeichnis 
 
@@ -19,7 +19,7 @@ starten mit
 siehe: [Startoptionen](02-optionen.md)
 bzw englisch: [Usage](02-usage.md)
 
-# Handbuch Fahrplanbedienung
+## Handbuch Fahrplanbedienung
 
 * [Einführung](01-Einfuehrung.md)
 * [Hauptfenster](03-Hauptfenster.md)
@@ -31,12 +31,12 @@ bzw englisch: [Usage](02-usage.md)
 
 ![](fahrplan1.png)
 
-# SXnet
+## SXnet
 
 [SXnet ASCII Protocol](20-protocol.md)
 
 
-# Licence
+## Licence
 
 [GPL v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html)
 

@@ -5,17 +5,12 @@
 Vom Fahrplan-Fenster aus kann einer der Fahrpläne, die im Panel.XML File gespeichert
 sind, gestartet werden und auch gestoppt werden.
 
-![Gleissp./Start/Stop](power-start.stop.png)
-
-Links neben dem Startbutton findet sich die Anzeige (rot/grün) für die Gleisspannung -
-durch Click auf diese Anzeige kann die Gleisspannung ein- und ausgeschaltet werden.
-
-Darunter kann ein Fahrplan ausgewählt werden:
+Der entsprechende Fahrplan wird ausgewählt:
 
 ![](fahrplan-select.png)
 
 
-weiter zu [Fahrplan-Start](04-start.md)
+weiter zu [Fahrplan Start](04-Fahrplan_Start.md)
 
 zurück zum [Index](index.md)
 
