@@ -454,6 +454,7 @@
 <li><a class="" href="04-Fahrplan_Start.html">Fahrplan Start</a></li>
 <li><a class="" href="05-Zug_setzen.html">Zug setzen</a></li>
 <li><a class="active" href="06-Zug_aendern.html">Zug aendern</a></li>
+<li><a class="" href="07-Fahrplan_stop.html">Fahrplan stop</a></li>
 <li><a class="" href="20-protocol.html">protocol</a></li>
 <li><a class="" href="99-License.html">License</a></li>
 </ul>
@@ -461,9 +462,22 @@
           <img src="sx4_loco2_core.png" /></a>
     </nav>
     <article id="main" class="content">
-      <h1>Zug ändern</h1>
-<p>TODO …</p>
-<h3>=&gt;&gt;  weiter zu <a href="06-Zug_aendern.html">Zug ändern</a></h3>
+      <h1>Temporäre Änderungen</h1>
+<h2>Geschwindigkeit ändern</h2>
+<p>Die Geschwindigkeit ändern kann man mit dem Dialog “Zug ändern”. Hier ein Beispiel:
+Die Geschwindigkeit des Zuges mit der Adresses “42” wird von “18” auf “22” geändert:</p>
+<p><img src="change-train.png" alt=""></p>
+<p>Achtung: Diese Änderung gilt bis zum nächsten Einlesen des Fahrplans (bzw Neustart des Programms) - soll sie
+dauerhaft geändert werden, so muss man dies im Panel.xml File machen, zum Beispiel mit SX4Draw.</p>
+<h2>Zug ändern</h2>
+<p>Falls man mit einem anderen Zug(Lok) fahren will als im Fahrplan
+vermerkt, so kann man ihn mit dem gleichen Dialog wie oben gegen eine andere Adresse tauschen.
+(auch hier ist die Änderung temporär)</p>
+<h2>Vereinfachung</h2>
+<p>Es gilt übrigens grundsätzlich die Vereinfachung</p>
+<pre><code>Zugnummer = Lokadresse
+</code></pre>
+<h3>=&gt;&gt;  weiter zu <a href="07-Fahrplan_stop.html">Fahrplan stop</a></h3>
 <hr>
 <p><img src="sx4_loco2_core.png" alt=""></p>
 

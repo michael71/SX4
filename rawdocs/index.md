@@ -4,15 +4,15 @@ Mehr allgemeine Info: https://opensx.net/sx4
 
 ## Installation
 
-Nach Download von *SX4.jar* von github, Verzeichnis 
+Nach Download von *SX4.jar* von github aus dem Verzeichnis:
 
     https://github.com/michael71/SX4/releases
 
-starten mit 
+kann das Programm mit dem Aufruf von: 
     
     java -jar SX4.jar  [Startoptionen...]
 
-(Java-8 oder Java-11 muss installiert sein)
+gestartet werden. Hierzu muss Java-8 oder Java-11 installiert sein.
 
 ## Startoptionen
 
@@ -27,8 +27,8 @@ bzw englisch: [Usage](02-usage.md)
 * [Fahrplan_Start](04-Fahrplan_Start.md)
 * [Zug setzen](05-Zug_setzen.md)
 * [Zug ändern](06-Zug_aendern.md)
-* ...
-* ...
+* [Fahrplan stop](07-Fahrplan_stop.md)
+
 
 ![](fahrplan1.png)
 
