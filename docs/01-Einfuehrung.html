@@ -446,8 +446,8 @@
     </a>
     <nav id="menu">
       <ul>
-<li><a class="active" href="index.html">index</a></li>
-<li><a class="" href="01-Einfuehrung.html">Einfuehrung</a></li>
+<li><a class="" href="index.html">index</a></li>
+<li><a class="active" href="01-Einfuehrung.html">Einfuehrung</a></li>
 <li><a class="" href="02-Optionen.html">Optionen</a></li>
 <li><a class="" href="02-usage.html">usage</a></li>
 <li><a class="" href="03-Hauptfenster.html">Hauptfenster</a></li>
@@ -459,32 +459,26 @@
  <img src="sx4_loco2_core.png" />
     </nav>
     <article id="main" class="content">
-      <h1>SX4 Fahrplan</h1>
-<p>Mehr allgemeine Info: <a href="https://opensx.net/sx4">https://opensx.net/sx4</a></p>
-<h1>Installation</h1>
-<p>Nach Download von <em>SX4.jar</em> von github, Verzeichnis</p>
-<pre><code>https://github.com/michael71/SX4/releases
-</code></pre>
-<p>starten mit</p>
-<pre><code>java -jar SX4.jar  [Startoptionen...]
-</code></pre>
-<p>(Java-8 oder Java-11 muss installiert sein)</p>
-<h2>Startoptionen</h2>
-<p>siehe: <a href="02-optionen.html">Startoptionen</a>
-bzw englisch: <a href="02-usage.html">Usage</a></p>
-<h1>Handbuch Fahrplanbedienung</h1>
-<ul>
-<li><a href="01-Einfuehrung.html">Einführung</a></li>
-<li><a href="03-Hauptfenster.html">Hauptfenster</a></li>
-<li><a href="04-Fahrplan_Start.html">Fahrplan_Start</a></li>
-<li><a href="05-Zug_setzen.html">Zug setzen</a></li>
-<li><a href="06-Zug_aendern.html">Zug ändern</a></li>
-<li>…</li>
-<li>…</li>
-</ul>
+      <h1>SX4 (Core)</h1>
+<p>Das SX4 Programm wird verwendet zur Steuerung einer Selectrix
+Modellbahn über das Netzwerk (per TCP/IP ASCII KommandosModellbahn über das Netzwerk (per TCP/IP ASCII Kommandos,
+,
+siehe <a href="20_protocol.html">Protokoll</a>
+). Hierzu muss die
+“Command Station” per seriellem Interface mit dem PC verbunden sein (RS232 oder USB).</p>
+<p>Das SX4 Programm kann auch als Dämon gestartet werden ohne GUI (ohne Fahrplan).</p>
+<p>Falls ein panel.xml file im Startverzeichnis existiert
+(erzeugt durch <a href="https://michael71.github.io/SX4Draw">SX4Draw</a>&gt;SX4Draw),
+so können auch Fahrstraßen gestellt werden.
+(siehe auch die LanbahnPanel und SX4Draw Dokumentation)</p>
+<p>Falls darüberhinaus ein GUI aktiviert wird durch die “-g” Option, so kann auch
+ein Fahrplan gestartet werden, der mehrere Zugfahrten nacheinander automatisch
+abarbeitet (für das GUI muss JavaFX installiert sein - dies ist in der Java-8-JRE
+enthalten, muss aber bei Verwendung von Java-11 separat installiert werden).</p>
 <p><img src="fahrplan1.png" alt=""></p>
-<h1>SXnet</h1>
-<p><a href="20-protocol.html">SXnet ASCII Protocol</a></p>
+<p>Mehr allgemeine Info: <a href="https://opensx.net/sx4">https://opensx.net/sx4</a></p>
+<p>weiter zu <em><a href="02_Optionen.html">Startoptionen</a></em></p>
+<p>bzw englisch: <a href="02_usage.html">Usage</a></p>
 <h1>Licence</h1>
 <p><a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPL v3.0</a></p>
 <p><img src="sx4_loco2_core.png" alt=""></p>

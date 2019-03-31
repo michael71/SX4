@@ -61,6 +61,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.util.Duration;
 
 /**
@@ -81,16 +83,19 @@ public class TripsTable extends Application {
     private final Image imgPause = new Image("/de/blankedv/sx4/res/pause2.png");
     private final Image imgStart = new Image("/de/blankedv/sx4/res/start2.png");
     private final Image imgStop = new Image("/de/blankedv/sx4/res/stop2.png");
+    private final Image imgHelp = new Image("/de/blankedv/sx4/res/help2.png");
     private final ImageView ivPowerState = new ImageView();
     private final ImageView ivRefresh = new ImageView(refresh);
     private final ImageView ivPause = new ImageView(imgPause);
     private final ImageView ivStart = new ImageView(imgStart);
     private final ImageView ivStop = new ImageView(imgStop);
+    private final ImageView ivHelp = new ImageView(imgHelp);
     private final Button btnRefresh = new Button("Fahrten neu laden");
     private final ComboBox<String> cbSelectTimetable = new ComboBox<>();
     private final Button btnChangeTrain = new Button("Zug ändern");
     private final Button btnSetTrain = new Button("Zug setzen");
     private final Button btnReset = new Button("Reset");
+    //private final Button btnHelp = new Button();
     final Button btnStart = new Button();
     final Button btnStop = new Button();
     //final Button btnPause = new Button();
@@ -347,6 +352,7 @@ public class TripsTable extends Application {
         btnStart.setGraphic(ivStart);
         btnStop.setDisable(true);
         btnStop.setGraphic(ivStop);
+        //btnHelp.setGraphic(ivHelp);
         //btnPause.setDisable(true);
         //btnPause.setGraphic(ivPause);
 
@@ -428,7 +434,7 @@ public class TripsTable extends Application {
             }
         });
 
-        btnReset.setOnAction(e -> {
+        /* btnReset.setOnAction(e -> {
             PanelElement.unlockAll();
             for (Route rt : allRoutes) {
                 rt.clear();
@@ -444,8 +450,17 @@ public class TripsTable extends Application {
             Timetable tt = allTimetables.get(0);
             tt.stop();
         }
-        );
+        ); */
+        
+        /*btnHelp.setOnAction(e -> {
+            showManual(primaryStage);      
+        }); */
 
+        ivHelp.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
+            showManual(primaryStage);
+            event.consume();
+        });
+        
         btnChangeTrain.setOnAction(e -> {
             LocoSpeedPairs res = ChangeTrainDialog.open(primaryStage);
             if (res.loco1 != INVALID_INT) {
@@ -490,7 +505,7 @@ public class TripsTable extends Application {
         HBox.setHgrow(lblNothing, Priority.ALWAYS);
         lblNothing.setMaxWidth(Double.MAX_VALUE);
         hb.getChildren().addAll(ivPowerState, btnStart, /* btnPause, */ btnStop, spacer, btnRefresh); // , pi);
-        hb2.getChildren().addAll(cbSelectTimetable, btnChangeTrain, btnSetTrain, spacer2, btnReset);
+        hb2.getChildren().addAll(cbSelectTimetable, btnChangeTrain, btnSetTrain, spacer2, ivHelp); // btnReset);
         vb.getChildren().addAll(hb, hb2);
         return vb;
     }
@@ -518,6 +533,22 @@ public class TripsTable extends Application {
             alert.showAndWait();
             return false;
         }
+    }
+    
+    private void showManual(Stage primStage) {
+        Stage wvStage = new Stage();
+        wvStage.initOwner(primStage);
+
+        WebView mWebView = new WebView();
+        WebEngine webEngine = mWebView.getEngine();
+        webEngine.load(this.getClass().getResource("/de/blankedv/sx4/res/docs/index.html").toExternalForm());
+        Scene scene = new Scene(mWebView, 900.0, 500.0);
+        wvStage.setTitle("Handbuch SX4 Fahrplan");
+
+        // Add  the Scene to the Stage
+        wvStage.setScene(scene);
+        // Display the Stage
+        wvStage.show();
     }
 
     public static void auto() {
