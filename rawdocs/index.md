@@ -24,10 +24,10 @@ bzw englisch: [Usage](02-usage.md)
 * [Einführung](01-Einfuehrung.md)
 * [Startoptionen](02-Optionen.md)
 * [Hauptfenster](03-Hauptfenster.md)
-* [Fahrplan_Start](04-Fahrplan_Start.md)
+* [Fahrplan Start](04-Fahrplan_Start.md)
 * [Zug setzen](05-Zug_setzen.md)
 * [Zug ändern](06-Zug_aendern.md)
-* [Fahrplan stop](07-Fahrplan_stop.md)
+* [Fahrplan Stop](07-Fahrplan_stop.md)
 
 
 ![](fahrplan1.png)

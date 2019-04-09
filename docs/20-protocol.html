@@ -462,32 +462,51 @@
           <img src="sx4_loco2_core.png" /></a>
     </nav>
     <article id="main" class="content">
-      <h1>SX4 - ASCII Protocol</h1>
-<h2>SXnet - Port</h2>
-<p>Es wird Port 4104 verwendet (und TCP/IP)</p>
+      <h1>SXnet Protocol</h1>
+<h2>Port</h2>
+<p>Es wird Port 4104 verwendet (und TCP/IP) - die Befehle werden als ASCII Texte übertragen</p>
 <h1>Befehlsübersicht</h1>
 <h2>reine SX Befehle</h2>
-<p>Über folgende ASCII Befehle werden SX-Bytes gesetzt und gelesen</p>
-<pre><code>S &lt;c&gt; &lt;d&gt;  - set an sx-channel &lt;c&gt; to value &lt;d&gt;  (&quot;S 44 12&quot; -&gt; result &quot;OK&quot;)
-SX &lt;c&gt; &lt;d&gt; = same as S &lt;c&gt; &lt;d&gt;
-R &lt;c&gt; - read a channel (&quot;R 44 -&gt; result  would be &quot;X 44 12)
+<p>Über folgende ASCII Befehle werden SX-Bytes gesetzt und gelesen, d.h. Selectrix “Kanal-Daten” geschrieben und gelesen (Kanal = eine SX-Adresse zwischen 0 und 111)</p>
+<pre><code>S  &lt;c&gt; &lt;d&gt;  heisst: eine Adresse &lt;c&gt; auf einen Wert &lt;d&gt;  setzen
+    Beispiel: &quot;S 44 12&quot; schicken an SX4, dann antwortet SX4 mit &quot;OK&quot; (oder &quot;ERROR&quot;, wenn der Befehl nicht verstanden wird)
+
+SX &lt;c&gt; &lt;d&gt;  heisst exakt dasselbe wie    S &lt;c&gt; &lt;d&gt;
+
+R  &lt;c&gt;      heisst: eine Adresse lesen (read)
+    Beispie: &quot;R 44&quot; schicken an SX4, dann antwortet in diesem Fall SX4 mit &quot;X 44 12&quot;
 
 hierbei kann c die Werte von 1 bis 111 annehmen und d die Werte 0 bis 255 (8bit)
 </code></pre>
-<h2>erweiterte, SX Bit Befehle</h2>
+<h2>erweiterte SX Bit Befehle</h2>
 <p>Um unabhängig von der anderen Bits eines SX Kanals zB eine einzelne Weiche stellen
 zu können, gibt es die “Bit-Befehle” SET und GET, Beispiel:</p>
 <pre><code>SET 853 1 =&gt; Setze Bit 3 auf Adresse 85
 SET 853 0 =&gt; Clear Bit 3 auf Adresse 85
-(Bit sind hier die typischen SX-Bits, die von 1..8 numeriert sind)
+    Achtung: Bit sind hier die typischen SX-Bits, die von 1..8 numeriert sind
 
 READ 853  =&gt; gibt den Wert von Bit 3 auf Adresse 85 aus
-   response will be something like 'XL 853 1' (or ... 0)
+   Antwort von SX4 in diesem Fall (s.o.):  &quot;XL 853 1&quot; (or ... 0)  
 </code></pre>
 <h2>Gleisspannungs Befehle Ein/AUS</h2>
 <pre><code>SETPOWER 1  =&gt; track power on (SETPOWER 0 =&gt; track power off)
 READPOWER   =&gt; lese den aktuellen &quot;Gleisspannungszustand&quot;
                   Antwort:  &quot;XPOWER 1&quot; or &quot;XPOWER 0&quot;
+</code></pre>
+<h2>Fahrstraßen Befehle (Route)</h2>
+<p>Grundsätzlich funktionieren Fahrstraßen-Befehle nur, wenn beim Start in der Kommandozeile die Option “-r” aktiviert wurde - und wenn ein “panel<xyz>.xml” File im Startverzeichnis des Programms liegt, in dem die Fahrstraßen definiert sind. <id> ist hierbei eine Zahl zwischen 1200 und 9999, die im XML File als “Route”-Adresse definiert wurde.</p>
+<pre><code>Beispiel: &lt;route adr=&quot;2203&quot; .....   /&gt;
+</code></pre>
+<p>Die Befehle im Einzelnen:</p>
+<pre><code>REQ &lt;id&gt; 1  =&gt; setze Fahrstraße mit der Adresse &lt;id&gt; 
+
+REQ &lt;id&gt; 0  =&gt; lösche Fahrstraße mit der Adresse &lt;id&gt;
+
+Die Antwort von der SX4 Zentrale ist &quot;XL &lt;id&gt; 1&quot;, wenn das Setzen der Fahrstraße möglich ist
+
+Die Antworten &quot;ERROR&quot;, &quot;ROUTE_LOCKED&quot;, &quot;ROUTE_INVALID&quot; bedeuten, dass die Fahrstraße NICHT gesetzt werden konnte
+
+READ &lt;id&gt;   =&gt; gibt den aktuellen Zustand der Fahrstraße aus &quot;XL &lt;id&gt; 1&quot; heisst zb: Fahrstraße mit der Adresse &lt;id&gt; ist aktuell aktiviert
 </code></pre>
 <p>zurück zum <a href="index.html">Index</a></p>
 <h1>Licence</h1>
