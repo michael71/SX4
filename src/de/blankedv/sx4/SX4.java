@@ -36,6 +36,7 @@ import de.blankedv.sx4.timetable.ReadConfigTrips;
 import de.blankedv.sx4.timetable.Route;
 import de.blankedv.sx4.timetable.Trip;
 import de.blankedv.sx4.timetable.TripsTable;
+import static de.blankedv.sx4.timetable.Vars.allTripsTables;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.io.File;
 import java.util.Collections;
@@ -150,7 +151,7 @@ public class SX4 {
                 error(ex.getMessage());
             }
         }
-// TODO may have to be changed in Java9 to (?)
+
         myips = NIC.getmyip();
 
         if (myips.isEmpty()) {
@@ -174,7 +175,9 @@ public class SX4 {
                 sxi.doUpdate();     // includes reading all SX data 
                 if (routingEnabled) {
                     if (guiEnabled) {
-                        TripsTable.auto();
+                        for (TripsTable tt : allTripsTables) {
+                            tt.auto();
+                        }
                         Trip.auto();
                     }
                     Route.auto();

@@ -71,18 +71,25 @@ public class Trip implements Comparable<Trip> {
 
     }
 
-    public int getAdr() {
-        return adr;
+    public int getLocoAddr() {
+        return locoAddr;
     }
-
-    public void setAdr(int adr) {
-        this.adr = adr;
-    }
-
+    
     public String getMessage() {
         return message;
     }
 
+    
+    public int getAdr() {
+        return adr;
+    }
+
+    
+    public void setAdr(int adr) {
+        this.adr = adr;
+    }
+
+    
     public int getRoute() {
         return route;
     }
@@ -115,9 +122,7 @@ public class Trip implements Comparable<Trip> {
         this.locoString = locoString;
     }
 
-    public int getLocoAddr() {
-        return locoAddr;
-    }
+    
 
     public void setLocoAddr(int locoAddr) {
         this.locoAddr = locoAddr;
@@ -161,7 +166,7 @@ public class Trip implements Comparable<Trip> {
 
     public void setLoco(Loco loco) {
         this.loco = loco;
-    }
+    } 
 
     public boolean convertLocoData() {
         // convert locoString string to int values for address, direction and speed

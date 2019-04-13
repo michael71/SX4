@@ -37,6 +37,8 @@ public class Vars {
 
     static final int RT_INACTIVE = 0;
     static final int RT_ACTIVE = 1;
+    
+    static final int MAX_START_STOP_DELAY = 100000;
 
     public static final ArrayList<PanelElement> panelElements = new ArrayList<>();
     public static final ArrayList<Loco> allLocos =  new ArrayList<>();
@@ -44,5 +46,6 @@ public class Vars {
     public static final ArrayList<Route> allRoutes  = new ArrayList<>();
     public static final ArrayList<CompRoute> allCompRoutes = new ArrayList<>();
 
+    public static final ArrayList<TripsTable> allTripsTables = new ArrayList<>();
 
 }

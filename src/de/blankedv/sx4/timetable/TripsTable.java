@@ -18,16 +18,17 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
+import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import static de.blankedv.sx4.Constants.NUM_VERSION;
 import static de.blankedv.sx4.SX4.configFilename;
 import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.timetable.Trip.TripState;
-import static de.blankedv.sx4.timetable.Vars.allCompRoutes;
-import static de.blankedv.sx4.timetable.Vars.allRoutes;
+import static de.blankedv.sx4.timetable.Vars.MAX_START_STOP_DELAY;
 import static de.blankedv.sx4.timetable.VarsFX.allTimetables;
 import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelName;
+
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -53,7 +54,9 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableRow;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -63,7 +66,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import javafx.stage.WindowEvent;
 import javafx.util.Duration;
+import javafx.util.StringConverter;
+import javafx.util.converter.IntegerStringConverter;
 
 /**
  *
@@ -71,11 +77,11 @@ import javafx.util.Duration;
  */
 public class TripsTable extends Application {
 
-    public static final TableView<Trip> tableView = new TableView<>();
+    private final TableView<Trip> tableView = new TableView<>();
 
-    Scene tripTableScene;
+    private Scene tripTableScene;
     // New window (Stage)
-    Stage tripWindow;
+    private Stage tripWindow;
 
     private final Image green = new Image("/de/blankedv/sx4/res/greendot.png");
     private final Image red = new Image("/de/blankedv/sx4/res/reddot.png");
@@ -96,14 +102,14 @@ public class TripsTable extends Application {
     private final Button btnSetTrain = new Button("Zug setzen");
     private final Button btnReset = new Button("Reset");
     //private final Button btnHelp = new Button();
-    final Button btnStart = new Button();
-    final Button btnStop = new Button();
+    private final Button btnStart = new Button();
+    private final Button btnStop = new Button();
     //final Button btnPause = new Button();
-    final Pane spacer = new Pane();
-    final Pane spacer2 = new Pane();
-    
+    private final Pane spacer = new Pane();
+    private final Pane spacer2 = new Pane();
 
-    private static Timetable ttSelected = null;  // TODO enable multiple timetables
+    public Timetable ttSelected = null;
+
     private Stage primaryStage;
     private final Label status = new Label();
     private final ArrayList<String> cbTimetables = new ArrayList<>();
@@ -144,6 +150,10 @@ public class TripsTable extends Application {
         createDataTables();
 
         primaryStage.show();
+        
+        primaryStage.setOnCloseRequest((WindowEvent e) -> {
+            System.out.println("TripsTable closing");
+        });
 
         // timeline for updating display
         final Timeline second = new Timeline(new KeyFrame(Duration.seconds(1), (ActionEvent event) -> {
@@ -283,6 +293,34 @@ public class TripsTable extends Application {
             return row;
         });
 
+        startDelayCol.setCellFactory(TextFieldTableCell.forTableColumn(new MyIntegerStringConverter()));
+
+        startDelayCol.setOnEditCommit((CellEditEvent<Trip, Integer> ev) -> {
+            Trip to = ev.getTableView().getItems().get(ev.getTablePosition().getRow());
+            if ((ev.getNewValue() >= 0) && (ev.getNewValue() < MAX_START_STOP_DELAY)) {
+                UpdateXML.setTripDelay(ev.getRowValue().adr, ev.getNewValue(), true);  
+                to.startDelay = ev.getNewValue();
+            } else {
+                invalidDelay(ev.getNewValue());
+                //to.startDelay = ev.getOldValue();
+            }
+            startDelayCol.setVisible(false);  // needed because of a JavaFX bug
+            startDelayCol.setVisible(true);
+        });
+
+        stopDelayCol.setCellFactory(TextFieldTableCell.forTableColumn(new MyIntegerStringConverter()));
+        stopDelayCol.setOnEditCommit((CellEditEvent<Trip, Integer> ev) -> {
+            Trip to = ev.getTableView().getItems().get(ev.getTablePosition().getRow());
+            if ((ev.getNewValue() >= 0) && (ev.getNewValue() < MAX_START_STOP_DELAY)) {
+                UpdateXML.setTripDelay(ev.getRowValue().adr, ev.getNewValue(), false);
+                to.stopDelay = ev.getNewValue();
+            } else {
+                invalidDelay(ev.getNewValue());
+            }
+            stopDelayCol.setVisible(false);   // needed because of a JavaFX bug
+            stopDelayCol.setVisible(true);
+        });
+
         adrCol.setCellValueFactory(new PropertyValueFactory<>("adr"));
         routeCol.setCellValueFactory(new PropertyValueFactory<>("route"));
         sens1Col.setCellValueFactory(new PropertyValueFactory<>("sens1"));
@@ -296,6 +334,14 @@ public class TripsTable extends Application {
         // textField.setTextFormatter(formatter);
         Utils.customResize(tableView);
 
+    }
+
+    private void invalidDelay(int value) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle("Error alert");
+        alert.setHeaderText(null);
+        alert.setContentText("Start/Stop-Delay muss im Bereich 0 ... 100000 liegen!");
+        alert.showAndWait();
     }
 
     private void startTripManually(Trip trip) {
@@ -341,7 +387,7 @@ public class TripsTable extends Application {
     private VBox createButtonBar() {
 
         final HBox hb = new HBox(15);     // first line of button
-        HBox.setHgrow(spacer, Priority.ALWAYS);       
+        HBox.setHgrow(spacer, Priority.ALWAYS);
         final HBox hb2 = new HBox(15);    // for second line of buttons
         HBox.setHgrow(spacer2, Priority.ALWAYS);
         final VBox vb = new VBox(5);
@@ -394,22 +440,6 @@ public class TripsTable extends Application {
             tableView.getSelectionModel().clearSelection();
         }
         );
-/*
-        btnPause.setOnAction(e -> {
-            Alert alert = new Alert(AlertType.ERROR);
-            alert.setTitle("Error alert");
-            alert.setHeaderText(null);
-            alert.setContentText("PAUSE noch nicht implementiert.");
-            alert.showAndWait();
-            
-        -----btnStop.setDisable(true);
-            btnPause.setDisable(true);
-            btnStart.setDisable(false);
-            cbSelectTimetable.setDisable(false);
-            ttSelected.stop();
-            tableView.getSelectionModel().clearSelection(); ----
-        }
-        ); */
 
         btnRefresh.setOnAction(e -> {
             // doublecheck that no trip is active
@@ -434,33 +464,11 @@ public class TripsTable extends Application {
             }
         });
 
-        /* btnReset.setOnAction(e -> {
-            PanelElement.unlockAll();
-            for (Route rt : allRoutes) {
-                rt.clear();
-            }
-            for (CompRoute cr : allCompRoutes) {
-                cr.clear();
-            }
-            btnStop.setDisable(true);
-            //btnPause.setDisable(true);
-            btnStart.setDisable(false);
-            cbSelectTimetable.setDisable(false);
-            cbSelectTimetable.getValue();
-            Timetable tt = allTimetables.get(0);
-            tt.stop();
-        }
-        ); */
-        
-        /*btnHelp.setOnAction(e -> {
-            showManual(primaryStage);      
-        }); */
-
         ivHelp.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
             showManual(primaryStage);
             event.consume();
         });
-        
+
         btnChangeTrain.setOnAction(e -> {
             LocoSpeedPairs res = ChangeTrainDialog.open(primaryStage);
             if (res.loco1 != INVALID_INT) {
@@ -494,13 +502,6 @@ public class TripsTable extends Application {
             event.consume();
         });
 
-        /*globalPower.addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
-            if (newValue) {
-                ivPowerState.setImage(green);
-            } else {
-                ivPowerState.setImage(red);
-            }
-        }); */
         Label lblNothing = new Label("  ");
         HBox.setHgrow(lblNothing, Priority.ALWAYS);
         lblNothing.setMaxWidth(Double.MAX_VALUE);
@@ -534,7 +535,7 @@ public class TripsTable extends Application {
             return false;
         }
     }
-    
+
     private void showManual(Stage primStage) {
         Stage wvStage = new Stage();
         wvStage.initOwner(primStage);
@@ -551,9 +552,10 @@ public class TripsTable extends Application {
         wvStage.show();
     }
 
-    public static void auto() {
+    public void auto() {
         if (ttSelected != null) {
             ttSelected.timetableCheck();
         }
     }
+
 }

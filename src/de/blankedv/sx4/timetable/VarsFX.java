@@ -27,4 +27,6 @@ public class VarsFX {
     public static final ObservableList<Trip> allTrips = FXCollections.observableArrayList();
     public static final ObservableList<Timetable> allTimetables  = FXCollections.observableArrayList();
 
+
+    
 }
