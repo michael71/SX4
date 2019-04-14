@@ -35,13 +35,13 @@ import de.blankedv.sx4.timetable.ReadConfig;
 import de.blankedv.sx4.timetable.ReadConfigTrips;
 import de.blankedv.sx4.timetable.Route;
 import de.blankedv.sx4.timetable.Trip;
-import de.blankedv.sx4.timetable.TripsTable;
-import static de.blankedv.sx4.timetable.Vars.allTripsTables;
+import de.blankedv.sx4.timetable.TimetableUI;
 import static de.blankedv.sx4.timetable.Vars.panelElements;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.prefs.Preferences;
+import static de.blankedv.sx4.timetable.Vars.allTimetableUIs;
 
 /**
  *
@@ -175,7 +175,7 @@ public class SX4 {
                 sxi.doUpdate();     // includes reading all SX data 
                 if (routingEnabled) {
                     if (guiEnabled) {
-                        for (TripsTable tt : allTripsTables) {
+                        for (TimetableUI tt : allTimetableUIs) {
                             tt.auto();
                         }
                         Trip.auto();

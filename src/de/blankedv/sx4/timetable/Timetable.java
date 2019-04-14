@@ -46,7 +46,7 @@ public class Timetable {
     private String tripsString = "";
     private final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
 
-    private TripsTable tripsTable = null;
+    private TimetableUI tripsTable = null;
 
     String message = "";
 
@@ -109,7 +109,7 @@ public class Timetable {
     }
     
     // start a new timetable with 0 .. n trips, return true if successful
-    public boolean start(TripsTable ttable) {
+    public boolean start(TimetableUI ttable) {
 
         tripsTable = ttable;  // store for reference, we need it at end of this tt.
 
@@ -229,7 +229,8 @@ public class Timetable {
             state = INACTIVE;
             currentTripIndex = INVALID_INT;  // reset
             debug("last trip of timetable was finished.");
-            return tripsTable.startNewTimetable(nextTT);
+            // TODO return tripsTable.startNewTimetable(nextTT);
+            return true;
         } else {
             Trip tr = tripsList.get(currentTripIndex);
             debug("starting next trip "+tr.adr);

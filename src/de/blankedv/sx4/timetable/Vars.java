@@ -46,6 +46,6 @@ public class Vars {
     public static final ArrayList<Route> allRoutes  = new ArrayList<>();
     public static final ArrayList<CompRoute> allCompRoutes = new ArrayList<>();
 
-    public static final ArrayList<TripsTable> allTripsTables = new ArrayList<>();
+    public static final ArrayList<TimetableUI> allTimetableUIs = new ArrayList<>();
 
 }

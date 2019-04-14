@@ -18,20 +18,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
-import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.INVALID_INT;
-import static de.blankedv.sx4.Constants.NUM_VERSION;
-import static de.blankedv.sx4.SX4.configFilename;
 import de.blankedv.sx4.SXData;
-import de.blankedv.sx4.timetable.Trip.TripState;
 import static de.blankedv.sx4.timetable.Vars.MAX_START_STOP_DELAY;
-import static de.blankedv.sx4.timetable.Vars.allTripsTables;
-import static de.blankedv.sx4.timetable.VarsFX.allTimetables;
 import static de.blankedv.sx4.timetable.VarsFX.allTrips;
-import static de.blankedv.sx4.timetable.Vars.panelName;
-
-import java.util.ArrayList;
-import java.util.Collections;
 
 import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
@@ -41,17 +31,14 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -69,39 +56,33 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
-import javafx.util.StringConverter;
-import javafx.util.converter.IntegerStringConverter;
+import static de.blankedv.sx4.timetable.Vars.allTimetableUIs;
 
 /**
  *
  * @author mblank
  */
-public class TripsTable extends Application {
+public class TimetableUI {
 
     private final TableView<Trip> tableView = new TableView<>();
 
-    private Scene tripTableScene;
-    // New window (Stage)
-    private Stage tripWindow;
+    private Scene timetableUIScene;
+    private Stage stage;
 
     private final Image green = new Image("/de/blankedv/sx4/res/greendot.png");
     private final Image red = new Image("/de/blankedv/sx4/res/reddot.png");
-    private final Image refresh = new Image("/de/blankedv/sx4/res/refresh.png");
-    private final Image imgPause = new Image("/de/blankedv/sx4/res/pause2.png");
     private final Image imgStart = new Image("/de/blankedv/sx4/res/start2.png");
     private final Image imgStop = new Image("/de/blankedv/sx4/res/stop2.png");
     private final Image imgHelp = new Image("/de/blankedv/sx4/res/help2.png");
     private final ImageView ivPowerState = new ImageView();
-    private final ImageView ivRefresh = new ImageView(refresh);
-    private final ImageView ivPause = new ImageView(imgPause);
     private final ImageView ivStart = new ImageView(imgStart);
     private final ImageView ivStop = new ImageView(imgStop);
     private final ImageView ivHelp = new ImageView(imgHelp);
-    private final Button btnRefresh = new Button("Fahrten neu laden");
-    private final ComboBox<String> cbSelectTimetable = new ComboBox<>();
+    //private final Button btnRefresh = new Button("Fahrten neu laden");
+
     private final Button btnChangeTrain = new Button("Zug ändern");
     private final Button btnSetTrain = new Button("Zug setzen");
-    private final Button btnReset = new Button("Reset");
+
     //private final Button btnHelp = new Button();
     private final Button btnStart = new Button();
     private final Button btnStop = new Button();
@@ -109,52 +90,48 @@ public class TripsTable extends Application {
     private final Pane spacer = new Pane();
     private final Pane spacer2 = new Pane();
 
-    public Timetable ttSelected = null;
+    public Timetable ttSelected;
 
-    private Stage primaryStage;
     private final Label status = new Label();
-    private final ArrayList<String> cbTimetables = new ArrayList<>();
     private final ObservableList<Trip> allTimetableTrips = FXCollections.observableArrayList();
 
-    @Override
-    public void start(Stage stage) {
+    public TimetableUI(Stage primaryStage, Timetable tt) {
+        stage = new Stage();
+        stage.initOwner(primaryStage);
+        ttSelected = tt;
+    }
 
-        primaryStage = stage;
+    public void start() {
+
         BorderPane bp = new BorderPane();
-
         VBox buttons = createButtonBar();
 
         bp.setTop(buttons);
         //hb.setAlignment(Pos.CENTER);
         BorderPane.setMargin(buttons, new Insets(8, 8, 8, 8));
-        tripTableScene = new Scene(bp, 700, 300);
+        timetableUIScene = new Scene(bp, 700, 300);
         bp.setCenter(tableView);
         bp.setBottom(status);
-        debug("starting TripsTable");
+        debug("starting TimetableUI " + ttSelected.getAdr());
         // already done in SX4 (if guiEnabled): ReadConfigTrips.readTripsAndTimetables(configFilename);
-        checkTimetables();
 
-        cbSelectTimetable.valueProperty().addListener((ov, oldV, newV) -> {   // String values
-            if (newV != null) {
-                status.setText(newV);
-                // extract number and load new timetable
-                if (allTimetables.size() > 0) {
-                    ttSelected = allTimetables.get(getTTIndex(newV));
-                    orderTrips(ttSelected);
-                }
-            }
-        });
+        orderTrips(ttSelected);
+        status.setText(ttSelected.toString());
 
-        primaryStage.setTitle("Fahrplan " + panelName + " (" + NUM_VERSION + ")");
-        primaryStage.setScene(tripTableScene);
+        stage.setTitle("Fahrplan " + ttSelected.getAdr());
+        stage.setScene(timetableUIScene);
 
         createDataTables();
+        allTimetableUIs.add(this);
 
-        primaryStage.show();
-        
-        primaryStage.setOnCloseRequest((WindowEvent e) -> {
-            allTripsTables.remove(this);
-            System.out.println("TripsTable closing");
+        int n = allTimetableUIs.size();
+        stage.setX((n + 1) * 100.0);
+        stage.setY((n + 1) * 100.0);
+        stage.show();
+
+        stage.setOnCloseRequest((WindowEvent e) -> {
+            allTimetableUIs.remove(this);
+            System.out.println("TimetableUI closing");
         });
 
         // timeline for updating display
@@ -170,55 +147,25 @@ public class TripsTable extends Application {
                 tableView.getSelectionModel().select(ttSelected.getCurrentTripIndex());
             }
 
-            if (ttSelected == null) {
-                btnStop.setDisable(true);
-                btnStart.setDisable(true);
-                //btnPause.setDisable(true);
-                status.setText("kein Fahrplan.");
-            } else if (ttSelected.isActive() == true) {
-                btnRefresh.setDisable(true);
+            if (ttSelected.isActive() == true) {
                 status.setText(ttSelected.toString());
                 btnStop.setDisable(false);
                 btnStart.setDisable(true);
                 //btnPause.setDisable(false);
-                cbSelectTimetable.setDisable(true);
                 if (ttSelected.getCurrentTripIndex() != INVALID_INT) {
                     tableView.getSelectionModel().select(ttSelected.getCurrentTripIndex());
                 }
             } else {
-                btnRefresh.setDisable(false);
                 status.setText(ttSelected.toString());
                 btnStop.setDisable(true);
                 //btnPause.setDisable(true);
                 btnStart.setDisable(false);
-                cbSelectTimetable.setDisable(false);
             }
         }));
 
         second.setCycleCount(Timeline.INDEFINITE);
         second.play();
-        
-        allTripsTables.add(this);
 
-    }
-
-    private void checkTimetables() {
-        if (!allTimetables.isEmpty()) {
-            ttSelected = allTimetables.get(0);
-            status.setText(ttSelected.toString());
-            cbTimetables.clear();
-            for (Timetable tt : allTimetables) {
-                cbTimetables.add("Fahrplan " + tt.getAdr());
-            }
-            cbSelectTimetable.getItems().clear();
-            cbSelectTimetable.getItems().addAll(cbTimetables);
-            cbSelectTimetable.getSelectionModel().select(0);
-            cbSelectTimetable.setDisable(false);
-            orderTrips(ttSelected);
-        } else {
-            status.setText("kein Fahrplan vorhanden");
-            cbSelectTimetable.setDisable(true);
-        }
     }
 
     private void orderTrips(Timetable tt) {
@@ -227,20 +174,11 @@ public class TripsTable extends Application {
     }
 
     public void show() {
-        tripWindow.show();
+        stage.show();
     }
 
-    public boolean startNewTimetable(int timetableAdrToStart) {
-        debug("next timetable=" + timetableAdrToStart);
-        for (Timetable tt : allTimetables) {
-            if (tt.getAdr() == timetableAdrToStart) {
-                ttSelected = tt;
-                cbSelectTimetable.getSelectionModel().select("Fahrplan " + ttSelected.getAdr());
-                ttSelected.start(this);
-                return true; // timetable found
-            }
-        }
-        return false;  // did not find a timetable with this address
+    public int getAddress() {
+        return ttSelected.getAdr();
     }
 
     private void createDataTables() {
@@ -270,7 +208,7 @@ public class TripsTable extends Application {
             final MenuItem setTrainMenuItem = new MenuItem("Zug setzen");
             setTrainMenuItem.setOnAction((ActionEvent event) -> {
                 final Trip tr = row.getItem();
-                int resLoco = SelectLocoDialog.open(primaryStage, tr.sens1);
+                int resLoco = SelectLocoDialog.open(stage, tr.sens1);
                 if ((resLoco != INVALID_INT) && (resLoco != 0)) {
                     PanelElement.setTrain(tr.sens1, resLoco);
                     debug("Sensor " + tr.sens1 + " belegt mit Zug#" + resLoco);
@@ -302,7 +240,7 @@ public class TripsTable extends Application {
         startDelayCol.setOnEditCommit((CellEditEvent<Trip, Integer> ev) -> {
             Trip to = ev.getTableView().getItems().get(ev.getTablePosition().getRow());
             if ((ev.getNewValue() >= 0) && (ev.getNewValue() < MAX_START_STOP_DELAY)) {
-                UpdateXML.setTripDelay(ev.getRowValue().adr, ev.getNewValue(), true);  
+                UpdateXML.setTripDelay(ev.getRowValue().adr, ev.getNewValue(), true);
                 to.startDelay = ev.getNewValue();
             } else {
                 invalidDelay(ev.getNewValue());
@@ -376,29 +314,14 @@ public class TripsTable extends Application {
         }
     }
 
-    // get timetable index from selected String, like "Fahrstraße 3300" -> 3300
-    private int getTTIndex(String s) {
-        int ttIndex = 0;
-        for (Timetable tt : allTimetables) {
-            if (s.contains("" + tt.getAdr())) {
-                return ttIndex;
-            }
-            ttIndex++;
-        }
-        return 0;  // if not found, return 0
-    }
-
     private VBox createButtonBar() {
 
         final HBox hb = new HBox(15);     // first line of button
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        final HBox hb2 = new HBox(15);    // for second line of buttons
-        HBox.setHgrow(spacer2, Priority.ALWAYS);
         final VBox vb = new VBox(5);
 
         // final ProgressIndicator pi = new ProgressIndicator();
         // pi.setVisible(false);
-        btnRefresh.setGraphic(ivRefresh);
         btnStart.setGraphic(ivStart);
         btnStop.setDisable(true);
         btnStop.setGraphic(ivStop);
@@ -417,14 +340,12 @@ public class TripsTable extends Application {
             btnStop.requestFocus();
             //btnPause.setDisable(false);
             btnStart.setDisable(true);
-            cbSelectTimetable.setDisable(true);
             ttSelected.start(this);
             if (ttSelected.isActive() == false) {
                 // reset button states if start was not successful
                 btnStop.setDisable(true);
                 //btnPause.setDisable(true);
                 btnStart.setDisable(false);
-                cbSelectTimetable.setDisable(false);
                 Alert alert = new Alert(AlertType.ERROR);
                 alert.setTitle("Error alert");
                 alert.setHeaderText(null);
@@ -439,42 +360,18 @@ public class TripsTable extends Application {
             //btnPause.setDisable(true);
             btnStart.setDisable(false);
             btnStart.requestFocus();
-            cbSelectTimetable.setDisable(false);
             ttSelected.stop();
             tableView.getSelectionModel().clearSelection();
         }
         );
 
-        btnRefresh.setOnAction(e -> {
-            // doublecheck that no trip is active
-            int tripsActive = INVALID_INT;
-            for (Trip tr : allTimetableTrips) {
-                if ((tr.state == TripState.ACTIVE) || (tr.state == TripState.WAITING)) {
-                    tripsActive = tr.adr;
-                }
-            }
-            if (tripsActive != INVALID_INT) {
-                Alert alert = new Alert(AlertType.ERROR);
-                alert.setTitle("Error alert");
-                alert.setHeaderText(null);
-                alert.setContentText("Refresh nicht möglich, da Trip " + tripsActive + "gerade läuft!");
-                alert.showAndWait();
-            } else {
-                //  pi.setVisible(true);  TIME TOO SHORT, cannot be seen
-
-                ReadConfigTrips.readTripsAndTimetables(configFilename);
-                Collections.sort(allTrips, (a, b) -> b.compareTo(a));
-                checkTimetables();
-            }
-        });
-
         ivHelp.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
-            showManual(primaryStage);
+            showManual(stage);
             event.consume();
         });
 
         btnChangeTrain.setOnAction(e -> {
-            LocoSpeedPairs res = ChangeTrainDialog.open(primaryStage);
+            LocoSpeedPairs res = ChangeTrainDialog.open(stage);
             if (res.loco1 != INVALID_INT) {
                 System.out.println("changing " + res.loco1 + ",*," + res.speed1 + " to "
                         + res.loco2 + ",*," + res.speed2);
@@ -487,7 +384,7 @@ public class TripsTable extends Application {
         }
         );
         btnSetTrain.setOnAction((ActionEvent e) -> {
-            SensorLocoPair res = SetTrainDialog.open(primaryStage);
+            SensorLocoPair res = SetTrainDialog.open(stage);
             if (res.sensor != INVALID_INT) {
                 PanelElement.setTrain(res.sensor, res.loco);
                 debug("Sensor " + res.sensor + " belegt mit Zug#" + res.loco);
@@ -509,22 +406,12 @@ public class TripsTable extends Application {
         Label lblNothing = new Label("  ");
         HBox.setHgrow(lblNothing, Priority.ALWAYS);
         lblNothing.setMaxWidth(Double.MAX_VALUE);
-        hb.getChildren().addAll(ivPowerState, btnStart, /* btnPause, */ btnStop, spacer, btnRefresh); // , pi);
-        hb2.getChildren().addAll(cbSelectTimetable, btnChangeTrain, btnSetTrain, spacer2, ivHelp); // btnReset);
-        vb.getChildren().addAll(hb, hb2);
+        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnChangeTrain, btnSetTrain, spacer2, ivHelp);
+        vb.getChildren().addAll(hb);
         return vb;
     }
 
     private boolean checkTrainsPositions() {
-        if (ttSelected == null) {
-            System.out.println("ERROR: no timetable -> cannot start any trip");
-            Alert alert = new Alert(AlertType.ERROR);
-            alert.setTitle("Error alert");
-            alert.setHeaderText(null);
-            alert.setContentText("no timetable -> cannot start any trip");
-            alert.showAndWait();
-            return false;
-        }
 
         String msg = ttSelected.checkPositions();
         if (msg.isEmpty()) {
@@ -557,9 +444,6 @@ public class TripsTable extends Application {
     }
 
     public void auto() {
-        if (ttSelected != null) {
-            ttSelected.timetableCheck();
-        }
+        ttSelected.timetableCheck();
     }
-
 }

@@ -30,7 +30,7 @@ public class FXGUI {
         new Thread() {
             @Override
             public void run() {
-                Application.launch(TripsTable.class, args);
+                Application.launch(MainUI.class, args);
             }
         }.start();
     }
