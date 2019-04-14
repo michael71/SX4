@@ -20,6 +20,7 @@ package de.blankedv.sx4.timetable;
 import static com.esotericsoftware.minlog.Log.debug;
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import de.blankedv.sx4.SXData;
+import static de.blankedv.sx4.timetable.MainUI.showManual;
 import static de.blankedv.sx4.timetable.Vars.MAX_START_STOP_DELAY;
 import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 
@@ -88,7 +89,6 @@ public class TimetableUI {
     private final Button btnStop = new Button();
     //final Button btnPause = new Button();
     private final Pane spacer = new Pane();
-    private final Pane spacer2 = new Pane();
 
     public Timetable ttSelected;
 
@@ -320,14 +320,10 @@ public class TimetableUI {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         final VBox vb = new VBox(5);
 
-        // final ProgressIndicator pi = new ProgressIndicator();
-        // pi.setVisible(false);
+
         btnStart.setGraphic(ivStart);
         btnStop.setDisable(true);
         btnStop.setGraphic(ivStop);
-        //btnHelp.setGraphic(ivHelp);
-        //btnPause.setDisable(true);
-        //btnPause.setGraphic(ivPause);
 
         btnStart.setOnAction(e -> {
             if (!globalPowerCheck()) {
@@ -365,8 +361,8 @@ public class TimetableUI {
         }
         );
 
-        ivHelp.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
-            showManual(stage);
+        ivHelp.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {           
+            MainUI.showManual();
             event.consume();
         });
 
@@ -406,7 +402,7 @@ public class TimetableUI {
         Label lblNothing = new Label("  ");
         HBox.setHgrow(lblNothing, Priority.ALWAYS);
         lblNothing.setMaxWidth(Double.MAX_VALUE);
-        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnChangeTrain, btnSetTrain, spacer2, ivHelp);
+        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnChangeTrain, btnSetTrain, spacer, ivHelp);
         vb.getChildren().addAll(hb);
         return vb;
     }
@@ -425,22 +421,6 @@ public class TimetableUI {
             alert.showAndWait();
             return false;
         }
-    }
-
-    private void showManual(Stage primStage) {
-        Stage wvStage = new Stage();
-        wvStage.initOwner(primStage);
-
-        WebView mWebView = new WebView();
-        WebEngine webEngine = mWebView.getEngine();
-        webEngine.load(this.getClass().getResource("/de/blankedv/sx4/res/docs/index.html").toExternalForm());
-        Scene scene = new Scene(mWebView, 900.0, 500.0);
-        wvStage.setTitle("Handbuch SX4 Fahrplan");
-
-        // Add  the Scene to the Stage
-        wvStage.setScene(scene);
-        // Display the Stage
-        wvStage.show();
     }
 
     public void auto() {

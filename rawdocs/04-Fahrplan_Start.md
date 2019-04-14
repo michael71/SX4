@@ -1,7 +1,6 @@
 # Fahrplan-Start
 
-Vom Fahrplan-Fenster aus kann einer der Fahrpläne, die im Panel.XML File gespeichert
-sind, gestartet werden und auch gestoppt werden.
+Von einem Fahrplan-Fenster aus wird ein Fahrplan gestartet (und kann auch gestoppt werden).
 
 ![Gleissp./Start/Stop](power-start-stop.png)
 

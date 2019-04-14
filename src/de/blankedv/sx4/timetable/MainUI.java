@@ -42,6 +42,13 @@ import java.util.Optional;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.StageStyle;
 
 /**
@@ -50,12 +57,17 @@ import javafx.stage.StageStyle;
  */
 public class MainUI extends Application {
 
+    public static Stage manualStage = new Stage();
+    
     private Stage primaryStage;
     private Scene mainScene;
 
     private final ComboBox<String> cbSelectTimetable = new ComboBox<>();
     private final Button btnStart = new Button("anzeigen");
     private final ArrayList<String> cbTimetables = new ArrayList<>();
+    private final Pane spacer = new Pane();
+    private final Image imgHelp = new Image("/de/blankedv/sx4/res/help2.png");
+    private final ImageView ivHelp = new ImageView(imgHelp);
 
     @Override
     public void start(Stage stage) {
@@ -71,11 +83,12 @@ public class MainUI extends Application {
 
         vb.getChildren().addAll(new Label("Fahrplan auswählen:"), hb, status);
         //hb.setAlignment(Pos.CENTER);
-
-        hb.getChildren().addAll(cbSelectTimetable, btnStart);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        hb.getChildren().addAll(cbSelectTimetable, btnStart, spacer, ivHelp);
 
         mainScene = new Scene(vb, 320, 130);
-
+        manualStage.initOwner(primaryStage);
+        
         debug("starting MainUI");
 
         if (!allTimetables.isEmpty()) {
@@ -91,7 +104,7 @@ public class MainUI extends Application {
             cbSelectTimetable.setDisable(true);
         }
 
-        btnStart.setOnAction(e -> {          
+        btnStart.setOnAction(e -> {
             int ttAddress = Integer.parseInt(cbSelectTimetable.getValue());
             boolean alreadyRunning = false;
 
@@ -113,6 +126,11 @@ public class MainUI extends Application {
                     }
                 }
             }
+        });
+
+        ivHelp.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {         
+            showManual();
+            event.consume();
         });
 
         primaryStage.setTitle("Fahrpläne  " + panelName + " (rev. " + NUM_VERSION + ")");
@@ -140,4 +158,16 @@ public class MainUI extends Application {
 
     }
 
+    public static void showManual() {
+        String content = MainUI.class.getResource("/de/blankedv/sx4/res/docs/index.html").toExternalForm();
+        WebView mWebView = new WebView();
+        WebEngine webEngine = mWebView.getEngine();
+        webEngine.load(content);
+        Scene scene = new Scene(mWebView, 900.0, 500.0);
+        manualStage.setTitle("Handbuch SX4 Fahrplan");
+        // Add  the Scene to the Stage
+        manualStage.setScene(scene);
+        // Display the Stage
+        manualStage.show();
+    }
 }
