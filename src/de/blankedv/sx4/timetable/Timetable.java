@@ -40,7 +40,6 @@ public class Timetable {
     //ArrayList<Integer> tripAdrs = new ArrayList<>();
     private final ArrayList<Trip> tripsList = new ArrayList<>();
     private int currentTripIndex = INVALID_INT;
-
     private int nextTT = 0;
 
     TT_State state = INACTIVE;
@@ -233,6 +232,7 @@ public class Timetable {
             return tripsTable.startNewTimetable(nextTT);
         } else {
             Trip tr = tripsList.get(currentTripIndex);
+            debug("starting next trip "+tr.adr);
             return startNewTrip(tr);
         }
     }

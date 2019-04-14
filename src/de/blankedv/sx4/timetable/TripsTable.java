@@ -25,6 +25,7 @@ import static de.blankedv.sx4.SX4.configFilename;
 import de.blankedv.sx4.SXData;
 import de.blankedv.sx4.timetable.Trip.TripState;
 import static de.blankedv.sx4.timetable.Vars.MAX_START_STOP_DELAY;
+import static de.blankedv.sx4.timetable.Vars.allTripsTables;
 import static de.blankedv.sx4.timetable.VarsFX.allTimetables;
 import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 import static de.blankedv.sx4.timetable.Vars.panelName;
@@ -152,6 +153,7 @@ public class TripsTable extends Application {
         primaryStage.show();
         
         primaryStage.setOnCloseRequest((WindowEvent e) -> {
+            allTripsTables.remove(this);
             System.out.println("TripsTable closing");
         });
 
@@ -195,6 +197,8 @@ public class TripsTable extends Application {
 
         second.setCycleCount(Timeline.INDEFINITE);
         second.play();
+        
+        allTripsTables.add(this);
 
     }
 
