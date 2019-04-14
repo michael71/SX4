@@ -27,8 +27,8 @@ public class Constants {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String NUM_VERSION = "1.34";
-    public static final String VERSION = "SX4 - rev" + NUM_VERSION +" - 4 Apr 2019";
+    public static final String NUM_VERSION = "1.4";
+    public static final String VERSION = "SX4 - rev" + NUM_VERSION +" - 14 Apr 2019";
     // finales SX4.jar file erzeugen mit
     // rechter Mausclick auf "build.xml" in Netbeans, dann "Run Target -> Other Targets -> Package-SX4.jar"
     
