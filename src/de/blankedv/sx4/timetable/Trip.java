@@ -15,7 +15,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
@@ -35,11 +34,11 @@ import javafx.animation.Timeline;
 import javafx.util.Duration;
 
 /**
- * A Trip is a combination of a route with a loco-command (adr,speed,dir) and
- * is used to run a loco/train over a route to a destination (sensor)
- * 
- * example for trip xml content:
- *  trip id="3100" routeid="2300" sens1="924" sens2="902" loco="29,1,126" stopdelay="1500" 
+ * A Trip is a combination of a route with a loco-command (adr,speed,dir) and is
+ * used to run a loco/train over a route to a destination (sensor)
+ *
+ * example for trip xml content: trip id="3100" routeid="2300" sens1="924"
+ * sens2="902" loco="29,1,126" stopdelay="1500"
  *
  * @author mblank
  */
@@ -55,12 +54,14 @@ public class Trip implements Comparable<Trip> {
     int locoSpeed = INVALID_INT;
     int startDelay = INVALID_INT;  // milliseconds
     int stopDelay = INVALID_INT;  // milliseconds
-    
+
+    boolean locked = false;
+
     TripState state = TripState.INACTIVE;
     Loco loco = null;
     final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
     int currSpeedPercent = 0;
-    
+
     String message = "";
 
     enum TripState {
@@ -71,25 +72,34 @@ public class Trip implements Comparable<Trip> {
 
     }
 
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void lock() {
+        this.locked = true;
+    }
+
+    public void unlock() {
+        this.locked = false;
+    }
+
     public int getLocoAddr() {
         return locoAddr;
     }
-    
+
     public String getMessage() {
         return message;
     }
 
-    
     public int getAdr() {
         return adr;
     }
 
-    
     public void setAdr(int adr) {
         this.adr = adr;
     }
 
-    
     public int getRoute() {
         return route;
     }
@@ -121,8 +131,6 @@ public class Trip implements Comparable<Trip> {
     public void setLocoString(String locoString) {
         this.locoString = locoString;
     }
-
-    
 
     public void setLocoAddr(int locoAddr) {
         this.locoAddr = locoAddr;
@@ -166,7 +174,7 @@ public class Trip implements Comparable<Trip> {
 
     public void setLoco(Loco loco) {
         this.loco = loco;
-    } 
+    }
 
     public boolean convertLocoData() {
         // convert locoString string to int values for address, direction and speed
@@ -208,10 +216,10 @@ public class Trip implements Comparable<Trip> {
         PanelElement startSensor = PanelElement.getByAddress(sens1);
 
         if (startSensor.getState() == STATE_FREE) {
-            
+
             message = "cannot start trip id=" + adr + " because no train on start-sensor " + sens1;
             error(message);
-                return false;
+            return false;
         }
 
         int trainNumber = startSensor.getTrain();
@@ -229,8 +237,8 @@ public class Trip implements Comparable<Trip> {
         }
 
         // aquire locoString and start 'full' speed
-        startLocoDelayed();
-        message = "starting trip id=" + adr ;
+        prepareStartLoco();
+        message = "starting trip id=" + adr;
         debug(message);
         state = TripState.ACTIVE;
         return true;
@@ -256,23 +264,16 @@ public class Trip implements Comparable<Trip> {
         }
 
         int speed = (locoSpeed * currSpeedPercent) / 100;
-        debug("loco-speed=" + speed);
+
         loco.setSpeed(speed);
         loco.setForward(locoDir == 0);
         loco.setLicht(true);
-        //sxi.sendLoco(loco.getLok_adr(), loco.getSpeed(), true, loco.isForward(),  false);  // light = true, horn = false
+
         SXData.update(loco.getAddr(), loco.getSX(), true); // true => send to SXinterface
     }
 
     private void startLoco() {
-        loco.setSpeed(locoSpeed);
-        loco.setForward(locoDir == 0);
-        loco.setLicht(true);
-        //sxi.sendLoco(loco.getLok_adr(), loco.getSpeed(), true, loco.isForward(),  false);  // light = true, horn = false
-        SXData.update(loco.getAddr(), loco.getSX(), true); // true => send to SXinterface
-    }
-
-    private void startLocoDelayed() {
+        debug("starting loco");
         loco.setSpeed(0);  // licht an, richtige direction, aber noch nicht losfahren
         loco.setForward(locoDir == 0);
         loco.setLicht(true);
@@ -283,9 +284,24 @@ public class Trip implements Comparable<Trip> {
                 ae -> incrLocoSpeed()
         ));
         timeline.setCycleCount(10); // for slow start of loco, increase speed in steps
-        timeline.setDelay(Duration.seconds(5)); // then increase speed every second
+        //timeline.setDelay(Duration.seconds(5)); // then increase speed every second
         timeline.play();
         addTimeline(timeline);
+    }
+
+    private void prepareStartLoco() {
+        debug("waiting for loco start: " + startDelay + " msecs");
+        if (startDelay == 0) {
+            startLoco();
+        } else {
+            Timeline timeline = new Timeline(new KeyFrame(
+                    Duration.millis(startDelay),
+                    ae -> {
+                        startLoco();
+                    }));
+            timeline.play();
+            addTimeline(timeline);
+        }
     }
 
     public void stopLoco() {
@@ -297,9 +313,9 @@ public class Trip implements Comparable<Trip> {
     }
 
     private void finishTripDelayed() {
-        if (stopDelay == INVALID_INT) {
+        if ((stopDelay == INVALID_INT) || (stopDelay == 0)) {
             finish();
-        }
+        } 
         Timeline timeline = new Timeline(new KeyFrame(
                 Duration.millis(stopDelay),
                 ae -> {
@@ -313,7 +329,6 @@ public class Trip implements Comparable<Trip> {
     private boolean setRouteID(int rID) {
         debug("trip: setRoute  =" + rID);
 
-        // todo check if route is free - except for "sens1" sensor
         for (Route r : allRoutes) {
             if (r.getAdr() == rID) {
                 if (r.isFreeExceptStart()) {
@@ -390,25 +405,25 @@ public class Trip implements Comparable<Trip> {
             }
         }
     }
-    
+
     public void addTimeline(Timeline t) {
         myTimelines.add(t);
     }
 
     // STOP timers, like loco speed increase, decrease, start new trip etc.
     public void stopAllTimelines() {
-        info("stopping trip="+adr+" Timelines");
+        info("stopping trip=" + adr + " Timelines");
         for (Timeline t : myTimelines) {
             t.stop();
         }
         myTimelines.clear();
     }
-    
+
     public static Trip getTripByAddress(int addr) {
         for (Trip tr : allTrips) {
-                    if (tr.adr == addr) {
-                        return tr;
-                    }
+            if (tr.adr == addr) {
+                return tr;
+            }
         }
         return null;
     }

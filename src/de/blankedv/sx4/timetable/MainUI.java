@@ -18,6 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
+import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.NUM_VERSION;
 import static de.blankedv.sx4.timetable.VarsFX.allTimetables;
 import static de.blankedv.sx4.timetable.Vars.panelName;
@@ -58,7 +59,7 @@ import javafx.stage.StageStyle;
 public class MainUI extends Application {
 
     public static Stage manualStage = new Stage();
-    
+
     private Stage primaryStage;
     private Scene mainScene;
 
@@ -73,22 +74,26 @@ public class MainUI extends Application {
     public void start(Stage stage) {
 
         primaryStage = stage;
-        GridPane gp = new GridPane();
+
         Label status = new Label(" ");
 
         VBox vb = new VBox(5);
+        vb.setStyle("-fx-background-color: #c0ffc0;");
         vb.setPadding(new Insets(15));
         HBox hb = new HBox(5);
-        hb.setPadding(new Insets(15));
+        //hb.setPadding(new Insets(15));
+        HBox hb2 = new HBox(5);
+        //hb2.setPadding(new Insets(15));
+        hb2.getChildren().addAll(new Label("Fahrplan auswählen:"), spacer, ivHelp);
 
-        vb.getChildren().addAll(new Label("Fahrplan auswählen:"), hb, status);
+        vb.getChildren().addAll(hb2, hb, status);
         //hb.setAlignment(Pos.CENTER);
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        hb.getChildren().addAll(cbSelectTimetable, btnStart, spacer, ivHelp);
+        hb.getChildren().addAll(cbSelectTimetable, btnStart);
 
-        mainScene = new Scene(vb, 320, 130);
+        mainScene = new Scene(vb, 320, 100);
         manualStage.initOwner(primaryStage);
-        
+
         debug("starting MainUI");
 
         if (!allTimetables.isEmpty()) {
@@ -122,13 +127,22 @@ public class MainUI extends Application {
                 for (Timetable tt : allTimetables) {
                     if (tt.getAdr() == ttAddress) {
                         TimetableUI trTable = new TimetableUI(primaryStage, tt);
-                        trTable.start();
+                        if (trTable.check()) {
+                            trTable.start();
+                        } else {
+                            trTable.close();
+                            Alert alert = new Alert(AlertType.ERROR);
+                            alert.setTitle("Error alert");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Diese Fahrstrasse enthält Fahrten, die bereits aktiviert sind in anderen Fahrstraßen.");
+                            alert.showAndWait();
+                        }
                     }
                 }
             }
         });
 
-        ivHelp.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {         
+        ivHelp.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
             showManual();
             event.consume();
         });

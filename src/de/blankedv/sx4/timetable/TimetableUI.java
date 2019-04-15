@@ -20,7 +20,6 @@ package de.blankedv.sx4.timetable;
 import static com.esotericsoftware.minlog.Log.debug;
 import static de.blankedv.sx4.Constants.INVALID_INT;
 import de.blankedv.sx4.SXData;
-import static de.blankedv.sx4.timetable.MainUI.showManual;
 import static de.blankedv.sx4.timetable.Vars.MAX_START_STOP_DELAY;
 import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 
@@ -53,11 +52,14 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 import static de.blankedv.sx4.timetable.Vars.allTimetableUIs;
+import java.util.ArrayList;
+import java.util.Optional;
+import javafx.geometry.Pos;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 
 /**
  *
@@ -68,21 +70,24 @@ public class TimetableUI {
     private final TableView<Trip> tableView = new TableView<>();
 
     private Scene timetableUIScene;
-    private Stage stage;
+    private final Stage stage;
 
     private final Image green = new Image("/de/blankedv/sx4/res/greendot.png");
     private final Image red = new Image("/de/blankedv/sx4/res/reddot.png");
     private final Image imgStart = new Image("/de/blankedv/sx4/res/start2.png");
     private final Image imgStop = new Image("/de/blankedv/sx4/res/stop2.png");
     private final Image imgHelp = new Image("/de/blankedv/sx4/res/help2.png");
+    private final Image imgRefresh = new Image("/de/blankedv/sx4/res/refresh.png");
     private final ImageView ivPowerState = new ImageView();
     private final ImageView ivStart = new ImageView(imgStart);
     private final ImageView ivStop = new ImageView(imgStop);
     private final ImageView ivHelp = new ImageView(imgHelp);
+    private final ImageView ivRefresh = new ImageView(imgRefresh);
     //private final Button btnRefresh = new Button("Fahrten neu laden");
 
     private final Button btnChangeTrain = new Button("Zug ändern");
     private final Button btnSetTrain = new Button("Zug setzen");
+    private final CheckBox cbRepeat = new CheckBox("Wiederh.");
 
     //private final Button btnHelp = new Button();
     private final Button btnStart = new Button();
@@ -91,6 +96,7 @@ public class TimetableUI {
     private final Pane spacer = new Pane();
 
     public Timetable ttSelected;
+    private ArrayList<Trip> allMyTrips = new ArrayList<>();
 
     private final Label status = new Label();
     private final ObservableList<Trip> allTimetableTrips = FXCollections.observableArrayList();
@@ -99,6 +105,31 @@ public class TimetableUI {
         stage = new Stage();
         stage.initOwner(primaryStage);
         ttSelected = tt;
+
+    }
+
+    public boolean check() {
+        // check if we can open this timetable
+        allTimetableTrips.clear();
+        allMyTrips = ttSelected.getTripsList();
+
+        String msg = "";
+        for (Trip tr : allMyTrips) {
+            if (tr.isLocked()) {
+                msg += "Trip " + tr.adr + " is locked. ";
+            } else {
+                // lock it
+                tr.lock();
+            }
+        }
+        if (!msg.isEmpty()) {
+            return false;  // cannot activate this timetable, because one of the trips is locked
+        }
+        return true;
+    }
+
+    public void close() {
+        stage.close();
     }
 
     public void start() {
@@ -115,7 +146,8 @@ public class TimetableUI {
         debug("starting TimetableUI " + ttSelected.getAdr());
         // already done in SX4 (if guiEnabled): ReadConfigTrips.readTripsAndTimetables(configFilename);
 
-        orderTrips(ttSelected);
+        allTimetableTrips.addAll(allMyTrips);
+
         status.setText(ttSelected.toString());
 
         stage.setTitle("Fahrplan " + ttSelected.getAdr());
@@ -143,12 +175,9 @@ public class TimetableUI {
                 ivPowerState.setImage(red);
             }
 
-            if (ttSelected.getCurrentTripIndex() != INVALID_INT) {
-                tableView.getSelectionModel().select(ttSelected.getCurrentTripIndex());
-            }
-
             if (ttSelected.isActive() == true) {
                 status.setText(ttSelected.toString());
+                status.setStyle("-fx-background-color: yellow;");
                 btnStop.setDisable(false);
                 btnStart.setDisable(true);
                 //btnPause.setDisable(false);
@@ -157,6 +186,7 @@ public class TimetableUI {
                 }
             } else {
                 status.setText(ttSelected.toString());
+                status.setStyle("-fx-background-color: lightgrey;");
                 btnStop.setDisable(true);
                 //btnPause.setDisable(true);
                 btnStart.setDisable(false);
@@ -166,15 +196,36 @@ public class TimetableUI {
         second.setCycleCount(Timeline.INDEFINITE);
         second.play();
 
-    }
+        stage.setOnCloseRequest((WindowEvent e) -> {
+            if (ttSelected.isActive()) {
+                if (!confirmClose()) {
+                    e.consume();   // ==> do nothing
+                    return;
+                }
+            }
+            ttSelected.stop();
+            unlockTrips();
+        });
 
-    private void orderTrips(Timetable tt) {
-        allTimetableTrips.clear();
-        allTimetableTrips.addAll(tt.getTripsList());
     }
 
     public void show() {
         stage.show();
+    }
+
+    private boolean confirmClose() {
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Fahrplan beenden?");
+        alert.setHeaderText("Fahrplan beenden, obwohl er noch aktiv ist?");
+        alert.setContentText("");
+        ((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Ja, trotzdem beenden!");
+        ((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("Nein, zurück.");
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == ButtonType.OK) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public int getAddress() {
@@ -278,6 +329,13 @@ public class TimetableUI {
 
     }
 
+    public void unlockTrips() {
+        debug("unlocking trips");
+        for (Trip tr : allMyTrips) {
+            tr.unlock();
+        }
+    }
+
     private void invalidDelay(int value) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle("Error alert");
@@ -320,10 +378,10 @@ public class TimetableUI {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         final VBox vb = new VBox(5);
 
-
         btnStart.setGraphic(ivStart);
         btnStop.setDisable(true);
         btnStop.setGraphic(ivStop);
+        cbRepeat.setGraphic(ivRefresh);
 
         btnStart.setOnAction(e -> {
             if (!globalPowerCheck()) {
@@ -336,7 +394,7 @@ public class TimetableUI {
             btnStop.requestFocus();
             //btnPause.setDisable(false);
             btnStart.setDisable(true);
-            ttSelected.start(this);
+            ttSelected.start();
             if (ttSelected.isActive() == false) {
                 // reset button states if start was not successful
                 btnStop.setDisable(true);
@@ -361,7 +419,7 @@ public class TimetableUI {
         }
         );
 
-        ivHelp.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {           
+        ivHelp.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
             MainUI.showManual();
             event.consume();
         });
@@ -402,7 +460,9 @@ public class TimetableUI {
         Label lblNothing = new Label("  ");
         HBox.setHgrow(lblNothing, Priority.ALWAYS);
         lblNothing.setMaxWidth(Double.MAX_VALUE);
-        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, btnChangeTrain, btnSetTrain, spacer, ivHelp);
+        hb.setFillHeight(true);          // Added this
+        hb.setAlignment(Pos.CENTER_LEFT);
+        hb.getChildren().addAll(ivPowerState, btnStart, btnStop, cbRepeat, btnChangeTrain, btnSetTrain, spacer, ivHelp);
         vb.getChildren().addAll(hb);
         return vb;
     }
@@ -424,6 +484,6 @@ public class TimetableUI {
     }
 
     public void auto() {
-        ttSelected.timetableCheck();
+        ttSelected.auto(cbRepeat.isSelected());
     }
 }

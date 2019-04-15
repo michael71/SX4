@@ -46,8 +46,6 @@ public class Timetable {
     private String tripsString = "";
     private final ArrayList<Timeline> myTimelines = new ArrayList<>();   // need references to all running timelines to be able to stop them
 
-    private TimetableUI tripsTable = null;
-
     String message = "";
 
     /**
@@ -109,9 +107,7 @@ public class Timetable {
     }
     
     // start a new timetable with 0 .. n trips, return true if successful
-    public boolean start(TimetableUI ttable) {
-
-        tripsTable = ttable;  // store for reference, we need it at end of this tt.
+    public boolean start() {
 
         // start first trip (index 0)
         currentTripIndex = 0;
@@ -161,6 +157,10 @@ public class Timetable {
         return true;
 
     }
+    
+    public void continueNewTrip(Trip t) {
+        
+    }
 
     public boolean startNewTrip(Trip t) {
         // check if start sensor is occupied and endsensor is free
@@ -169,6 +169,7 @@ public class Timetable {
         // set route(s)
         int start = PanelElement.getByAddress(t.sens1).getState();
         int end = PanelElement.getByAddress(t.sens2).getState();
+       
 
         if ((start == STATE_OCCUPIED) && (end == STATE_FREE)) {
             debug("start sensor (" + t.sens1 + ") occupied and end sensor(" + t.sens2 + ") free, we can start the trip");
@@ -213,7 +214,7 @@ public class Timetable {
         return adr;
     }
 
-    public boolean advanceToNextTrip() {
+    public boolean advanceToNextTrip(boolean repeat) {
         if (state == INACTIVE) {
             error("cannot advance to next Trip because TimeTable is INACTIVE");
             return false;
@@ -229,30 +230,29 @@ public class Timetable {
             state = INACTIVE;
             currentTripIndex = INVALID_INT;  // reset
             debug("last trip of timetable was finished.");
-            // TODO return tripsTable.startNewTimetable(nextTT);
+            if (repeat) {
+                start();   // start again
+            }
             return true;
         } else {
             Trip tr = tripsList.get(currentTripIndex);
-            debug("starting next trip "+tr.adr);
+            debug("starting next trip "+tr.adr+" in "+tr.startDelay+" msecs.");
+            
             return startNewTrip(tr);
         }
     }
 
     @Override
     public String toString() {
-        String nextS = "";
-        if (nextTT > 0) {
-            nextS += " (danach Fahrplan " + nextTT + ")";
-        }
         if (state == INACTIVE) {
-            return "Fahrplan(" + adr + "): " + tripsString + nextS;
+            return "Fahrplan(" + adr + "): " + tripsString;
         } else {
 
-            return "Fahrplan(" + adr + "): " + tripsString + " läuft." + nextS;
+            return "Fahrplan(" + adr + "): " + tripsString + " läuft.";
         }
     }
 
-    public void timetableCheck() {
+    public void auto(boolean repeat) {
 
         if (currentTripIndex != INVALID_INT) {
             Trip cTrip = tripsList.get(currentTripIndex);
@@ -260,12 +260,12 @@ public class Timetable {
                 case ACTIVE:
                     if (cTrip.state == TripState.INACTIVE) {   // current trip has been finished, start a new one (delayed)                        
                         state = WAITING;   // wait for start of new trip
-                        debug("current trip " + cTrip.adr + " has ended. start new one 5 seconds after train stop.");
+                        debug("current trip " + cTrip.adr + " has ended. start new one 3 seconds after train stop.");
                         // currentTrip has ended, wait three seconds, then start next
                         Timeline timeline = new Timeline(new KeyFrame(
-                                Duration.millis(5000 + cTrip.stopDelay),
+                                Duration.millis(3000 + cTrip.stopDelay),
                                 ae -> {
-                                    advanceToNextTrip();
+                                    advanceToNextTrip(repeat);
                                 }));
                         timeline.play();
                         addTimeline(timeline);
