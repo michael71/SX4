@@ -64,6 +64,10 @@ import javafx.scene.control.CheckBox;
 /**
  *
  * @author mblank
+ * 
+ * TODO: when trip.start() does not work because of "route blocked", wait 10 secs, then try again
+ * TODO low prio: fahrplan options
+ * 
  */
 public class TimetableUI {
 
@@ -112,15 +116,18 @@ public class TimetableUI {
         // check if we can open this timetable
         allTimetableTrips.clear();
         allMyTrips = ttSelected.getTripsList();
-
+        ArrayList<Trip> tripsToLock = new ArrayList<>();
         String msg = "";
         for (Trip tr : allMyTrips) {
             if (tr.isLocked()) {
                 msg += "Trip " + tr.adr + " is locked. ";
             } else {
-                // lock it
-                tr.lock();
+                // save for later locking
+                tripsToLock.add(tr);
             }
+        }
+        for (Trip tr : tripsToLock) {
+            tr.lock();
         }
         if (!msg.isEmpty()) {
             return false;  // cannot activate this timetable, because one of the trips is locked
