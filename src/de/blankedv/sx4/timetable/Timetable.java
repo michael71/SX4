@@ -81,31 +81,31 @@ public class Timetable {
     }
 
     /**
-     * check if all trains in this timetable are currently located 
-     * at the right sensors
-     * 
-     * @return 
+     * check if all trains in this timetable are currently located at the right
+     * sensors
+     *
+     * @return
      */
     public String checkPositions() {
         // iterate over tripsList
-        
+
         ArrayList<Integer> ttLocos = new ArrayList<>();
-        
+
         for (Trip tr : tripsList) {
             int loco = tr.getLocoAddr();
             if (!ttLocos.contains(loco)) {
                 // so far we did not check this train/loco
-                  if (PanelElement.isSensorOccupied(tr.sens1) && (PanelElement.getTrain(tr.sens1) == loco)) {
+                if (PanelElement.isSensorOccupied(tr.sens1) && (PanelElement.getTrain(tr.sens1) == loco)) {
                     // position o.k.
                     ttLocos.add(loco);
                 } else {
-                    return "Zug# "+loco + " nicht auf Start-Position (Sensor "+tr.sens1+")";
+                    return "Zug# " + loco + " nicht auf Start-Position (Sensor " + tr.sens1 + ")";
                 }
             }
-        }      
+        }
         return "";  // all positions are correct
     }
-    
+
     // start a new timetable with 0 .. n trips, return true if successful
     public boolean start() {
 
@@ -157,9 +157,18 @@ public class Timetable {
         return true;
 
     }
-    
-    public void continueNewTrip(Trip t) {
-        
+
+    // continue timetable at the selected index
+    public boolean cont(int index) {
+        // get trip by index
+        debug("cont timetable at trip-index=" + index);
+        currentTripIndex = index;
+        Trip tr = tripsList.get(currentTripIndex);
+        if (tr == null) {
+            return false;
+        }
+
+        return startNewTrip(tr);
     }
 
     public boolean startNewTrip(Trip t) {
@@ -169,7 +178,6 @@ public class Timetable {
         // set route(s)
         int start = PanelElement.getByAddress(t.sens1).getState();
         int end = PanelElement.getByAddress(t.sens2).getState();
-       
 
         if ((start == STATE_OCCUPIED) && (end == STATE_FREE)) {
             debug("start sensor (" + t.sens1 + ") occupied and end sensor(" + t.sens2 + ") free, we can start the trip");
@@ -236,8 +244,8 @@ public class Timetable {
             return true;
         } else {
             Trip tr = tripsList.get(currentTripIndex);
-            debug("starting next trip "+tr.adr+" in "+tr.startDelay+" msecs.");
-            
+            debug("starting next trip " + tr.adr + " in " + tr.startDelay + " msecs.");
+
             return startNewTrip(tr);
         }
     }

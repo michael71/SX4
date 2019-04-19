@@ -248,8 +248,8 @@ public class Trip implements Comparable<Trip> {
     public void retryStart() {
         boolean couldSetRoutes = setRouteID(route);
         if (!couldSetRoutes) {
-            message = "retry, still waiting for loco start for trip id=" + adr + " - cannot set (comp)route id=" + route;
-            error(message);
+            //message = "retry, still waiting for loco start for trip id=" + adr + " - cannot set (comp)route id=" + route;
+            //error(message);
             return;
         }
 
@@ -343,7 +343,7 @@ public class Trip implements Comparable<Trip> {
     }
 
     private boolean setRouteID(int rID) {
-        debug("trip: setRoute  =" + rID);
+        //debug("trip: setRoute  =" + rID);
 
         for (Route r : allRoutes) {
             if (r.getAdr() == rID) {

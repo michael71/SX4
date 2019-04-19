@@ -282,7 +282,12 @@ public class TimetableUI {
                 final Trip tripShown = row.getItem();
                 tripShown.finish();
             });
-            contextMenu.getItems().addAll(setTrainMenuItem, startMenuItem, stopMenuItem);
+            final MenuItem continueMenuItem = new MenuItem("Fahrplan hier fortsetzen");
+            continueMenuItem.setOnAction((ActionEvent event) -> {
+                final int index = row.getIndex();
+                contTimetable(index);
+            });
+            contextMenu.getItems().addAll(setTrainMenuItem, startMenuItem, stopMenuItem,continueMenuItem);
             // Set context menu on row, but use a binding to make it only show for non-empty rows:
             row.contextMenuProperty().bind(
                     Bindings.when(row.emptyProperty())
@@ -364,6 +369,21 @@ public class TimetableUI {
                 }
             }
         }
+    }
+    
+    private void contTimetable(int index) {
+
+            if (globalPowerCheck()) {
+                boolean result = ttSelected.cont(index);
+                if (!result) {
+                    Alert alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Error alert");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Fortsetzen des Fahrplans nicht möglich");
+                    alert.showAndWait();
+                }
+            }
+  
     }
 
     private boolean globalPowerCheck() {
