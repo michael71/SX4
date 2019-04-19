@@ -78,4 +78,8 @@ public class Constants {
     public static enum TT_State {
         INACTIVE, ACTIVE, WAITING
     };
+    
+    enum TripState {
+        INACTIVE, ACTIVE, WAITING, WAITING_FOR_ROUTE
+    }
 }

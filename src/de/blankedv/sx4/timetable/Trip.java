@@ -65,7 +65,7 @@ public class Trip implements Comparable<Trip> {
     String message = "";
 
     enum TripState {
-        INACTIVE, ACTIVE, WAITING
+        INACTIVE, ACTIVE, WAITING, WAITING_FOR_ROUTE
     }
 
     Trip() {
@@ -231,9 +231,10 @@ public class Trip implements Comparable<Trip> {
 
         boolean couldSetRoutes = setRouteID(route);
         if (!couldSetRoutes) {
-            message = "cannot start trip id=" + adr + " cannot set (comp)route id=" + route;
+            message = "waiting for loco start for trip id=" + adr + " - cannot set (comp)route id=" + route;
             error(message);
-            return false;
+            state = TripState.WAITING_FOR_ROUTE;
+            return true;
         }
 
         // aquire locoString and start 'full' speed
@@ -242,6 +243,21 @@ public class Trip implements Comparable<Trip> {
         debug(message);
         state = TripState.ACTIVE;
         return true;
+    }
+    
+    public void retryStart() {
+        boolean couldSetRoutes = setRouteID(route);
+        if (!couldSetRoutes) {
+            message = "retry, still waiting for loco start for trip id=" + adr + " - cannot set (comp)route id=" + route;
+            error(message);
+            return;
+        }
+
+        // aquire locoString and start 'full' speed
+        prepareStartLoco();
+        message = "finally starting trip id=" + adr;
+        debug(message);
+        state = TripState.ACTIVE;
     }
 
     public void finish() {
@@ -402,6 +418,8 @@ public class Trip implements Comparable<Trip> {
                     tr.state = TripState.WAITING;  // avaid triggering finish a second time
                     tr.finishTripDelayed();  // incl. finish loco
                 }
+            } else if (tr.state == TripState.WAITING_FOR_ROUTE) {
+                tr.retryStart();
             }
         }
     }
