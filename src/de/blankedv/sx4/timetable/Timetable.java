@@ -163,6 +163,7 @@ public class Timetable {
         // get trip by index
         debug("cont timetable at trip-index=" + index);
         currentTripIndex = index;
+        state = INACTIVE;
         Trip tr = tripsList.get(currentTripIndex);
         if (tr == null) {
             return false;
