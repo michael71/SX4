@@ -157,7 +157,7 @@ public class TimetableUI {
 
         status.setText(ttSelected.toString());
 
-        stage.setTitle("Fahrplan " + ttSelected.getAdr());
+        stage.setTitle("Fahrplan " + ttSelected.getName() + " ("+ttSelected.getAdr()+")");
         stage.setScene(timetableUIScene);
 
         createDataTables();

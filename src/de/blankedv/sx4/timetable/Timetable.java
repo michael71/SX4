@@ -40,7 +40,7 @@ public class Timetable {
     //ArrayList<Integer> tripAdrs = new ArrayList<>();
     private final ArrayList<Trip> tripsList = new ArrayList<>();
     private int currentTripIndex = INVALID_INT;
-    private int nextTT = 0;
+    private String name = "";
 
     TT_State state = INACTIVE;
     private String tripsString = "";
@@ -49,17 +49,17 @@ public class Timetable {
     String message = "";
 
     /**
-     * construct a timetable from address, allTripsString and "next TT" info
+     * construct a timetable from address, allTripsString and name info
      *
      * @param adr
      * @param allTtripsString
-     * @param next
+     * @param name
      */
-    Timetable(int adr, String allTtripsString, int next) {
+    Timetable(int adr, String allTtripsString, String name) {
         // parse "time" to "startTime" array
         tripsString = allTtripsString;
         String[] sTrip = allTtripsString.split(",");
-        nextTT = next;  // next timetable after this one is finished
+        this.name = name;
 
         this.adr = adr;
 
@@ -221,6 +221,10 @@ public class Timetable {
 
     public int getAdr() {
         return adr;
+    }
+    
+    public String getName() {
+        return name;
     }
 
     public boolean advanceToNextTrip(boolean repeat) {

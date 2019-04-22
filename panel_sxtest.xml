@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<layout-config filename="panel_sxtest.xml" version="20190419_094125">
+<layout-config filename="panel_sxtest.xml" version="20190419_091905">
     <panels>
         <panel name="sxtest">
             <locos>
@@ -65,10 +65,10 @@
                 <route adr="2215" btn1="1206" btn2="1202" route="853,0;852,0;761,0;783,0" sensors="922,927"/>
                 <route adr="2216" btn1="1204" btn2="1203" route="851,0;771,1;773,0;783,0" sensors="902,926"/>
                 <route adr="2217" btn1="1205" btn2="1203" route="851,1;773,2;771,0;783,0" sensors="903,926"/>
-                <route adr="4301" btn1="1201" btn2="1203" route="853,0;854,0" sensors="923,926"/>
-                <route adr="4302" btn1="1203" btn2="1201" route="853,0;854,0" sensors="926,923"/>
-                <route adr="4303" btn1="1203" btn2="1205" route="771,0;773,0;783,1;851,1" sensors="926,903"/>
-                <route adr="4304" btn1="1205" btn2="1203" route="771,0;773,0;783,1;851,1" sensors="903,926"/>
+                <route adr="4301" btn1="1201" btn2="1203" route="853,0;854,0" sensors="923,928"/>
+                <route adr="4302" btn1="1203" btn2="1201" route="853,0;854,0" sensors="928,923"/>
+                <route adr="4303" btn1="1203" btn2="1205" route="771,0;773,0;783,1;851,1" sensors="928,903"/>
+                <route adr="4304" btn1="1205" btn2="1203" route="771,0;773,0;783,1;851,1" sensors="903,928"/>
             </routes>
             <comproutes>
                 <comproute adr="2300" btn1="1200" btn2="1204" routes="2201,2206"/>
@@ -88,8 +88,8 @@
                 <trip adr="3100" loco="29,0,22" route="2300" sens1="924" sens2="902" startdelay="100" stopdelay="1700"/>
                 <trip adr="3101" loco="29,1,22" route="2310" sens1="902" sens2="924" startdelay="1000" stopdelay="1400"/>
                 <trip adr="3102" loco="42,0,18" route="2303" sens1="923" sens2="903" startdelay="100" stopdelay="1400"/>
-                <trip adr="3112" loco="42,0,18" route="4301" sens1="923" sens2="926" startdelay="100" stopdelay="1400"/>
-                <trip adr="3113" loco="42,0,18" route="4303" sens1="926" sens2="903" startdelay="0" stopdelay="1400"/>
+<trip adr="3112" loco="42,0,18" route="4301" sens1="923" sens2="928" startdelay="100" stopdelay="1400"/>
+<trip adr="3113" loco="42,0,18" route="4303" sens1="928" sens2="903" startdelay="0" stopdelay="1400"/>
                 <trip adr="3103" loco="42,1,18" route="2313" sens1="903" sens2="923" startdelay="100" stopdelay="1200"/>
                 <trip adr="3104" loco="40,1,28" route="2304" sens1="922" sens2="902" startdelay="1000" stopdelay="2300"/>
                 <trip adr="3105" loco="40,0,28" route="2314" sens1="902" sens2="922" startdelay="100" stopdelay="1700"/>
@@ -98,9 +98,9 @@
                 <trip adr="3108" loco="29,1,22" route="2312" sens1="902" sens2="923" startdelay="3000" stopdelay="1400"/>
             </trips>
             <timetables>
-                <timetable adr="3300" next="3300" trip="3102,3101,3104,3103,3105,3100"/>
-                <timetable adr="3301" next="0" trip="3101,3112,3113,3103,3104,3105,3100"/>
-                <timetable adr="3302" next="3302" trip="3107,3108"/>
+                <timetable adr="3300" name="Hauptfahrplan" trip="3102,3101,3104,3103,3105,3100"/>
+                <timetable adr="3301" name="Hauptfahrplan 2" trip="3101,3112,3113,3103,3104,3105,3100"/>
+                <timetable adr="3302" name="Test (kurz)" trip="3107,3108"/>
             </timetables>
         </panel>
     </panels>

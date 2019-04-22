@@ -91,14 +91,14 @@ public class MainUI extends Application {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         hb.getChildren().addAll(cbSelectTimetable, btnStart);
 
-        mainScene = new Scene(vb, 320, 100);
+        mainScene = new Scene(vb, 350, 100);
         manualStage.initOwner(primaryStage);
 
         debug("starting MainUI");
 
         if (!allTimetables.isEmpty()) {
             for (Timetable tt : allTimetables) {
-                cbTimetables.add("" + tt.getAdr());
+                cbTimetables.add("" + tt.getAdr() + " " + tt.getName().substring(0, Math.min(20, tt.getName().length())));
             }
             cbSelectTimetable.getItems().addAll(cbTimetables);
             cbSelectTimetable.getSelectionModel().select(0);
@@ -110,7 +110,9 @@ public class MainUI extends Application {
         }
 
         btnStart.setOnAction(e -> {
-            int ttAddress = Integer.parseInt(cbSelectTimetable.getValue());
+            String val = cbSelectTimetable.getValue();
+            int aEnd = val.indexOf(" ");
+            int ttAddress = Integer.parseInt(val.substring(0, aEnd));
             boolean alreadyRunning = false;
 
             // check, if a Timetable with this address is already displayed
