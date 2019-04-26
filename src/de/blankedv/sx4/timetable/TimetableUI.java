@@ -19,6 +19,7 @@ package de.blankedv.sx4.timetable;
 
 import static com.esotericsoftware.minlog.Log.debug;
 import static de.blankedv.sx4.Constants.INVALID_INT;
+import static de.blankedv.sx4.Constants.SXMAX_USED;
 import de.blankedv.sx4.SXData;
 import static de.blankedv.sx4.timetable.Vars.MAX_START_STOP_DELAY;
 import static de.blankedv.sx4.timetable.VarsFX.allTrips;
@@ -64,10 +65,10 @@ import javafx.scene.control.CheckBox;
 /**
  *
  * @author mblank
- * 
- * TODO: when trip.start() does not work because of "route blocked", wait 10 secs, then try again
- * TODO low prio: fahrplan options
- * 
+ *
+ * TODO: when trip.start() does not work because of "route blocked", wait 10
+ * secs, then try again TODO low prio: fahrplan options
+ *
  */
 public class TimetableUI {
 
@@ -157,7 +158,7 @@ public class TimetableUI {
 
         status.setText(ttSelected.toString());
 
-        stage.setTitle("Fahrplan " + ttSelected.getName() + " ("+ttSelected.getAdr()+")");
+        stage.setTitle("Fahrplan " + ttSelected.getName() + " (" + ttSelected.getAdr() + ")");
         stage.setScene(timetableUIScene);
 
         createDataTables();
@@ -245,9 +246,11 @@ public class TimetableUI {
         TableColumn<Trip, Integer> routeCol = new TableColumn<>("Fahrstr.");
         TableColumn<Trip, Integer> sens1Col = new TableColumn<>("Start");
         TableColumn<Trip, Integer> sens2Col = new TableColumn<>("Ende");
-        TableColumn<Trip, String> locoCol = new TableColumn<>("Zug,Dir,Speed");
-        TableColumn<Trip, Integer> startDelayCol = new TableColumn<>("StartDelay[ms]");
-        TableColumn<Trip, Integer> stopDelayCol = new TableColumn<>("StopDelay[ms]");
+        TableColumn<Trip, Integer> locoCol = new TableColumn<>("Zug");
+        TableColumn<Trip, Integer> dirCol = new TableColumn<>("Ri.");
+        TableColumn<Trip, Integer> speedCol = new TableColumn<>("Geschw.");
+        TableColumn<Trip, Integer> startDelayCol = new TableColumn<>("Start V.[ms]");
+        TableColumn<Trip, Integer> stopDelayCol = new TableColumn<>("Stopp V.[ms]");
 
         tableView.getColumns().add(adrCol);
         tableView.getColumns().add(routeCol);
@@ -256,6 +259,18 @@ public class TimetableUI {
         tableView.getColumns().add(startDelayCol);
         tableView.getColumns().add(stopDelayCol);
         tableView.getColumns().add(locoCol);
+        tableView.getColumns().add(dirCol);
+        tableView.getColumns().add(speedCol);
+        
+        adrCol.setStyle( "-fx-alignment: CENTER;");
+        routeCol.setStyle( "-fx-alignment: CENTER;");
+        sens1Col.setStyle( "-fx-alignment: CENTER;");
+        sens2Col.setStyle( "-fx-alignment: CENTER;");
+        locoCol.setStyle( "-fx-alignment: CENTER;");
+        dirCol.setStyle( "-fx-alignment: CENTER;");
+        speedCol.setStyle( "-fx-alignment: CENTER;");
+        startDelayCol.setStyle( "-fx-alignment: CENTER;");
+        stopDelayCol.setStyle( "-fx-alignment: CENTER;");
 
         tableView.setEditable(true);
 
@@ -287,7 +302,7 @@ public class TimetableUI {
                 final int index = row.getIndex();
                 contTimetable(index);
             });
-            contextMenu.getItems().addAll(setTrainMenuItem, startMenuItem, stopMenuItem,continueMenuItem);
+            contextMenu.getItems().addAll(setTrainMenuItem, startMenuItem, stopMenuItem, continueMenuItem);
             // Set context menu on row, but use a binding to make it only show for non-empty rows:
             row.contextMenuProperty().bind(
                     Bindings.when(row.emptyProperty())
@@ -326,11 +341,58 @@ public class TimetableUI {
             stopDelayCol.setVisible(true);
         });
 
+        locoCol.setCellFactory(TextFieldTableCell.forTableColumn(new MyIntegerStringConverter()));
+        locoCol.setOnEditCommit((CellEditEvent<Trip, Integer> ev) -> {
+            Trip to = ev.getTableView().getItems().get(ev.getTablePosition().getRow());
+            if ((ev.getNewValue() > 0) && (ev.getNewValue() <= SXMAX_USED)) {
+                String newLocoString = "" + ev.getNewValue() + "," + to.locoDir + "," + to.locoSpeed;
+                UpdateXML.setLocoString(to.adr, newLocoString);
+                to.locoString = newLocoString;
+                to.locoAddr = ev.getNewValue();
+            } else {
+                invalidLoco(ev.getNewValue());
+            }
+            locoCol.setVisible(false);   // needed because of a JavaFX bug
+            locoCol.setVisible(true);
+        });
+
+        dirCol.setCellFactory(TextFieldTableCell.forTableColumn(new MyIntegerStringConverter()));
+        dirCol.setOnEditCommit((CellEditEvent<Trip, Integer> ev) -> {
+            Trip to = ev.getTableView().getItems().get(ev.getTablePosition().getRow());
+            if ((ev.getNewValue() >= 0) && (ev.getNewValue() <= 1)) {
+                String newLocoString = "" + to.locoAddr + "," + ev.getNewValue() + "," + to.locoSpeed;
+                UpdateXML.setLocoString(to.adr, newLocoString);
+                to.locoString = newLocoString;
+                to.locoDir = ev.getNewValue();
+            } else {
+                invalidDir();
+            }
+            dirCol.setVisible(false);   // needed because of a JavaFX bug
+            dirCol.setVisible(true);
+        });
+
+        speedCol.setCellFactory(TextFieldTableCell.forTableColumn(new MyIntegerStringConverter()));
+        speedCol.setOnEditCommit((CellEditEvent<Trip, Integer> ev) -> {
+            Trip to = ev.getTableView().getItems().get(ev.getTablePosition().getRow());
+            if ((ev.getNewValue() >= 1) && (ev.getNewValue() <= 31)) {
+                String newLocoString = "" + to.locoAddr + "," + to.locoDir + "," + ev.getNewValue();
+                UpdateXML.setLocoString(to.adr, newLocoString);
+                to.locoString = newLocoString;
+                to.locoSpeed = ev.getNewValue();
+            } else {
+                invalidSpeed(ev.getNewValue());
+            }
+            speedCol.setVisible(false);   // needed because of a JavaFX bug
+            speedCol.setVisible(true);
+        });
+
         adrCol.setCellValueFactory(new PropertyValueFactory<>("adr"));
         routeCol.setCellValueFactory(new PropertyValueFactory<>("route"));
         sens1Col.setCellValueFactory(new PropertyValueFactory<>("sens1"));
         sens2Col.setCellValueFactory(new PropertyValueFactory<>("sens2"));
-        locoCol.setCellValueFactory(new PropertyValueFactory<>("locoString"));
+        locoCol.setCellValueFactory(new PropertyValueFactory<>("locoAddr"));
+        dirCol.setCellValueFactory(new PropertyValueFactory<>("locoDir"));
+        speedCol.setCellValueFactory(new PropertyValueFactory<>("locoSpeed"));
         startDelayCol.setCellValueFactory(new PropertyValueFactory<>("startDelay"));
         stopDelayCol.setCellValueFactory(new PropertyValueFactory<>("stopDelay"));
 
@@ -356,6 +418,30 @@ public class TimetableUI {
         alert.showAndWait();
     }
 
+    private void invalidLoco(int value) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle("Error alert");
+        alert.setHeaderText(null);
+        alert.setContentText("LocoAdresse muss im Bereich 0 .." + SXMAX_USED + " liegen!");
+        alert.showAndWait();
+    }
+
+    private void invalidDir() {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle("Error alert");
+        alert.setHeaderText(null);
+        alert.setContentText("Dir muss 0 oder 1 sein");
+        alert.showAndWait();
+    }
+
+    private void invalidSpeed(int value) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle("Error alert");
+        alert.setHeaderText(null);
+        alert.setContentText("Loco Speed muss im Bereich 1 ..31 liegen!");
+        alert.showAndWait();
+    }
+
     private void startTripManually(Trip trip) {
         if (trip != null) {
             if (globalPowerCheck()) {
@@ -370,20 +456,20 @@ public class TimetableUI {
             }
         }
     }
-    
+
     private void contTimetable(int index) {
 
-            if (globalPowerCheck()) {
-                boolean result = ttSelected.cont(index);
-                if (!result) {
-                    Alert alert = new Alert(AlertType.ERROR);
-                    alert.setTitle("Error alert");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Fortsetzen des Fahrplans nicht möglich");
-                    alert.showAndWait();
-                }
+        if (globalPowerCheck()) {
+            boolean result = ttSelected.cont(index);
+            if (!result) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error alert");
+                alert.setHeaderText(null);
+                alert.setContentText("Fortsetzen des Fahrplans nicht möglich");
+                alert.showAndWait();
             }
-  
+        }
+
     }
 
     private boolean globalPowerCheck() {
@@ -465,7 +551,7 @@ public class TimetableUI {
         }
         );
         btnSetTrain.setOnAction((ActionEvent e) -> {
-            SensorLocoPair res = SetTrainDialog.open(stage);
+            SensorLocoPair res = SetTrainDialog.open(stage, ttSelected);
             if (res.sensor != INVALID_INT) {
                 PanelElement.setTrain(res.sensor, res.loco);
                 debug("Sensor " + res.sensor + " belegt mit Zug#" + res.loco);

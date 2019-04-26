@@ -14,8 +14,8 @@ Fahrten können auch individuell aus dem Fahrplan heraus (rechter Mausclick auf 
 
 ![](set-train1.png)
 
-Damit ist das Ende des Handbuchs erreicht - bitte schicken Sie mir bei Fragen eine email - Kontakt siehe
-SX4-Webseite.
+Damit ist das Ende des Handbuchs erreicht - bitte schicken Sie mir bei Fragen
+eine email - Kontakt siehe SX4-Webseite.
 
 DANKE.
 

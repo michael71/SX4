@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<layout-config filename="panel_sxtest.xml" version="20190419_091905">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><layout-config filename="panel_sxtest.xml" version="20190419_091905">
     <panels>
         <panel name="sxtest">
             <locos>
@@ -88,8 +87,8 @@
                 <trip adr="3100" loco="29,0,22" route="2300" sens1="924" sens2="902" startdelay="100" stopdelay="1700"/>
                 <trip adr="3101" loco="29,1,22" route="2310" sens1="902" sens2="924" startdelay="1000" stopdelay="1400"/>
                 <trip adr="3102" loco="42,0,18" route="2303" sens1="923" sens2="903" startdelay="100" stopdelay="1400"/>
-<trip adr="3112" loco="42,0,18" route="4301" sens1="923" sens2="928" startdelay="100" stopdelay="1400"/>
-<trip adr="3113" loco="42,0,18" route="4303" sens1="928" sens2="903" startdelay="0" stopdelay="1400"/>
+                <trip adr="3112" loco="42,0,18" route="4301" sens1="923" sens2="928" startdelay="100" stopdelay="1400"/>
+                <trip adr="3113" loco="42,0,18" route="4303" sens1="928" sens2="903" startdelay="0" stopdelay="1400"/>
                 <trip adr="3103" loco="42,1,18" route="2313" sens1="903" sens2="923" startdelay="100" stopdelay="1200"/>
                 <trip adr="3104" loco="40,1,28" route="2304" sens1="922" sens2="902" startdelay="1000" stopdelay="2300"/>
                 <trip adr="3105" loco="40,0,28" route="2314" sens1="902" sens2="922" startdelay="100" stopdelay="1700"/>

@@ -15,9 +15,10 @@ import javafx.util.converter.IntegerStringConverter;
 public class MyIntegerStringConverter extends IntegerStringConverter {
     @Override
             public Integer fromString(String s) {
+                String digits = s.replaceAll("[^0-9]", "");
                 int i = INVALID_INT;
                 try {
-                     i = Integer.parseInt(s);
+                     i = Integer.parseInt(digits);
                 } catch (NumberFormatException ex) {
                     
                 }

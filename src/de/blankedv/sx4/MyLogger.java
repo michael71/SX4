@@ -34,6 +34,7 @@ import java.util.logging.Level;
 public class MyLogger extends Logger {
 
     Writer writer;
+    String lastMessage="";
 
     MyLogger(String path)  {
         try {
@@ -51,7 +52,10 @@ public class MyLogger extends Logger {
     
     @Override
     protected void print(String message) {
-        System.out.println(message);
+        if (!message.equals(lastMessage)) {
+            System.out.println(message);
+        }
+        lastMessage = message;
         try {
             writer.write(message);
             writer.write('\n');

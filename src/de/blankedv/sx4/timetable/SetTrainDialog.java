@@ -51,18 +51,17 @@ public class SetTrainDialog {
     final static Spinner<Integer> spinner1 = new Spinner<>(0, 9, 0);
     final static Label lblAdr = new Label(" Adresse");
 
-    static SensorLocoPair open(Stage primaryStage) {
+    static SensorLocoPair open(Stage primaryStage, Timetable tt) {
 
         final SensorLocoPair result = new SensorLocoPair();
 
         ArrayList<Integer> sensorAddresses = new ArrayList<>();
-        // get all sensors
-        for (PanelElement pe : panelElements) {
-            if (pe.isSensor()) {
-                sensorAddresses.add(pe.getAdr());
-            }
+        ArrayList<Trip> tripsList = tt.getTripsList();
+        // get all start sensors
+        for (Trip tr : tripsList) { 
+            sensorAddresses.add(tr.sens1);
         }
-        
+               
         if (sensorAddresses.isEmpty()) {
             error("no sensors, cannot set train");
             return result;

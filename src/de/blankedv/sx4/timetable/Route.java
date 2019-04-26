@@ -269,7 +269,7 @@ public class Route extends PanelElement {
             // check if any of the PanelElements in this route are locked
             String pesLocked = panelElementsLocked();
             if (!pesLocked.isEmpty()) {
-                error("cannot set route id=" + getAdr() + " because some PanelElements are locked: " + pesLocked);
+                info("cannot set route id=" + getAdr() + " because some PanelElements are locked: " + pesLocked);
                 return false;  // cannot set route.
             }
 

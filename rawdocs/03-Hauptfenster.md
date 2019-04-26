@@ -18,6 +18,10 @@ und betätigen "anzeigen", so öffnet sich ein Fahrplan Fenster:
 
 Von diesem Fenster aus kann der Fahrplan gestartet werden und auch gestoppt werden.
 
+Die Werte für "Start V.[ms]" (= Start dieser Fahrt wird um x Millisekunden verzögert), 
+Stop Verzögerung, Lok/Zug Adresse, Richtung ("Ri.") und Geschwindigkeit können in
+ diesem Fenster editiert werden, der Panel-XML File wird entsprechend geändert.
+
 
 ### =>> weiter zu [Fahrplan Start](04-Fahrplan_Start.md)
 
