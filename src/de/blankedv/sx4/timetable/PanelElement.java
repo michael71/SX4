@@ -349,13 +349,18 @@ public class PanelElement implements Comparator<PanelElement>, Comparable<PanelE
 
     /**
      * check if a panel element with given address is locked
+     * return false, if element does not exist
      *
      * @param addr
      * @return
      */
     public static boolean isAddressLocked(int addr) {
         PanelElement pe = PanelElement.getByAddress(addr);
-        return pe.isLocked();
+        if (pe != null) {
+            return pe.isLocked();
+        } else {
+            return false;
+        }
     }
 
     /**
