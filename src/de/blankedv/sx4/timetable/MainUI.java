@@ -69,6 +69,8 @@ public class MainUI extends Application {
     private final Pane spacer = new Pane();
     private final Image imgHelp = new Image("/de/blankedv/sx4/res/help2.png");
     private final ImageView ivHelp = new ImageView(imgHelp);
+    
+
 
     @Override
     public void start(Stage stage) {
@@ -171,6 +173,8 @@ public class MainUI extends Application {
                 e.consume();   // ==> do nothing
             }
         });
+        
+
 
     }
 

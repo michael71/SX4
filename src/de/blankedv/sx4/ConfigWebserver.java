@@ -15,7 +15,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package de.blankedv.sx4;
 
 /**
@@ -31,6 +30,7 @@ import java.net.InetSocketAddress;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import de.blankedv.sx4.timetable.FileWatcher;
 import de.blankedv.sx4.timetable.ReadConfig;
 
 import java.io.BufferedInputStream;
@@ -52,6 +52,7 @@ public class ConfigWebserver {
     String fileName = "";
     HttpServer server;
     private final int PORT = 8000;  // fixed port used by android software
+   
 
     public ConfigWebserver(String fname) throws Exception {
 
@@ -59,14 +60,15 @@ public class ConfigWebserver {
             return;
         }
         fileName = fname;  // store locally for later use in http server
-        
+
         info("starting config server on port " + PORT + ", serving: " + fileName);
-        
+
         // double check name inside XML file
         String pName = ReadConfig.readPanelName(fileName);
-         if (!pName.equals(fileName)) {
-            error("wrong 'filename' attribute="+pName+" in layout-config file="+fileName);
+        if (!pName.equals(fileName)) {
+            error("wrong 'filename' attribute=" + pName + " in layout-config file=" + fileName);
         }
+
         server = HttpServer.create(new InetSocketAddress(PORT), 0);
         server.createContext("/", new MyHandler());
         server.setExecutor(null); // creates a default executor
@@ -74,6 +76,7 @@ public class ConfigWebserver {
     }
 
     public void stop() {
+        
         server.stop(0);
 
     }

@@ -20,14 +20,11 @@ package de.blankedv.sx4.timetable;
 import static com.esotericsoftware.minlog.Log.debug;
 import static com.esotericsoftware.minlog.Log.error;
 import static de.blankedv.sx4.Constants.*;
-import de.blankedv.sx4.SXUtils;
-import static de.blankedv.sx4.timetable.Vars.*;
 import static de.blankedv.sx4.timetable.VarsFX.allTimetables;
 import static de.blankedv.sx4.timetable.VarsFX.allTrips;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;

@@ -29,6 +29,7 @@ import static de.blankedv.sx4.Constants.*;
 import static com.esotericsoftware.minlog.Log.*;
 import de.blankedv.sx4.timetable.CompRoute;
 import de.blankedv.sx4.timetable.FXGUI;
+import de.blankedv.sx4.timetable.FileWatcher;
 import de.blankedv.sx4.timetable.PanelElement;
 
 import de.blankedv.sx4.timetable.ReadConfig;
@@ -78,6 +79,8 @@ public class SX4 {
     private static Timer timer = new Timer();
     private static long lastSavedTrainNumbersTime = 0;
     public static volatile long lastConnected = System.currentTimeMillis();
+
+    private FileWatcher panelWatch;
 
     @SuppressWarnings("SleepWhileInLoop")
     public static void main(String[] args) {
@@ -150,6 +153,14 @@ public class SX4 {
             } catch (Exception ex) {
                 error(ex.getMessage());
             }
+
+            try {
+                String pN = "/home/mblank/NetBeansProjects/SX4/panel_sxtest.xml";
+                panelWatch = new FileWatcher(new File(pN));
+                panelWatch.start();
+            } catch (Exception ex) {
+                error(ex.getMessage());
+            }
         }
 
         myips = NIC.getmyip();
@@ -198,6 +209,9 @@ public class SX4 {
                 try {
                     running = false;  // shutdown all threads
                     server.stopClients();
+                    if (panelWatch != null) {
+                        panelWatch.stopThread();
+                    }
                     Thread.sleep(200);
                     info("Shutdown, SX4 ends.");
                 } catch (InterruptedException e) {
